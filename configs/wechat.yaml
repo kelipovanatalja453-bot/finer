@@ -1,0 +1,5 @@
+# WeChat Service Configuration
+exporter_url: "http://localhost:3001"
+source_type: "hybrid"  # direct_api, exporter_service, hybrid
+prefer_exporter: true
+cache_credentials: true

@@ -1,0 +1,27 @@
+name: 🐛 Bug 回报 | Bug Report
+about: 报告项目中的错误 | Report an error in the project
+title: '[BUG] '
+labels: bug
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 描述 | Description
+      placeholder: 请简要描述此 Bug。 | Provide a brief summary of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤 | Steps To Reproduce
+      description: 描述你是如何发现此 Bug 的。 | Describe how you encountered this bug.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境信息 | Environment
+      description: 操作系统、Python 版本等。 | OS, Python version, etc.

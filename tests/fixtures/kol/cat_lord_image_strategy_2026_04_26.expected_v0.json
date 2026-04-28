@@ -1,0 +1,575 @@
+{
+  "envelope_id": "cat_lord_image_strategy_2026_04_26",
+  "schema_version": "v0.5",
+  "source_type": "image",
+  "source_uri": "/Users/zhouhongyuan/Library/Containers/com.bytedance.macos.feishu/Data/Library/Application Support/LarkShell/sdk_storage/cca2e3816618ff1cd423ead1e51b0034/resources/images/img_v3_02114_7cb4416b-0376-499c-9e39-e086723d2f0g.jpg",
+  "source_title": "猫大人图片策略分析 — 2026年4月26日",
+  "creator_id": "cat_lord_fire",
+  "creator_name": "猫大人FIRE",
+  "published_at": "2026-04-26T10:00:00+08:00",
+  "ingested_at": "2026-04-28T00:00:00+08:00",
+  "blocks": [
+    {
+      "block_id": "img_block_01",
+      "block_type": "heading",
+      "text": "市场环境判断",
+      "order": 0,
+      "quality_card": {
+        "readability_score": 0.95,
+        "semantic_completeness_score": 0.90,
+        "financial_relevance_score": 0.85,
+        "entity_resolution_score": 0.80,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.70,
+        "overall_score": 0.83,
+        "gate_status": "pass"
+      },
+      "evidence_spans": []
+    },
+    {
+      "block_id": "img_block_02",
+      "block_type": "paragraph",
+      "text": "当前市场处于震荡调整阶段，主要指数表现分化。",
+      "order": 1,
+      "quality_card": {
+        "readability_score": 0.90,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.80,
+        "entity_resolution_score": 0.75,
+        "temporal_resolution_score": 0.70,
+        "evidence_traceability_score": 0.65,
+        "overall_score": 0.78,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_001",
+          "block_id": "img_block_02",
+          "char_start": 0,
+          "char_end": 30,
+          "text": "市场处于震荡调整阶段",
+          "confidence": 0.95
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_03",
+      "block_type": "table_region",
+      "text": "[TABLE_REGION] 上证指数近期走势数据表格",
+      "order": 2,
+      "quality_card": {
+        "readability_score": 0.50,
+        "semantic_completeness_score": 0.70,
+        "financial_relevance_score": 0.85,
+        "entity_resolution_score": 0.60,
+        "temporal_resolution_score": 0.50,
+        "evidence_traceability_score": 0.40,
+        "overall_score": 0.59,
+        "gate_status": "review"
+      },
+      "evidence_spans": []
+    },
+    {
+      "block_id": "img_block_04",
+      "block_type": "list",
+      "text": "上证指数近期走势：短期支撑位3100点，短期压力位3300点，当前位置接近支撑位",
+      "order": 3,
+      "quality_card": {
+        "readability_score": 0.85,
+        "semantic_completeness_score": 0.80,
+        "financial_relevance_score": 0.90,
+        "entity_resolution_score": 0.85,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.70,
+        "overall_score": 0.81,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_002",
+          "block_id": "img_block_04",
+          "char_start": 0,
+          "char_end": 50,
+          "text": "上证指数近期走势",
+          "confidence": 0.90
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_05",
+      "block_type": "heading",
+      "text": "板块分析",
+      "order": 4,
+      "quality_card": {
+        "readability_score": 0.95,
+        "semantic_completeness_score": 0.90,
+        "financial_relevance_score": 0.85,
+        "entity_resolution_score": 0.80,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.70,
+        "overall_score": 0.83,
+        "gate_status": "pass"
+      },
+      "evidence_spans": []
+    },
+    {
+      "block_id": "img_block_06",
+      "block_type": "paragraph",
+      "text": "新能源板块整体估值已回落至合理区间，但短期仍面临产能过剩压力。看好方向：储能受益于算电协同需求，绿电成本优势明显。风险提示：光伏组件价格竞争激烈，电动车销量增速放缓。",
+      "order": 5,
+      "quality_card": {
+        "readability_score": 0.88,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.95,
+        "entity_resolution_score": 0.90,
+        "temporal_resolution_score": 0.80,
+        "evidence_traceability_score": 0.75,
+        "overall_score": 0.86,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_003",
+          "block_id": "img_block_06",
+          "char_start": 0,
+          "char_end": 80,
+          "text": "新能源板块整体估值已回落至合理区间",
+          "confidence": 0.92
+        },
+        {
+          "evidence_span_id": "img_ev_004",
+          "block_id": "img_block_06",
+          "char_start": 81,
+          "char_end": 150,
+          "text": "储能受益于算电协同需求",
+          "confidence": 0.88
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_07",
+      "block_type": "chart_region",
+      "text": "[CHART_REGION] 新能源板块走势图表",
+      "order": 6,
+      "quality_card": {
+        "readability_score": 0.40,
+        "semantic_completeness_score": 0.60,
+        "financial_relevance_score": 0.90,
+        "entity_resolution_score": 0.50,
+        "temporal_resolution_score": 0.40,
+        "evidence_traceability_score": 0.30,
+        "overall_score": 0.52,
+        "gate_status": "review"
+      },
+      "evidence_spans": []
+    },
+    {
+      "block_id": "img_block_08",
+      "block_type": "paragraph",
+      "text": "科技板块分化明显，AI相关标的估值偏高。关注方向：AI算力基础设施、半导体国产替代。风险：美国制裁不确定性、估值透支业绩。",
+      "order": 7,
+      "quality_card": {
+        "readability_score": 0.85,
+        "semantic_completeness_score": 0.80,
+        "financial_relevance_score": 0.90,
+        "entity_resolution_score": 0.85,
+        "temporal_resolution_score": 0.70,
+        "evidence_traceability_score": 0.65,
+        "overall_score": 0.79,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_005",
+          "block_id": "img_block_08",
+          "char_start": 0,
+          "char_end": 60,
+          "text": "科技板块分化明显",
+          "confidence": 0.90
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_09",
+      "block_type": "heading",
+      "text": "个股分析",
+      "order": 8,
+      "quality_card": {
+        "readability_score": 0.95,
+        "semantic_completeness_score": 0.90,
+        "financial_relevance_score": 0.85,
+        "entity_resolution_score": 0.80,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.70,
+        "overall_score": 0.83,
+        "gate_status": "pass"
+      },
+      "evidence_spans": []
+    },
+    {
+      "block_id": "img_block_10",
+      "block_type": "paragraph",
+      "text": "理想汽车(LI)四季报分析：Q4单车均价下降10.2%，毛利率承压。2026年1-2月销量回落。投资价值弱于其他新能源车企。结论：短期看空。",
+      "order": 9,
+      "quality_card": {
+        "readability_score": 0.88,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.95,
+        "entity_resolution_score": 0.92,
+        "temporal_resolution_score": 0.85,
+        "evidence_traceability_score": 0.80,
+        "overall_score": 0.88,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_006",
+          "block_id": "img_block_10",
+          "char_start": 0,
+          "char_end": 100,
+          "text": "理想汽车四季报分析",
+          "confidence": 0.95
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_11",
+      "block_type": "paragraph",
+      "text": "宝丰能源(600989)目标价分析：2026年归母净利润预期144~151亿，合理PE 14倍，目标价27.5~27.8元。风险：海峡封锁炒作溢价，等跌到27元以下再关注。",
+      "order": 10,
+      "quality_card": {
+        "readability_score": 0.90,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.95,
+        "entity_resolution_score": 0.92,
+        "temporal_resolution_score": 0.88,
+        "evidence_traceability_score": 0.85,
+        "overall_score": 0.89,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_007",
+          "block_id": "img_block_11",
+          "char_start": 0,
+          "char_end": 80,
+          "text": "宝丰能源目标价27.5~27.8元",
+          "confidence": 0.92
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_12",
+      "block_type": "paragraph",
+      "text": "阿特斯太阳能(CSIQ)看好理由：储能在手订单31亿美元，2026年储能出货14-17GWh，同比增长73%~115%，动态远期PE仅8-12倍。入场条件15元以下，目标价18-20元。",
+      "order": 11,
+      "quality_card": {
+        "readability_score": 0.88,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.95,
+        "entity_resolution_score": 0.92,
+        "temporal_resolution_score": 0.85,
+        "evidence_traceability_score": 0.88,
+        "overall_score": 0.89,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_008",
+          "block_id": "img_block_12",
+          "char_start": 0,
+          "char_end": 100,
+          "text": "阿特斯太阳能储能在手订单31亿美元",
+          "confidence": 0.95
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_13",
+      "block_type": "table_region",
+      "text": "[TABLE_REGION] CSIQ 储能订单数据表格",
+      "order": 12,
+      "quality_card": {
+        "readability_score": 0.50,
+        "semantic_completeness_score": 0.70,
+        "financial_relevance_score": 0.90,
+        "entity_resolution_score": 0.60,
+        "temporal_resolution_score": 0.50,
+        "evidence_traceability_score": 0.40,
+        "overall_score": 0.60,
+        "gate_status": "review"
+      },
+      "evidence_spans": []
+    },
+    {
+      "block_id": "img_block_14",
+      "block_type": "paragraph",
+      "text": "腾讯音乐(TME)底部价值支撑，修复空间约20%。风险：利润增长放缓见顶，需业绩超预期或AI概念催化。",
+      "order": 13,
+      "quality_card": {
+        "readability_score": 0.85,
+        "semantic_completeness_score": 0.80,
+        "financial_relevance_score": 0.90,
+        "entity_resolution_score": 0.85,
+        "temporal_resolution_score": 0.70,
+        "evidence_traceability_score": 0.65,
+        "overall_score": 0.79,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_009",
+          "block_id": "img_block_14",
+          "char_start": 0,
+          "char_end": 60,
+          "text": "腾讯音乐底部价值支撑",
+          "confidence": 0.88
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_15",
+      "block_type": "heading",
+      "text": "风险提示",
+      "order": 14,
+      "quality_card": {
+        "readability_score": 0.95,
+        "semantic_completeness_score": 0.90,
+        "financial_relevance_score": 0.85,
+        "entity_resolution_score": 0.80,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.70,
+        "overall_score": 0.83,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_012",
+          "block_id": "img_block_15",
+          "char_start": 0,
+          "char_end": 4,
+          "text": "风险提示",
+          "confidence": 0.90
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_16",
+      "block_type": "ocr_unreadable",
+      "text": "[OCR_UNREADABLE] 图片中部分风险提示文字无法识别",
+      "order": 15,
+      "quality_card": {
+        "readability_score": 0.10,
+        "semantic_completeness_score": 0.30,
+        "financial_relevance_score": 0.50,
+        "entity_resolution_score": 0.20,
+        "temporal_resolution_score": 0.20,
+        "evidence_traceability_score": 0.10,
+        "overall_score": 0.22,
+        "gate_status": "reject"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_013",
+          "block_id": "img_block_16",
+          "char_start": 29,
+          "char_end": 33,
+          "text": "风险提示",
+          "confidence": 0.50
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_17",
+      "block_type": "list",
+      "text": "主要风险：市场情绪波动剧烈，外部政策不确定性，个股业绩不及预期，估值透支风险",
+      "order": 16,
+      "quality_card": {
+        "readability_score": 0.85,
+        "semantic_completeness_score": 0.80,
+        "financial_relevance_score": 0.90,
+        "entity_resolution_score": 0.75,
+        "temporal_resolution_score": 0.70,
+        "evidence_traceability_score": 0.65,
+        "overall_score": 0.78,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_010",
+          "block_id": "img_block_17",
+          "char_start": 0,
+          "char_end": 80,
+          "text": "主要风险",
+          "confidence": 0.90
+        }
+      ]
+    },
+    {
+      "block_id": "img_block_18",
+      "block_type": "image_region",
+      "text": "[IMAGE_REGION] 飞书界面UI元素（点赞数、评论数等），非策略内容",
+      "order": 17,
+      "quality_card": {
+        "readability_score": 0.30,
+        "semantic_completeness_score": 0.50,
+        "financial_relevance_score": 0.20,
+        "entity_resolution_score": 0.30,
+        "temporal_resolution_score": 0.20,
+        "evidence_traceability_score": 0.10,
+        "overall_score": 0.27,
+        "gate_status": "reject"
+      },
+      "evidence_spans": []
+    },
+    {
+      "block_id": "img_block_19",
+      "block_type": "heading",
+      "text": "总结",
+      "order": 18,
+      "quality_card": {
+        "readability_score": 0.95,
+        "semantic_completeness_score": 0.90,
+        "financial_relevance_score": 0.85,
+        "entity_resolution_score": 0.80,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.70,
+        "overall_score": 0.83,
+        "gate_status": "pass"
+      },
+      "evidence_spans": []
+    },
+    {
+      "block_id": "img_block_20",
+      "block_type": "paragraph",
+      "text": "当前策略：债券持有观望，股票精选低估值标的，板块关注储能、绿电。仓位建议不提供具体仓位百分比，仅提供方向性判断。",
+      "order": 19,
+      "quality_card": {
+        "readability_score": 0.88,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.90,
+        "entity_resolution_score": 0.85,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.70,
+        "overall_score": 0.81,
+        "gate_status": "pass"
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "img_ev_011",
+          "block_id": "img_block_20",
+          "char_start": 0,
+          "char_end": 80,
+          "text": "当前策略",
+          "confidence": 0.88
+        }
+      ]
+    }
+  ],
+  "quality_card": {
+    "readability_score": 0.75,
+    "semantic_completeness_score": 0.72,
+    "financial_relevance_score": 0.85,
+    "entity_resolution_score": 0.70,
+    "temporal_resolution_score": 0.65,
+    "evidence_traceability_score": 0.55,
+    "overall_score": 0.70,
+    "gate_status": "review"
+  },
+  "temporal_anchors": [
+    {
+      "anchor_id": "img_ta_001",
+      "anchor_type": "published_at",
+      "raw_text": "2026年4月26日",
+      "resolved_time": "2026-04-26T00:00:00+08:00",
+      "confidence": 0.80,
+      "resolution_strategy": "explicit_date"
+    },
+    {
+      "anchor_id": "img_ta_002",
+      "anchor_type": "mentioned_at",
+      "raw_text": "Q4",
+      "resolved_time": "2025-10-01T00:00:00+08:00",
+      "confidence": 0.95,
+      "resolution_strategy": "fiscal_period"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "entity_anchor_id": "img_ea_001",
+      "entity_type": "index",
+      "raw_text": "上证指数",
+      "resolved_name": "上证指数",
+      "resolved_symbol": null,
+      "market": "CN",
+      "confidence": 0.90
+    },
+    {
+      "entity_anchor_id": "img_ea_002",
+      "entity_type": "sector",
+      "raw_text": "新能源板块",
+      "resolved_name": "新能源",
+      "resolved_symbol": null,
+      "market": null,
+      "confidence": 0.88
+    },
+    {
+      "entity_anchor_id": "img_ea_003",
+      "entity_type": "sector",
+      "raw_text": "储能",
+      "resolved_name": "储能",
+      "resolved_symbol": null,
+      "market": null,
+      "confidence": 0.90
+    },
+    {
+      "entity_anchor_id": "img_ea_004",
+      "entity_type": "stock",
+      "raw_text": "理想汽车",
+      "resolved_name": "理想汽车",
+      "resolved_symbol": "LI",
+      "market": "US",
+      "confidence": 0.95
+    },
+    {
+      "entity_anchor_id": "img_ea_005",
+      "entity_type": "stock",
+      "raw_text": "宝丰能源",
+      "resolved_name": "宝丰能源",
+      "resolved_symbol": "600989",
+      "market": "A",
+      "confidence": 0.95
+    },
+    {
+      "entity_anchor_id": "img_ea_006",
+      "entity_type": "stock",
+      "raw_text": "阿特斯太阳能",
+      "resolved_name": "阿特斯太阳能",
+      "resolved_symbol": "CSIQ",
+      "market": "US",
+      "confidence": 0.92
+    },
+    {
+      "entity_anchor_id": "img_ea_007",
+      "entity_type": "stock",
+      "raw_text": "腾讯音乐",
+      "resolved_name": "腾讯音乐",
+      "resolved_symbol": "TME",
+      "market": "US",
+      "confidence": 0.90
+    }
+  ],
+  "metadata": {
+    "source_platform": "feishu",
+    "content_format": "image_strategy",
+    "ocr_method": "manual_transcription",
+    "total_char_count": 1500,
+    "estimated_reading_time_min": 6,
+    "placeholder_blocks": {
+      "table_region": 2,
+      "chart_region": 1,
+      "ocr_unreadable": 1,
+      "image_region": 1
+    }
+  }
+}

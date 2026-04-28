@@ -1,0 +1,515 @@
+{
+  "envelope_id": "cat_lord_2026_03_12_feishu_doc",
+  "schema_version": "v0.5",
+  "source_type": "chat",
+  "source_uri": null,
+  "source_title": "猫大人投资策略分析 — 2026年3月12日",
+  "creator_id": "cat_lord_fire",
+  "creator_name": "猫大人FIRE",
+  "published_at": "2026-03-12T15:36:00+08:00",
+  "ingested_at": "2026-04-27T00:00:00+08:00",
+  "blocks": [
+    {
+      "block_id": "cat_lord_2026_03_12_block_01",
+      "block_type": "heading",
+      "text": "理想汽车分析",
+      "order": 0,
+      "parent_block_id": null,
+      "page_index": null,
+      "bbox": null,
+      "speaker": "猫大人FIRE",
+      "start_time_sec": null,
+      "end_time_sec": null,
+      "quality_card": {
+        "readability_score": 0.95,
+        "semantic_completeness_score": 0.9,
+        "financial_relevance_score": 0.85,
+        "entity_resolution_score": 0.8,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.7,
+        "overall_score": 0.825,
+        "gate_status": "pass",
+        "gate_reasons": []
+      },
+      "evidence_spans": [],
+      "metadata": {
+        "timestamp": "2026-03-12T20:46:00+08:00"
+      }
+    },
+    {
+      "block_id": "cat_lord_2026_03_12_block_02",
+      "block_type": "paragraph",
+      "text": "年报很惨这个在三季报的时候大家都有预期了，这里重点说一下四季报。直接说结论：",
+      "order": 1,
+      "parent_block_id": "cat_lord_2026_03_12_block_01",
+      "page_index": null,
+      "bbox": null,
+      "speaker": "猫大人FIRE",
+      "start_time_sec": null,
+      "end_time_sec": null,
+      "quality_card": {
+        "readability_score": 0.92,
+        "semantic_completeness_score": 0.88,
+        "financial_relevance_score": 0.9,
+        "entity_resolution_score": 0.75,
+        "temporal_resolution_score": 0.7,
+        "evidence_traceability_score": 0.65,
+        "overall_score": 0.8,
+        "gate_status": "pass",
+        "gate_reasons": []
+      },
+      "evidence_spans": [],
+      "metadata": {
+        "timestamp": "2026-03-12T20:46:00+08:00"
+      }
+    },
+    {
+      "block_id": "cat_lord_2026_03_12_block_03",
+      "block_type": "list",
+      "text": "1.四季报勉强保持盈利主要是因为三季报的时候很多费用前置计提了，不然四季度也是亏损，这个扭亏为盈并不值得表扬，属于当时就预期到的财技操作。2.四季度在中国新能源汽车交付的大旺季，环比增长只能算正常。而且在之后的26年的1月，2月又快速回落（2026年1-2月销量54,089辆）。整体来说还是落后市场其他友商的。3.Q4的销量增长，还是靠降级和低端车完成的，Q4单车均价24.6万元，较Q3均价27.4万元，环比单车价格下降10.2%，这个挺夸张，我不觉得是好事情。理论上之后的毛利率还得降。4.一手好牌被自己的套娃策略和缓慢的纯电策略玩崩了的结论不变，目前看短期在新款车出来得到市场认可前，依然投资价值弱于其他看好的新能源车企。",
+      "order": 2,
+      "parent_block_id": "cat_lord_2026_03_12_block_01",
+      "page_index": null,
+      "bbox": null,
+      "speaker": "猫大人FIRE",
+      "start_time_sec": null,
+      "end_time_sec": null,
+      "quality_card": {
+        "readability_score": 0.88,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.95,
+        "entity_resolution_score": 0.9,
+        "temporal_resolution_score": 0.85,
+        "evidence_traceability_score": 0.8,
+        "overall_score": 0.87,
+        "gate_status": "pass",
+        "gate_reasons": []
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "ev_001",
+          "block_id": "cat_lord_2026_03_12_block_03",
+          "char_start": 0,
+          "char_end": 236,
+          "text": "Q4单车均价24.6万元，较Q3均价27.4万元，环比单车价格下降10.2%",
+          "confidence": 0.95
+        },
+        {
+          "evidence_span_id": "ev_002",
+          "block_id": "cat_lord_2026_03_12_block_03",
+          "char_start": 237,
+          "char_end": 358,
+          "text": "目前看短期在新款车出来得到市场认可前，依然投资价值弱于其他看好的新能源车企",
+          "confidence": 0.9
+        }
+      ],
+      "metadata": {
+        "timestamp": "2026-03-12T20:46:00+08:00",
+        "mentioned_tickers": [
+          "LI"
+        ],
+        "mentioned_entities": [
+          "理想汽车",
+          "新能源汽车"
+        ],
+        "mentioned_periods": [
+          "Q4",
+          "Q3",
+          "2026年1-2月"
+        ]
+      }
+    },
+    {
+      "block_id": "cat_lord_2026_03_12_block_04",
+      "block_type": "heading",
+      "text": "宝丰能源分析",
+      "order": 3,
+      "parent_block_id": null,
+      "page_index": null,
+      "bbox": null,
+      "speaker": "猫大人FIRE",
+      "start_time_sec": null,
+      "end_time_sec": null,
+      "quality_card": {
+        "readability_score": 0.95,
+        "semantic_completeness_score": 0.9,
+        "financial_relevance_score": 0.85,
+        "entity_resolution_score": 0.8,
+        "temporal_resolution_score": 0.8,
+        "evidence_traceability_score": 0.75,
+        "overall_score": 0.84,
+        "gate_status": "pass",
+        "gate_reasons": []
+      },
+      "evidence_spans": [],
+      "metadata": {
+        "timestamp": "2026-03-12T22:20:00+08:00"
+      }
+    },
+    {
+      "block_id": "cat_lord_2026_03_12_block_05",
+      "block_type": "paragraph",
+      "text": "2025年烯烃均价为1270元左右；按这个基础上浮10%~15%，已经计算上浮增产影响，省略计算过程：预计宝丰能源2026年归母净利润预期在144~151亿；较2025年增长25%~31%; 合理PE按14倍计算（略微上调增速预期），对应2016亿~2114亿元。对应目标价从合理到乐观27.5~27.8元；目前看短期定价是高估炒作溢价或者市场认为海峡将长时间封锁，烯烃价格还会持续上涨。但是目前看属于风险高于价值。而且如果海峡解封，相关期货价格回落的风险更高。等跌到27元以下，再酌情关注吧。",
+      "order": 4,
+      "parent_block_id": "cat_lord_2026_03_12_block_04",
+      "page_index": null,
+      "bbox": null,
+      "speaker": "猫大人FIRE",
+      "start_time_sec": null,
+      "end_time_sec": null,
+      "quality_card": {
+        "readability_score": 0.9,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.95,
+        "entity_resolution_score": 0.92,
+        "temporal_resolution_score": 0.88,
+        "evidence_traceability_score": 0.85,
+        "overall_score": 0.89,
+        "gate_status": "pass",
+        "gate_reasons": []
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "ev_003",
+          "block_id": "cat_lord_2026_03_12_block_05",
+          "char_start": 0,
+          "char_end": 90,
+          "text": "预计宝丰能源2026年归母净利润预期在144~151亿；较2025年增长25%~31%",
+          "confidence": 0.95
+        },
+        {
+          "evidence_span_id": "ev_004",
+          "block_id": "cat_lord_2026_03_12_block_05",
+          "char_start": 91,
+          "char_end": 170,
+          "text": "对应目标价从合理到乐观27.5~27.8元",
+          "confidence": 0.92
+        },
+        {
+          "evidence_span_id": "ev_005",
+          "block_id": "cat_lord_2026_03_12_block_05",
+          "char_start": 220,
+          "char_end": 260,
+          "text": "等跌到27元以下，再酌情关注吧",
+          "confidence": 0.9
+        }
+      ],
+      "metadata": {
+        "timestamp": "2026-03-12T22:20:00+08:00",
+        "mentioned_tickers": [
+          "600989"
+        ],
+        "mentioned_entities": [
+          "宝丰能源",
+          "烯烃"
+        ],
+        "price_targets": {
+          "target_price_low": 27.5,
+          "target_price_high": 27.8,
+          "currency": "CNY"
+        }
+      }
+    },
+    {
+      "block_id": "cat_lord_2026_03_12_block_06",
+      "block_type": "paragraph",
+      "text": "其实底层逻辑整体也算简单讲了，核心就是怎么发更便宜的绿电，对外出口token；理论上现在美国是算力芯片够，但是电力不足，且就算电力基建满足，但是电力成本高。所以中国更希望通过绿电成本优势去获取token成本优势，甚至出口token；相当于当年\"东数西算\"的升级版。主要是强化的绿电的价值链条。增强了绿电产业的长期确定性。所以最近电力，储能，绿电都在涨；涨多了该卖就卖就好。因为有时候短期上涨特别多的时候就会透支业绩。绿电基本透支2年就是上限了。",
+      "order": 5,
+      "parent_block_id": null,
+      "page_index": null,
+      "bbox": null,
+      "speaker": "猫大人FIRE",
+      "start_time_sec": null,
+      "end_time_sec": null,
+      "quality_card": {
+        "readability_score": 0.92,
+        "semantic_completeness_score": 0.88,
+        "financial_relevance_score": 0.92,
+        "entity_resolution_score": 0.85,
+        "temporal_resolution_score": 0.75,
+        "evidence_traceability_score": 0.7,
+        "overall_score": 0.84,
+        "gate_status": "pass",
+        "gate_reasons": []
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "ev_006",
+          "block_id": "cat_lord_2026_03_12_block_06",
+          "char_start": 0,
+          "char_end": 210,
+          "text": "增强了绿电产业的长期确定性",
+          "confidence": 0.88
+        },
+        {
+          "evidence_span_id": "ev_007",
+          "block_id": "cat_lord_2026_03_12_block_06",
+          "char_start": 211,
+          "char_end": 280,
+          "text": "涨多了该卖就卖就好。因为有时候短期上涨特别多的时候就会透支业绩",
+          "confidence": 0.85
+        }
+      ],
+      "metadata": {
+        "timestamp": "2026-03-12T15:36:00+08:00",
+        "mentioned_sectors": [
+          "绿电",
+          "储能",
+          "电力"
+        ],
+        "theme": "算电协同"
+      }
+    },
+    {
+      "block_id": "cat_lord_2026_03_12_block_07",
+      "block_type": "paragraph",
+      "text": "值得，前段时间超跌了。主要是因为剥离了美国业务，股权结构调整（因为美国法案限制被迫调整），导致后面的盈利增速调低，也会导致目标价下调。这我觉得15元以下都是还不错的入场机会。2026年目标价上限也就是18-20元；相比之前我还是觉得阿特斯剥离后的美股公司阿特斯太阳能CSIQ更值得关注（和之前讲这个公司的时候也是这么说的），因为这块市场更容易挣钱。结合CSIQ公布的数据和2026年指引，储能在手订单为31亿美元（包括长期服务协议），在手订单充沛。公司预计26全年储能出货约14GWh-17GWh，同比增长73%~115%。2026年大概率扭亏为盈，盈利预期在1-1.5亿美元左右（确实估不准太细，美国制造业我不太好说，所以只能给一个宽幅的区间），不过动态远期PE只有8-12倍。性价比和下限，上限都高于A股的阿特斯。2026年业绩兑现翻倍我也不奇怪。",
+      "order": 6,
+      "parent_block_id": null,
+      "page_index": null,
+      "bbox": null,
+      "speaker": "猫大人FIRE",
+      "start_time_sec": null,
+      "end_time_sec": null,
+      "quality_card": {
+        "readability_score": 0.88,
+        "semantic_completeness_score": 0.85,
+        "financial_relevance_score": 0.95,
+        "entity_resolution_score": 0.92,
+        "temporal_resolution_score": 0.85,
+        "evidence_traceability_score": 0.88,
+        "overall_score": 0.89,
+        "gate_status": "pass",
+        "gate_reasons": []
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "ev_008",
+          "block_id": "cat_lord_2026_03_12_block_07",
+          "char_start": 0,
+          "char_end": 100,
+          "text": "15元以下都是还不错的入场机会。2026年目标价上限也就是18-20元",
+          "confidence": 0.92
+        },
+        {
+          "evidence_span_id": "ev_009",
+          "block_id": "cat_lord_2026_03_12_block_07",
+          "char_start": 101,
+          "char_end": 200,
+          "text": "阿特斯剥离后的美股公司阿特斯太阳能CSIQ更值得关注",
+          "confidence": 0.9
+        },
+        {
+          "evidence_span_id": "ev_010",
+          "block_id": "cat_lord_2026_03_12_block_07",
+          "char_start": 201,
+          "char_end": 350,
+          "text": "储能在手订单为31亿美元，公司预计26全年储能出货约14GWh-17GWh，同比增长73%~115%",
+          "confidence": 0.95
+        }
+      ],
+      "metadata": {
+        "timestamp": "2026-03-12T16:43:00+08:00",
+        "mentioned_tickers": [
+          "CSIQ"
+        ],
+        "mentioned_entities": [
+          "阿特斯",
+          "阿特斯太阳能",
+          "储能"
+        ],
+        "price_targets": {
+          "target_price_low": 18.0,
+          "target_price_high": 20.0,
+          "currency": "USD"
+        }
+      }
+    },
+    {
+      "block_id": "cat_lord_2026_03_12_block_08",
+      "block_type": "paragraph",
+      "text": "确实，基本到了买不了吃亏，买不了上当的阶段。目前市场对腾讯音乐最大担心也就是利润增长放缓见顶。不过基本目前这个阶段也符合保底的基本面价值了。我觉得埋伏没问题，但是正常看也就是修复空间20%，如果预期更高涨幅，要么后面的业绩超预期，要么是蹭上AI概念（并非不可能），但是这种就属于不太好预判的事件了。",
+      "order": 7,
+      "parent_block_id": null,
+      "page_index": null,
+      "bbox": null,
+      "speaker": "猫大人FIRE",
+      "start_time_sec": null,
+      "end_time_sec": null,
+      "quality_card": {
+        "readability_score": 0.9,
+        "semantic_completeness_score": 0.88,
+        "financial_relevance_score": 0.92,
+        "entity_resolution_score": 0.85,
+        "temporal_resolution_score": 0.7,
+        "evidence_traceability_score": 0.75,
+        "overall_score": 0.83,
+        "gate_status": "pass",
+        "gate_reasons": []
+      },
+      "evidence_spans": [
+        {
+          "evidence_span_id": "ev_011",
+          "block_id": "cat_lord_2026_03_12_block_08",
+          "char_start": 0,
+          "char_end": 80,
+          "text": "基本到了买不了吃亏，买不了上当的阶段",
+          "confidence": 0.88
+        },
+        {
+          "evidence_span_id": "ev_012",
+          "block_id": "cat_lord_2026_03_12_block_08",
+          "char_start": 81,
+          "char_end": 160,
+          "text": "我觉得埋伏没问题，但是正常看也就是修复空间20%",
+          "confidence": 0.85
+        }
+      ],
+      "metadata": {
+        "timestamp": "2026-03-12T19:51:00+08:00",
+        "mentioned_tickers": [
+          "TME"
+        ],
+        "mentioned_entities": [
+          "腾讯音乐"
+        ],
+        "upside_potential": "20%"
+      }
+    }
+  ],
+  "quality_card": {
+    "readability_score": 0.9,
+    "semantic_completeness_score": 0.87,
+    "financial_relevance_score": 0.92,
+    "entity_resolution_score": 0.85,
+    "temporal_resolution_score": 0.78,
+    "evidence_traceability_score": 0.8,
+    "overall_score": 0.85,
+    "gate_status": "pass",
+    "gate_reasons": []
+  },
+  "temporal_anchors": [
+    {
+      "anchor_id": "ta_001",
+      "anchor_type": "published_at",
+      "raw_text": "2026年3月12日",
+      "resolved_time": "2026-03-12T00:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "evidence_span_id": null
+    },
+    {
+      "anchor_id": "ta_002",
+      "anchor_type": "mentioned_at",
+      "raw_text": "Q4",
+      "resolved_time": "2025-10-01T00:00:00+08:00",
+      "confidence": 0.95,
+      "resolution_strategy": "fiscal_period",
+      "evidence_span_id": "ev_001"
+    },
+    {
+      "anchor_id": "ta_003",
+      "anchor_type": "mentioned_at",
+      "raw_text": "2026年1-2月",
+      "resolved_time": "2026-01-01T00:00:00+08:00",
+      "confidence": 0.98,
+      "resolution_strategy": "explicit_date",
+      "evidence_span_id": null
+    }
+  ],
+  "entity_anchors": [
+    {
+      "entity_anchor_id": "ea_001",
+      "entity_type": "stock",
+      "raw_text": "理想汽车",
+      "resolved_name": "理想汽车",
+      "resolved_symbol": "LI",
+      "market": "US",
+      "confidence": 0.95,
+      "metadata": {
+        "mentioned_in_blocks": [
+          "cat_lord_2026_03_12_block_03"
+        ]
+      }
+    },
+    {
+      "entity_anchor_id": "ea_002",
+      "entity_type": "stock",
+      "raw_text": "宝丰能源",
+      "resolved_name": "宝丰能源",
+      "resolved_symbol": "600989",
+      "market": "A",
+      "confidence": 0.95,
+      "metadata": {
+        "mentioned_in_blocks": [
+          "cat_lord_2026_03_12_block_05"
+        ]
+      }
+    },
+    {
+      "entity_anchor_id": "ea_003",
+      "entity_type": "stock",
+      "raw_text": "阿特斯太阳能",
+      "resolved_name": "阿特斯太阳能",
+      "resolved_symbol": "CSIQ",
+      "market": "US",
+      "confidence": 0.92,
+      "metadata": {
+        "mentioned_in_blocks": [
+          "cat_lord_2026_03_12_block_07"
+        ]
+      }
+    },
+    {
+      "entity_anchor_id": "ea_004",
+      "entity_type": "stock",
+      "raw_text": "腾讯音乐",
+      "resolved_name": "腾讯音乐",
+      "resolved_symbol": "TME",
+      "market": "US",
+      "confidence": 0.9,
+      "metadata": {
+        "mentioned_in_blocks": [
+          "cat_lord_2026_03_12_block_08"
+        ]
+      }
+    },
+    {
+      "entity_anchor_id": "ea_005",
+      "entity_type": "sector",
+      "raw_text": "绿电",
+      "resolved_name": "绿电",
+      "resolved_symbol": null,
+      "market": null,
+      "confidence": 0.88,
+      "metadata": {
+        "mentioned_in_blocks": [
+          "cat_lord_2026_03_12_block_06"
+        ]
+      }
+    },
+    {
+      "entity_anchor_id": "ea_006",
+      "entity_type": "sector",
+      "raw_text": "储能",
+      "resolved_name": "储能",
+      "resolved_symbol": null,
+      "market": null,
+      "confidence": 0.9,
+      "metadata": {
+        "mentioned_in_blocks": [
+          "cat_lord_2026_03_12_block_06",
+          "cat_lord_2026_03_12_block_07"
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "source_platform": "feishu",
+    "content_format": "chat_session",
+    "total_segments": 5,
+    "qa_pairs": 3,
+    "total_char_count": 1850,
+    "estimated_reading_time_min": 8
+  }
+}

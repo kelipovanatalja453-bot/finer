@@ -1,0 +1,46 @@
+# Finance Skills Configuration
+# Configure the finance-skills service integration
+
+# Service endpoint
+base_url: "https://finance-skills.himself65.com"
+
+# Environment variable for API key
+api_key_env: "FINANCE_SKILLS_API_KEY"
+
+# Request timeout (seconds)
+timeout: 30.0
+
+# Maximum retry attempts
+max_retries: 3
+
+# Enable/disable the service
+enabled: true
+
+# Cache configuration (TTL in seconds)
+cache:
+  # Market data (quotes, prices) - short TTL
+  market_ttl: 60
+  # Fundamentals (PE, market cap) - medium TTL
+  fundamentals_ttl: 300
+  # Sentiment/News - medium TTL
+  sentiment_ttl: 300
+  # Options flow - short TTL
+  options_ttl: 60
+
+# Feature flags
+features:
+  # Enable market data enrichment
+  market_data: true
+  # Enable price validation
+  price_validation: true
+  # Enable sentiment analysis (P1)
+  sentiment: false
+  # Enable strategy assessment (P2)
+  strategy: false
+
+# Fallback behavior
+fallback:
+  # Return empty data on failure (true) or raise error (false)
+  silent_fail: true
+  # Log warnings on API failures
+  log_failures: true

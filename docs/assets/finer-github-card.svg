@@ -1,0 +1,65 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="28" fill="#0B1020"/>
+  <rect x="32" y="32" width="1136" height="566" rx="24" fill="#111827" stroke="#263244" stroke-width="2"/>
+
+  <g opacity="0.22">
+    <path d="M72 500 C220 410, 330 460, 460 350 S750 190, 890 250 S1050 310, 1128 190" stroke="#38BDF8" stroke-width="5" fill="none"/>
+    <path d="M72 540 C230 455, 360 500, 520 385 S790 260, 930 330 S1050 370, 1128 280" stroke="#22C55E" stroke-width="5" fill="none"/>
+  </g>
+
+  <text x="80" y="128" fill="#F8FAFC" font-family="Inter, Arial, sans-serif" font-size="74" font-weight="800">Finer OS</text>
+  <text x="82" y="178" fill="#93C5FD" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="600">KOL timeline intelligence for structured, auditable investment research</text>
+
+  <g transform="translate(80 240)">
+    <rect x="0" y="0" width="168" height="96" rx="14" fill="#1E293B" stroke="#475569"/>
+    <text x="24" y="38" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Raw Sources</text>
+    <text x="24" y="68" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="14">chat / image / PDF</text>
+
+    <path d="M178 48 H228" stroke="#64748B" stroke-width="3"/>
+    <path d="M220 40 L232 48 L220 56" stroke="#64748B" stroke-width="3" fill="none"/>
+
+    <rect x="242" y="0" width="168" height="96" rx="14" fill="#172554" stroke="#3B82F6"/>
+    <text x="266" y="38" fill="#E0F2FE" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">V0 Blocks</text>
+    <text x="266" y="68" fill="#BAE6FD" font-family="Inter, Arial, sans-serif" font-size="14">quality + evidence</text>
+
+    <path d="M420 48 H470" stroke="#64748B" stroke-width="3"/>
+    <path d="M462 40 L474 48 L462 56" stroke="#64748B" stroke-width="3" fill="none"/>
+
+    <rect x="484" y="0" width="168" height="96" rx="14" fill="#052E16" stroke="#22C55E"/>
+    <text x="508" y="38" fill="#DCFCE7" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">V1 Intent</text>
+    <text x="508" y="68" fill="#BBF7D0" font-family="Inter, Arial, sans-serif" font-size="14">direction + actionability</text>
+
+    <path d="M662 48 H712" stroke="#64748B" stroke-width="3"/>
+    <path d="M704 40 L716 48 L704 56" stroke="#64748B" stroke-width="3" fill="none"/>
+
+    <rect x="726" y="0" width="168" height="96" rx="14" fill="#3B2506" stroke="#F59E0B"/>
+    <text x="750" y="38" fill="#FEF3C7" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Policy</text>
+    <text x="750" y="68" fill="#FDE68A" font-family="Inter, Arial, sans-serif" font-size="14">style + persona</text>
+
+    <path d="M904 48 H954" stroke="#64748B" stroke-width="3"/>
+    <path d="M946 40 L958 48 L946 56" stroke="#64748B" stroke-width="3" fill="none"/>
+
+    <rect x="968" y="0" width="168" height="96" rx="14" fill="#4C0519" stroke="#FB7185"/>
+    <text x="992" y="38" fill="#FFE4E6" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Backtest</text>
+    <text x="992" y="68" fill="#FECDD3" font-family="Inter, Arial, sans-serif" font-size="14">KOL performance</text>
+  </g>
+
+  <g transform="translate(80 402)">
+    <rect x="0" y="0" width="320" height="72" rx="12" fill="#0F172A" stroke="#334155"/>
+    <circle cx="36" cy="36" r="12" fill="#38BDF8"/>
+    <text x="62" y="31" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Multimodal standardization</text>
+    <text x="62" y="52" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="13">images, chats, docs, transcripts</text>
+
+    <rect x="344" y="0" width="320" height="72" rx="12" fill="#0F172A" stroke="#334155"/>
+    <circle cx="380" cy="36" r="12" fill="#22C55E"/>
+    <text x="406" y="31" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Evidence-first intent layer</text>
+    <text x="406" y="52" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="13">trace every conclusion to source spans</text>
+
+    <rect x="688" y="0" width="320" height="72" rx="12" fill="#0F172A" stroke="#334155"/>
+    <circle cx="724" cy="36" r="12" fill="#F59E0B"/>
+    <text x="750" y="31" fill="#E2E8F0" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Backtest-ready KOL evaluation</text>
+    <text x="750" y="52" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="13">timeline views, actions, returns</text>
+  </g>
+
+  <text x="80" y="548" fill="#64748B" font-family="Inter, Arial, sans-serif" font-size="18">From noisy creator posts to structured investment intelligence.</text>
+</svg>

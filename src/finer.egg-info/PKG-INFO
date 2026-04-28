@@ -1,0 +1,124 @@
+Metadata-Version: 2.4
+Name: finer
+Version: 0.1.0
+Summary: Pipeline skeleton for creator-content investment event research
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: fastapi[standard]>=0.111.0
+Requires-Dist: uvicorn>=0.23.0
+Requires-Dist: python-multipart>=0.0.6
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: dashscope>=1.14.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: snownlp>=0.12.3
+Requires-Dist: openai>=1.0.0
+Requires-Dist: instructor>=1.0.0
+Dynamic: license-file
+
+<p align="center">
+  <img src="docs/assets/logo.png" width="200" alt="finer-logo">
+</p>
+
+# Finer: 投资研究自动化系统 | Financial AI Research
+
+> **从非标 KOL 内容到结构化投资事件的端到端自动化流水线。**
+> **An end-to-end automated pipeline transforming non-standard creator content into structured investment events.**
+
+<div align="center">
+
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](pyproject.toml)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-orange.svg)](https://kelipovanatalja453-bot.github.io/finer/)
+[![AI-Ready](https://img.shields.io/badge/AI-Ready-brightgreen.svg)](llms.txt)
+
+[简体中文](README.md) | [English](README_EN.md)
+
+</div>
+
+---
+
+## 📖 目录 | Table of Contents
+- [项目简介 | Introduction](#项目简介--introduction)
+- [核心架构 | Architecture](#核心架构--architecture)
+- [技术栈 | Tech Stack](#技术栈--tech-stack)
+- [快速上手 | Quick Start](#快速上手--quick-start)
+- [贡献指南 | Contributing](#贡献指南--contributing)
+
+---
+
+## 🚀 项目简介 | Introduction
+
+`finer` 旨在构建一个高度自动化的投研数据中台，将社交媒体创作者（KOL）零散、口语化且非标的投资观点（如 B站视频、微信长图、雪球贴、**飞书群文件**等），转化为具备**高度结构化、可回测、可审计**的“投资事件”（Investment Events），并自动同步至 **NotebookLM** 构建个人知识库。
+
+`finer` is designed to build a highly automated investment research data platform that transforms scattered, colloquial, and non-standard investment opinions from social media creators (KOLs)—including Bilibili videos, WeChat images, Xueqiu posts, and **Feishu chat files**—into **highly structured, backtestable, and auditable** "Investment Events," with automatic synchronization to **NotebookLM** for personalized knowledge base building.
+
+<p align="center">
+  <img src="docs/assets/feishu_sync.png" width="600" alt="feishu-sync-pipeline">
+</p>
+
+---
+
+## 🏗️ 核心架构 | Architecture
+
+系统由 6 个解耦的核心模块组成：
+The system consists of 6 decoupled core modules:
+
+```mermaid
+flowchart LR
+  A["模块 1: 数据注入 | Ingestion"] --> B["模块 2: 多模态解析 | Parsing"]
+  B --> C["模块 3: 数据清洗 | Cleaning"]
+  C --> D["模块 4: 模型抽取 | Extraction"]
+  D --> E["模块 5: 人机评审 | Review (RLHF)"]
+  E --> F["模块 6: 自动回测 | Backtesting"]
+```
+
+---
+
+## 🛠️ 技术栈 | Tech Stack
+
+- **核心语言 | Core**: Python 3.11+ (Polars / Pydantic V2)
+- **大模型引擎 | AI**: DashScope (Qwen-VL-Max) / OpenAI
+- **结构约束 | Constraint**: `Instructor`
+- **数据处理 | Data**: `Data-Juicer`
+- **标注评审 | Review**: `Argilla` (SFT & RLHF)
+
+---
+
+## ⚡ 快速上手 | Quick Start
+
+```bash
+# 克隆项目 | Clone
+git clone https://github.com/kelipovanatalja453-bot/finer.git
+cd finer
+
+# 安装 | Install
+pip install -e .
+
+# 配置飞书与 NLM (可选) | Config Feishu & NLM (Optional)
+cp configs/feishu.yaml.example configs/feishu.yaml
+# 编辑 configs/feishu.yaml | Edit configs/feishu.yaml
+
+# 运行同步 | Run Sync
+finer feishu-sync
+```
+
+---
+
+## 📖 详细文档 | Documentation
+欲了解更多功能，请查看我们的文档库：
+For more features, please visit our documentation:
+- [飞书与 NotebookLM 集成指南 | Feishu & NotebookLM Integration](docs/how-to/feishu-integration.md)
+- [系统架构解析 | System Architecture](docs/explanations/system-architecture.md)
+
+---
+
+## 🤝 贡献指南 | Contributing
+
+欢迎通过 Issue 或 Pull Request 提交你的贡献！请参阅 [CONTRIBUTING.md](CONTRIBUTING.md)。
+We welcome contributions via Issues or Pull Requests! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## ⚖️ 许可说明 | License
+
+本项目采用 [MIT License](LICENSE)。
+This project is licensed under the [MIT License](LICENSE).

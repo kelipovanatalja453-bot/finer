@@ -1,0 +1,58 @@
+# ═══════════════════════════════════════════════════════════════
+# Feishu File Management System Configuration (Template)
+# ═══════════════════════════════════════════════════════════════
+
+feishu:
+  # ── Paths ──────────────────────────────────────────────────
+  # Path to lark-cli binary
+  lark_cli_path: "/usr/local/bin/lark-cli"
+  
+  # ── Watched Feishu Chats ────────────────────────────────────
+  watched_chats:
+    - chat_id: "your_chat_id_here"
+      name: "Your Group Name"
+      notebook_id: "your_notebook_id_here"  # Optional: Sync to NotebookLM
+      default_creator: "default_creator_id"
+      
+  # ── Receipt Group (Processing Notifications) ─────────────────
+  receipt_chat_id: "your_receipt_chat_id_here"
+
+  # ── Sync Settings ───────────────────────────────────────────
+  poll_interval_seconds: 300
+  state_file: "data/.feishu_sync_state.json"
+  inbox_dir: "data/inbox"
+
+# ── NotebookLM Settings ────────────────────────────────────
+notebooklm:
+  # Path to nlm binary
+  nlm_cli_path: "/usr/local/bin/nlm"
+  
+  supported_extensions:
+    - ".pdf"
+    - ".txt"
+    - ".md"
+    - ".docx"
+    - ".png"
+    - ".jpg"
+  wait_for_processing: true
+
+# ── AI Assisted Classification ─────────────────────────────
+classification:
+  ai_enabled: true
+  ai_model: "gemini"  # requires 'gemini' CLI or similar
+  
+  # ── Rule-based Classification (higher priority) ───────────
+  rules:
+    - name: "example_rule_1"
+      pattern: "(?i)keyword_1|keyword_2"
+      creator_id: "example_creator"
+      content_type: "example_type"
+      
+    - name: "research_reports"
+      pattern: "(?i)research|report|analysis"
+      creator_id: "_research"
+      content_type: "research_report"
+  
+  default:
+    creator_id: "_inbox"
+    content_type: "unclassified"

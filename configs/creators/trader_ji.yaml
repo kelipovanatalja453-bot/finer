@@ -1,0 +1,25 @@
+creator_id: trader_ji
+display_name: trader韭
+platforms:
+  - bilibili
+  - image_upload
+content_types:
+  - weekly_strategy
+  - daily_pre
+  - daily_post
+  - bilibili_video
+  - livestream
+markets:
+  - US
+  - HK
+  - A
+focus:
+  - sector
+  - theme
+default_horizons:
+  - daily
+  - weekly
+  - swing
+notes:
+  - prioritize sector- and theme-level events over single-stock views
+  - map views to ETF or index proxies before stock-level proxies

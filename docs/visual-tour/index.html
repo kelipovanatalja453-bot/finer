@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finer OS - 交互式项目导览</title>
+    <style>
+        :root {
+            --primary: #C41E3A;
+            --secondary: #2D3748;
+            --accent: #38A169;
+            --bg: #FFFCF7;
+            --code-bg: #1A202C;
+            --text: #2D3748;
+            --muted: #718096;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #8B0000 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Navigation */
+        .nav {
+            position: sticky;
+            top: 0;
+            background: white;
+            border-bottom: 2px solid #E2E8F0;
+            padding: 15px 0;
+            z-index: 100;
+        }
+
+        .nav-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .nav a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .nav a:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Section */
+        .section {
+            max-width: 1200px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            color: var(--primary);
+        }
+
+        /* Flow Animation */
+        .flow-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin: 40px 0;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .flow-node {
+            background: linear-gradient(135deg, var(--primary) 0%, #8B0000 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 120px;
+            animation: pulse 2s infinite;
+        }
+
+        .flow-node:nth-child(odd) {
+            animation-delay: 0.5s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: var(--primary);
+            animation: moveArrow 1s infinite;
+        }
+
+        @keyframes moveArrow {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(10px); }
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--code-bg);
+            color: #E2E8F0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .code-block .keyword { color: #F472B6; }
+        .code-block .string { color: #A5D6A7; }
+        .code-block .number { color: #90CAF9; }
+        .code-block .comment { color: #78909C; }
+
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        /* Screenshot Placeholder */
+        .screenshot {
+            background: linear-gradient(135deg, #E2E8F0 0%, #CBD5E0 100%);
+            border-radius: 12px;
+            padding: 60px;
+            text-align: center;
+            margin: 30px 0;
+            border: 3px dashed var(--muted);
+        }
+
+        .screenshot-label {
+            font-size: 1.2rem;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        /* Quiz */
+        .quiz {
+            background: #EBF8FF;
+            border-left: 4px solid #3182CE;
+            padding: 30px;
+            border-radius: 0 12px 12px 0;
+            margin: 30px 0;
+        }
+
+        .quiz-question {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quiz-option {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .quiz-option:hover {
+            border-color: var(--primary);
+        }
+
+        .quiz-option.correct {
+            background: #C6F6D5;
+            border-color: var(--accent);
+        }
+
+        /* Glossary */
+        .glossary-term {
+            border-bottom: 2px dotted var(--primary);
+            cursor: help;
+        }
+
+        .glossary-tooltip {
+            display: none;
+            position: absolute;
+            background: var(--secondary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 300px;
+            z-index: 1000;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--secondary);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            margin-top: 80px;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .section-title { font-size: 1.8rem; }
+            .flow-diagram { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <section class="hero">
+        <h1>📊 Finer OS</h1>
+        <p>AI 驱动的金融智能平台<br>从 KOL 观点到可执行交易策略的完整流水线</p>
+    </section>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="#overview">概览</a>
+            <a href="#pipeline">流水线</a>
+            <a href="#features">核心功能</a>
+            <a href="#rlhf">RLHF 评价</a>
+            <a href="#kol">KOL 评级</a>
+            <a href="#api">API</a>
+        </div>
+    </nav>
+
+    <!-- Overview -->
+    <section class="section" id="overview">
+        <h2 class="section-title">🎯 项目概览</h2>
+
+        <div class="flow-container">
+            <p style="font-size: 1.2rem; margin-bottom: 30px;">
+                <strong>你点击"同步飞书"按钮后发生了什么？</strong>
+            </p>
+
+            <div class="flow-diagram">
+                <div class="flow-node">
+                    <strong>L0</strong><br>接入台
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-node">
+                    <strong>L1</strong><br>富化台
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-node">
+                    <strong>L3</strong><br>解析台
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-node">
+                    <strong>L5</strong><br>抽取台
+                </div>
+                <span class="flow-arrow">→</span>
+                <div class="flow-node">
+                    <strong>L6</strong><br>复核台
+                </div>
+            </div>
+
+            <p style="margin-top: 30px; color: var(--muted);">
+                每一层都是一个独立的处理阶段，数据从左向右流动，逐步从原始素材转化为结构化的交易观点。
+            </p>
+        </div>
+
+        <!-- Screenshot Placeholder -->
+        <div class="screenshot">
+            <div class="screenshot-label">📸 Dashboard 主界面截图</div>
+            <p style="margin-top: 10px; color: var(--muted);">显示六层流水线的工作流视图</p>
+        </div>
+    </section>
+
+    <!-- Pipeline -->
+    <section class="section" id="pipeline">
+        <h2 class="section-title">🔄 六层流水线详解</h2>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📥</div>
+                <h3 class="feature-title">L0 接入台</h3>
+                <p>接收来自飞书、微信公众号、B站等多源的原始素材，自动分类归档。</p>
+                <div class="code-block">
+<span class="comment"># 支持的数据源</span>
+sources = [
+    <span class="string">"feishu"</span>,      <span class="comment"># 飞书群消息</span>
+    <span class="string">"wechat"</span>,     <span class="comment"># 微信公众号</span>
+    <span class="string">"bilibili"</span>,   <span class="comment"># B站视频转录</span>
+    <span class="string">"notebooklm"</span>, <span class="comment"># NotebookLM 同步</span>
+]
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🏷️</div>
+                <h3 class="feature-title">L1 富化台</h3>
+                <p>话题拆分、实体抽取、内容关联，构建结构化知识图谱。</p>
+                <div class="code-block">
+<span class="comment"># 富化输出示例</span>
+{
+    <span class="string">"entities"</span>: [<span class="string">"腾讯"</span>, <span class="string">"美团"</span>],
+    <span class="string">"topics"</span>: [<span class="string">"港股"</span>, <span class="string">"科技股"</span>],
+    <span class="string">"sentiment"</span>: <span class="string">"bullish"</span>
+}
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3 class="feature-title">L3 解析台</h3>
+                <p>OCR 文字识别、视觉转录、音频转文字，提取结构化内容。</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">L5 抽取台</h3>
+                <p>GLM-5.1 提取 TradeAction，包含标的、方向、操作链、置信度。</p>
+                <div class="code-block">
+<span class="comment"># TradeAction 输出</span>
+{
+    <span class="string">"ticker"</span>: <span class="string">"0700.HK"</span>,
+    <span class="string">"direction"</span>: <span class="string">"bullish"</span>,
+    <span class="string">"action_chain"</span>: [
+        {<span class="string">"action"</span>: <span class="string">"watch"</span>, <span class="string">"at"</span>: <span class="number">480</span>},
+        {<span class="string">"action"</span>: <span class="string">"long"</span>, <span class="string">"on"</span>: <span class="string">"breakout"</span>}
+    ]
+}
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">✅</div>
+                <h3 class="feature-title">L6 复核台</h3>
+                <p>RLHF 人工评价，收集反馈数据用于模型微调。</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📈</div>
+                <h3 class="feature-title">L8 回测台</h3>
+                <p>验证观点准确性，计算 KOL 评级，生成回测报告。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="section" id="features">
+        <h2 class="section-title">✨ 核心功能</h2>
+
+        <div class="feature-card" style="margin: 20px 0;">
+            <div class="feature-icon">🔌</div>
+            <h3 class="feature-title">多源数据导入</h3>
+            <p>支持飞书群消息、微信公众号文章、B站视频转录等多种数据源，统一接入 L0 层处理。</p>
+
+            <div class="screenshot">
+                <div class="screenshot-label">📸 数据源配置界面截图</div>
+            </div>
+        </div>
+
+        <div class="feature-card" style="margin: 20px 0;">
+            <div class="feature-icon">🤖</div>
+            <h3 class="feature-title">智能 Trade Action 提取</h3>
+            <p>使用 GLM-5.1 + Finance-Skills 混合策略，从非结构化文本提取结构化交易观点。</p>
+
+            <div class="code-block">
+<span class="comment"># 输入：KOL 观点文本</span>
+text = <span class="string">"腾讯日线支撑480，破了就止损，突破看520"</span>
+
+<span class="comment"># 输出：结构化 TradeAction</span>
+{
+    <span class="string">"ticker"</span>: <span class="string">"0700.HK"</span>,
+    <span class="string">"direction"</span>: <span class="string">"bullish"</span>,
+    <span class="string">"confidence"</span>: <span class="number">0.85</span>,
+    <span class="string">"action_chain"</span>: [
+        {<span class="string">"seq"</span>: <span class="number">1</span>, <span class="string">"action"</span>: <span class="string">"watch"</span>, <span class="string">"trigger"</span>: <span class="string">"price <= 480"</span>},
+        {<span class="string">"seq"</span>: <span class="number">2</span>, <span class="string">"action"</span>: <span class="string">"long"</span>, <span class="string">"trigger"</span>: <span class="string">"breakout > 500"</span>},
+        {<span class="string">"seq"</span>: <span class="number">3</span>, <span class="string">"action"</span>: <span class="string">"stop_loss"</span>, <span class="string">"trigger"</span>: <span class="string">"price < 480"</span>}
+    ]
+}
+            </div>
+        </div>
+    </section>
+
+    <!-- RLHF -->
+    <section class="section" id="rlhf">
+        <h2 class="section-title">👥 RLHF 评价系统</h2>
+
+        <div class="feature-card">
+            <p style="font-size: 1.1rem; margin-bottom: 20px;">
+                <strong>为什么需要人工评价？</strong><br>
+                模型可能错误识别标的、方向判断失误、操作链逻辑混乱。人工反馈用于：
+            </p>
+            <ul style="margin-left: 20px; margin-bottom: 20px;">
+                <li>修正模型错误输出</li>
+                <li>收集 DPO 训练数据</li>
+                <li>持续提升模型准确率</li>
+            </ul>
+
+            <div class="screenshot">
+                <div class="screenshot-label">📸 RLHF 评价面板截图</div>
+                <p style="margin-top: 10px; color: var(--muted);">中文界面，支持键盘快捷操作</p>
+            </div>
+        </div>
+
+        <!-- Quiz -->
+        <div class="quiz">
+            <div class="quiz-question">🤔 小测验：以下哪个是 DPO 的核心优势？div>
+            <div class="quiz-options">
+                <div class="quiz-option" onclick="this.classList.toggle('correct')">
+                    A. 不需要训练奖励模型，直接优化策略
+                </div>
+                <div class="quiz-option" onclick="this.classList.toggle('correct')">
+                    B. 只需要成对偏好数据，无需绝对评分
+                </div>
+                <div class="quiz-option" onclick="this.classList.toggle('correct')">
+                    C. 训练稳定，不易发散
+                </div>
+                <div class="quiz-option" onclick="this.classList.toggle('correct')">
+                    D. 以上都是
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- KOL Rating -->
+    <section class="section" id="kol">
+        <h2 class="section-title">🏆 KOL 评价体系</h2>
+
+        <div class="feature-card">
+            <p style="font-size: 1.1rem; margin-bottom: 20px;">
+                参考<span class="glossary-term">晨星网</span>基金经理评价体系，为 KOL 建立多维度评分：
+            </p>
+
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                <tr style="background: #F7FAFC;">
+                    <th style="padding: 12px; text-align: left;">维度</th>
+                    <th style="padding: 12px; text-align: center;">权重</th>
+                    <th style="padding: 12px; text-align: left;">说明</th>
+                </tr>
+                <tr>
+                    <td style="padding: 12px;">观点准确率</td>
+                    <td style="padding: 12px; text-align: center;">35%</td>
+                    <td style="padding: 12px;">看多/看空/中性各自的准确率</td>
+                </tr>
+                <tr style="background: #F7FAFC;">
+                    <td style="padding: 12px;">止损质量</td>
+                    <td style="padding: 12px; text-align: center;">25%</td>
+                    <td style="padding: 12px;">止损建议的及时性和合理性</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px;">一致性</td>
+                    <td style="padding: 12px; text-align: center;">20%</td>
+                    <td style="padding: 12px;">观点逻辑连贯性</td>
+                </tr>
+                <tr style="background: #F7FAFC;">
+                    <td style="padding: 12px;">市场敏感度</td>
+                    <td style="padding: 12px; text-align: center;">10%</td>
+                    <td style="padding: 12px;">观点领先性</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px;">风险提示</td>
+                    <td style="padding: 12px; text-align: center;">10%</td>
+                    <td style="padding: 12px;">风险提示频率和覆盖</td>
+                </tr>
+            </table>
+
+            <div class="screenshot">
+                <div class="screenshot-label">📸 KOL 评价卡片截图</div>
+                <p style="margin-top: 10px; color: var(--muted);">金/银/铜奖章，维度仪表盘，业绩时间线</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- API -->
+    <section class="section" id="api">
+        <h2 class="section-title">🔌 API 端点</h2>
+
+        <div class="code-block">
+<span class="comment"># 核心 API 端点</span>
+
+<span class="comment"># 文件管理</span>
+GET  /api/files              <span class="comment"># 获取文件列表</span>
+GET  /api/files/{id}         <span class="comment"># 获取文件详情</span>
+
+<span class="comment"># RLHF 评价</span>
+GET  /api/rlhf/pending       <span class="comment"># 获取待评价列表</span>
+POST /api/rlhf/submit        <span class="comment"># 提交评价反馈</span>
+GET  /api/rlhf/export        <span class="comment"># 导出 DPO 训练数据</span>
+
+<span class="comment"># KOL 评级</span>
+GET  /api/kol/rating/{id}    <span class="comment"># 获取 KOL 评分</span>
+GET  /api/kol/opinions/{id}  <span class="comment"># 获取 KOL 观点列表</span>
+GET  /api/kol/top            <span class="comment"># 获取排行榜</span>
+
+<span class="comment"># 数据源</span>
+POST /api/wechat/login       <span class="comment"># 微信扫码登录</span>
+POST /api/bilibili/transcribe <span class="comment"># B站视频转录</span>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Finer OS - AI 驱动的金融智能平台</p>
+        <p style="margin-top: 10px;">
+            <a href="https://github.com/zhouhongyuan/finer">GitHub</a> ·
+            <a href="./API_REFERENCE.md">API 文档</a> ·
+            <a href="./ARCHITECTURE.md">架构文档</a>
+        </p>
+    </footer>
+
+    <script>
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Glossary tooltip
+        document.querySelectorAll('.glossary-term').forEach(term => {
+            term.addEventListener('mouseenter', function(e) {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'glossary-tooltip';
+                tooltip.textContent = this.dataset.definition || '晨星网是全球知名的基金评级机构，以其五星评级系统著称。';
+                tooltip.style.display = 'block';
+                tooltip.style.left = e.pageX + 'px';
+                tooltip.style.top = (e.pageY + 20) + 'px';
+                document.body.appendChild(tooltip);
+            });
+
+            term.addEventListener('mouseleave', function() {
+                document.querySelectorAll('.glossary-tooltip').forEach(t => t.remove());
+            });
+        });
+    </script>
+</body>
+</html>

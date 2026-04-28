@@ -1,0 +1,87 @@
+# Security Configuration Template
+# Copy this file to security.yaml and customize for your environment
+
+# CORS Configuration
+# Comma-separated list of allowed origins
+# For production, specify exact domains (no wildcards)
+cors:
+  allowed_origins:
+    - "https://your-domain.com"
+    - "https://api.your-domain.com"
+  # For development:
+  # allowed_origins:
+  #   - "http://localhost:3000"
+  #   - "http://127.0.0.1:3000"
+
+# Authentication
+# Configure via environment variables (recommended) or this file
+auth:
+  # Enable authentication (set via AUTH_ENABLED env var)
+  enabled: false
+
+  # Whitelist paths that don't require authentication
+  whitelist:
+    - "/api/health"
+    - "/api/docs"
+    - "/openapi.json"
+    - "/docs"
+    - "/redoc"
+
+  # Sensitive operations requiring additional verification
+  sensitive_paths:
+    - "/api/files/delete"
+    - "/api/wechat/accounts"  # DELETE operations
+    - "/api/backtest"
+
+# Token Management
+tokens:
+  # Token expiration in days
+  expire_days: 30
+
+  # Enable encryption for stored tokens
+  encryption_enabled: true
+
+# Rate Limiting (future)
+# rate_limiting:
+#   enabled: true
+#   requests_per_minute: 60
+#   burst: 10
+
+---
+# Environment Variables Reference
+
+# Enable authentication (required for production)
+# AUTH_ENABLED=true
+
+# API Key for simple authentication
+# API_KEY=your-secure-api-key-here
+
+# JWT Secret for token-based authentication
+# JWT_SECRET=your-jwt-secret-here
+
+# Encryption key for token storage (recommended for production)
+# Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# FINER_ENCRYPTION_KEY=your-fernet-key-here
+
+# CORS allowed origins (comma-separated)
+# ALLOWED_ORIGINS=https://your-domain.com,https://api.your-domain.com
+
+---
+# Quick Start Guide
+
+# 1. Generate API Key:
+#    python -c "from finer.api.middleware import generate_api_key; print(generate_api_key())"
+
+# 2. Generate Encryption Key:
+#    python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+# 3. Set environment variables:
+#    export AUTH_ENABLED=true
+#    export API_KEY=your-generated-api-key
+#    export FINER_ENCRYPTION_KEY=your-generated-encryption-key
+
+# 4. Test authentication:
+#    curl -H "X-API-Key: your-api-key" http://localhost:8000/api/health
+
+# 5. For production, also set:
+#    export ALLOWED_ORIGINS=https://your-production-domain.com

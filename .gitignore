@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Environment / Secret
+.env
+auth_token.txt
+
+# Local Data (Heavy or Private)
+data/
+reports/
+.claude/
+trader韭菜*/
+*.json
+!pyproject.toml
+
+# Local throwaway scripts
+run_intent_tests.sh
+run_tests.py
+run_tests.sh
+test_core.py
+test_regex.py
+validate_standardizer.py
+
+# OS
+.DS_Store
+Thumbs.db
+*.pdf
+*.xlsx
+*.docx
+*.pptx
+
+# Logs
+logs/
+*.log
+configs/feishu.yaml
+
+# Local/source screenshots not for public release
+src/*.png
+src/finer_dashboard/*.png
+src/finer_dashboard/*.txt

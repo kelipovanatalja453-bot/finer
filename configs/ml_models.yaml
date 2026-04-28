@@ -1,0 +1,119 @@
+# ML Models Configuration
+# This file configures all ML models used in Finer OS.
+
+# Sentiment Analysis Models
+sentiment:
+  # Primary: FinBERT (financial domain-specific BERT)
+  primary:
+    model: "finbert"
+    model_id: "ProsusAI/finbert"
+    provider: "huggingface"
+    max_input_length: 512
+    batch_size: 32
+    requires_gpu: false
+
+  # Fallback: Rule-based (always available)
+  fallback:
+    model: "rule_based"
+    model_id: "finer/sentiment_rules"
+    provider: "local"
+
+# Trade Action Extraction Models
+extraction:
+  primary:
+    model: "qwen-max"
+    model_id: "qwen-max"
+    provider: "dashscope"
+    use_instructor: true
+    response_model: "TradeAction"
+    max_input_length: 8192
+    temperature: 0.0
+
+  fallback:
+    model: "glm-5.1"
+    model_id: "glm-5.1"
+    provider: "svips"
+    max_input_length: 8192
+    temperature: 0.0
+
+# Entity Recognition Models
+entity:
+  primary:
+    model: "rule_based"
+    model_id: "finer/entity_rules"
+    provider: "local"
+
+  # Future: NER model
+  # fallback:
+  #   model: "bert-base-chinese-ner"
+  #   model_id: "uer/roberta-base-finetuned-jd-binary-chinese"
+  #   provider: "huggingface"
+
+# KOL Scoring Configuration
+kol_scorer:
+  # V2 weights (task-specified)
+  v2_weights:
+    accuracy: 0.30
+    timeliness: 0.20
+    return_score: 0.30
+    consistency: 0.20
+
+  # Legacy weights (5 dimensions)
+  weights:
+    accuracy: 0.30
+    timeliness: 0.15
+    return: 0.30
+    consistency: 0.15
+    depth: 0.10
+
+  # Decay parameters
+  decay_days: 90          # Half-life for recency decay
+  min_sample_size: 5     # Minimum trades for reliable score
+
+  # Accuracy parameters
+  accuracy_threshold_pct: 0.05    # 5% threshold for "correct" prediction
+  accuracy_direction_only: false   # Consider magnitude, not just direction
+
+  # Timeliness parameters
+  timeliness_ideal_days: 5
+  timeliness_max_days: 30
+
+  # Return parameters
+  return_benchmark: 0.0           # Benchmark return (e.g., S&P 500)
+  return_risk_adjusted: true       # Use risk-adjusted returns
+
+  # Consistency parameters
+  consistency_window_trades: 10   # Rolling window
+
+# Backtest Configuration
+backtest:
+  default:
+    initial_capital: 100000
+    position_size_pct: 0.10       # 10% per trade
+    max_position_pct: 0.25        # Max 25% in single asset
+    commission_pct: 0.001         # 0.1% commission
+    slippage_pct: 0.0005          # 0.05% slippage
+    stop_loss_pct: 0.10           # 10% stop loss
+    take_profit_pct: 0.20         # 20% take profit
+    max_holding_days: 30
+    allow_short_selling: true
+
+# DPO Training Configuration
+dpo:
+  beta: 0.01                     # KL penalty coefficient
+  loss_type: "sigmoid"
+  learning_rate: 0.0000005        # 5e-7
+  num_train_epochs: 1
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 4
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  model_name_or_path: "Qwen/Qwen2.5-14B-Instruct"
+  use_peft: true
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  min_rating: 3
+  max_prompt_length: 2048
+  max_response_length: 1024

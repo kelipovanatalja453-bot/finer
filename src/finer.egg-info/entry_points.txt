@@ -1,0 +1,2 @@
+[console_scripts]
+finer = finer.cli:main

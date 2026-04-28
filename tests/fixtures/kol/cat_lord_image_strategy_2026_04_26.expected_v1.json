@@ -1,0 +1,277 @@
+{
+  "intents": [
+    {
+      "intent_id": "img_intent_001",
+      "schema_version": "1.0",
+      "envelope_id": "cat_lord_image_strategy_2026_04_26",
+      "block_ids": ["img_block_02", "img_block_04"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "index",
+      "target_name": "上证指数",
+      "target_symbol": null,
+      "market": "CN",
+      "direction": "neutral",
+      "actionability": "opinion",
+      "position_delta_hint": "none",
+      "conviction": 0.60,
+      "sentiment_score": 0.0,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "short_term",
+      "temporal_anchor_ids": ["img_ta_001"],
+      "evidence_span_ids": ["img_ev_001", "img_ev_002"],
+      "ambiguity_flags": [],
+      "confidence": 0.75,
+      "metadata": {
+        "support_level": 3100,
+        "resistance_level": 3300,
+        "current_position": "near_support"
+      }
+    },
+    {
+      "intent_id": "img_intent_002",
+      "schema_version": "1.0",
+      "envelope_id": "cat_lord_image_strategy_2026_04_26",
+      "block_ids": ["img_block_06"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "sector",
+      "target_name": "储能",
+      "target_symbol": null,
+      "market": null,
+      "direction": "bullish",
+      "actionability": "opinion",
+      "position_delta_hint": "none",
+      "conviction": 0.70,
+      "sentiment_score": 0.55,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "long_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["img_ev_003", "img_ev_004"],
+      "ambiguity_flags": [],
+      "confidence": 0.80,
+      "metadata": {
+        "thesis": "受益于算电协同需求",
+        "key_driver": "绿电成本优势"
+      }
+    },
+    {
+      "intent_id": "img_intent_003",
+      "schema_version": "1.0",
+      "envelope_id": "cat_lord_image_strategy_2026_04_26",
+      "block_ids": ["img_block_10"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "stock",
+      "target_name": "理想汽车",
+      "target_symbol": "LI",
+      "market": "US",
+      "direction": "bearish",
+      "actionability": "opinion",
+      "position_delta_hint": "none",
+      "conviction": 0.75,
+      "sentiment_score": -0.65,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "short_term",
+      "temporal_anchor_ids": ["img_ta_002"],
+      "evidence_span_ids": ["img_ev_006"],
+      "ambiguity_flags": [],
+      "confidence": 0.85,
+      "metadata": {
+        "key_points": [
+          "Q4单车均价下降10.2%",
+          "毛利率承压",
+          "投资价值弱于其他新能源车企"
+        ]
+      }
+    },
+    {
+      "intent_id": "img_intent_004",
+      "schema_version": "1.0",
+      "envelope_id": "cat_lord_image_strategy_2026_04_26",
+      "block_ids": ["img_block_11"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "stock",
+      "target_name": "宝丰能源",
+      "target_symbol": "600989",
+      "market": "A",
+      "direction": "bullish",
+      "actionability": "watch",
+      "position_delta_hint": "none",
+      "conviction": 0.70,
+      "sentiment_score": 0.50,
+      "risk_preference_hint": "conservative",
+      "time_horizon_hint": "medium_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["img_ev_007"],
+      "ambiguity_flags": [
+        "wait_for_entry_below_27",
+        "海峡封锁_risk"
+      ],
+      "confidence": 0.82,
+      "metadata": {
+        "price_target_range": {
+          "low": 27.5,
+          "high": 27.8,
+          "currency": "CNY"
+        },
+        "entry_condition": "price_below_27"
+      }
+    },
+    {
+      "intent_id": "img_intent_005",
+      "schema_version": "1.0",
+      "envelope_id": "cat_lord_image_strategy_2026_04_26",
+      "block_ids": ["img_block_12", "img_block_13"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "stock",
+      "target_name": "阿特斯太阳能",
+      "target_symbol": "CSIQ",
+      "market": "US",
+      "direction": "bullish",
+      "actionability": "explicit_action",
+      "position_delta_hint": "open",
+      "conviction": 0.80,
+      "sentiment_score": 0.75,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "medium_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["img_ev_008"],
+      "ambiguity_flags": [],
+      "confidence": 0.88,
+      "metadata": {
+        "price_target_range": {
+          "low": 18.0,
+          "high": 20.0,
+          "currency": "USD"
+        },
+        "entry_price_max": 15.0,
+        "order_backlog": "31亿美元",
+        "shipment_growth": "73%~115%"
+      }
+    },
+    {
+      "intent_id": "img_intent_006",
+      "schema_version": "1.0",
+      "envelope_id": "cat_lord_image_strategy_2026_04_26",
+      "block_ids": ["img_block_14"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "stock",
+      "target_name": "腾讯音乐",
+      "target_symbol": "TME",
+      "market": "US",
+      "direction": "bullish",
+      "actionability": "watch",
+      "position_delta_hint": "open",
+      "conviction": 0.65,
+      "sentiment_score": 0.50,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "medium_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["img_ev_009"],
+      "ambiguity_flags": [
+        "limited_upside_20%",
+        "catalyst_dependency"
+      ],
+      "confidence": 0.75,
+      "metadata": {
+        "upside_potential": "20%",
+        "key_risks": ["利润增长放缓见顶"]
+      }
+    },
+    {
+      "intent_id": "img_intent_007",
+      "schema_version": "1.0",
+      "envelope_id": "cat_lord_image_strategy_2026_04_26",
+      "block_ids": ["img_block_17"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "macro",
+      "target_name": "市场风险",
+      "target_symbol": null,
+      "market": null,
+      "direction": "unknown",
+      "actionability": "review_required",
+      "position_delta_hint": "none",
+      "conviction": 0.50,
+      "sentiment_score": null,
+      "risk_preference_hint": "unknown",
+      "time_horizon_hint": "unknown",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["img_ev_010"],
+      "ambiguity_flags": [
+        "general_risk_warning",
+        "no_specific_target"
+      ],
+      "confidence": 0.60,
+      "metadata": {
+        "risk_types": [
+          "市场情绪波动",
+          "外部政策不确定性",
+          "个股业绩不及预期",
+          "估值透支风险"
+        ]
+      }
+    },
+    {
+      "intent_id": "img_intent_008",
+      "schema_version": "1.0",
+      "envelope_id": "cat_lord_image_strategy_2026_04_26",
+      "block_ids": ["img_block_03", "img_block_07"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "unknown",
+      "target_name": "图表证据",
+      "target_symbol": null,
+      "market": null,
+      "direction": "unknown",
+      "actionability": "review_required",
+      "position_delta_hint": "none",
+      "conviction": 0.30,
+      "sentiment_score": null,
+      "risk_preference_hint": "unknown",
+      "time_horizon_hint": "unknown",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": [],
+      "ambiguity_flags": [
+        "chart_region_not_parsed",
+        "table_region_not_parsed",
+        "requires_visual_analysis"
+      ],
+      "confidence": 0.40,
+      "metadata": {
+        "block_types": ["table_region", "chart_region"],
+        "note": "图表/表格区域需要人工审核或视觉分析"
+      }
+    }
+  ],
+  "extraction_metadata": {
+    "schema_version": "1.0",
+    "extracted_at": "2026-04-28T00:00:00+08:00",
+    "extractor_version": "fixture_v1_image",
+    "total_intents": 8,
+    "intents_by_type": {
+      "stock": 4,
+      "sector": 1,
+      "index": 1,
+      "macro": 1,
+      "unknown": 1
+    },
+    "intents_by_direction": {
+      "bullish": 4,
+      "bearish": 1,
+      "neutral": 1,
+      "unknown": 2
+    },
+    "intents_by_actionability": {
+      "opinion": 3,
+      "watch": 2,
+      "explicit_action": 1,
+      "review_required": 2
+    },
+    "coverage": {
+      "individual_stocks": ["LI", "600989", "CSIQ", "TME"],
+      "sectors": ["储能"],
+      "indices": ["上证指数"],
+      "has_risk_warnings": true,
+      "has_chart_table_evidence": true,
+      "has_ocr_unreadable": true
+    },
+    "no_position_percentage": true
+  }
+}

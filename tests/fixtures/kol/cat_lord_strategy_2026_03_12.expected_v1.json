@@ -1,0 +1,219 @@
+{
+  "intents": [
+    {
+      "intent_id": "intent_001",
+      "schema_version": "v1.0",
+      "envelope_id": "cat_lord_2026_03_12_feishu_doc",
+      "block_ids": ["cat_lord_2026_03_12_block_03"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "stock",
+      "target_name": "理想汽车",
+      "target_symbol": "LI",
+      "market": "US",
+      "direction": "bearish",
+      "actionability": "opinion",
+      "position_delta_hint": "none",
+      "conviction": 0.75,
+      "sentiment_score": -0.65,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "short_term",
+      "temporal_anchor_ids": ["ta_002", "ta_003"],
+      "evidence_span_ids": ["ev_001", "ev_002"],
+      "ambiguity_flags": [],
+      "confidence": 0.85,
+      "metadata": {
+        "key_points": [
+          "Q4单车均价下降10.2%",
+          "毛利率预计继续下降",
+          "投资价值弱于其他新能源车企"
+        ],
+        "mentioned_period": "Q4 2025"
+      }
+    },
+    {
+      "intent_id": "intent_002",
+      "schema_version": "v1.0",
+      "envelope_id": "cat_lord_2026_03_12_feishu_doc",
+      "block_ids": ["cat_lord_2026_03_12_block_05"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "stock",
+      "target_name": "宝丰能源",
+      "target_symbol": "600989",
+      "market": "A",
+      "direction": "bullish",
+      "actionability": "watch",
+      "position_delta_hint": "none",
+      "conviction": 0.70,
+      "sentiment_score": 0.55,
+      "risk_preference_hint": "conservative",
+      "time_horizon_hint": "medium_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["ev_003", "ev_004", "ev_005"],
+      "ambiguity_flags": [
+        "target_price_below_current",
+        "wait_for_better_entry"
+      ],
+      "confidence": 0.82,
+      "metadata": {
+        "price_target_range": {
+          "low": 27.5,
+          "high": 27.8,
+          "currency": "CNY"
+        },
+        "profit_forecast": {
+          "low": 144,
+          "high": 151,
+          "unit": "billion_CNY"
+        },
+        "entry_condition": "price_below_27",
+        "key_risks": ["海峡封锁风险", "期货价格回落"]
+      }
+    },
+    {
+      "intent_id": "intent_003",
+      "schema_version": "v1.0",
+      "envelope_id": "cat_lord_2026_03_12_feishu_doc",
+      "block_ids": ["cat_lord_2026_03_12_block_06"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "sector",
+      "target_name": "绿电",
+      "target_symbol": null,
+      "market": null,
+      "direction": "bullish",
+      "actionability": "opinion",
+      "position_delta_hint": "exit",
+      "conviction": 0.65,
+      "sentiment_score": 0.50,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "short_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["ev_006", "ev_007"],
+      "ambiguity_flags": ["overvalued_warning"],
+      "confidence": 0.78,
+      "metadata": {
+        "theme": "算电协同",
+        "thesis": "绿电成本优势获取token成本优势",
+        "risk_warning": "涨多了该卖就卖，短期上涨透支业绩",
+        "valuation_warning": "透支2年业绩上限"
+      }
+    },
+    {
+      "intent_id": "intent_004",
+      "schema_version": "v1.0",
+      "envelope_id": "cat_lord_2026_03_12_feishu_doc",
+      "block_ids": ["cat_lord_2026_03_12_block_07"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "stock",
+      "target_name": "阿特斯太阳能",
+      "target_symbol": "CSIQ",
+      "market": "US",
+      "direction": "bullish",
+      "actionability": "explicit_action",
+      "position_delta_hint": "open",
+      "conviction": 0.80,
+      "sentiment_score": 0.75,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "medium_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["ev_008", "ev_009", "ev_010"],
+      "ambiguity_flags": [],
+      "confidence": 0.88,
+      "metadata": {
+        "price_target_range": {
+          "low": 18.0,
+          "high": 20.0,
+          "currency": "USD"
+        },
+        "entry_price_max": 15.0,
+        "thesis": "储能在手订单充沛，2026大概率扭亏为盈",
+        "key_data": {
+          "order_backlog": "31亿美元",
+          "shipment_growth": "73%~115%",
+          "pe_range": "8-12倍"
+        }
+      }
+    },
+    {
+      "intent_id": "intent_005",
+      "schema_version": "v1.0",
+      "envelope_id": "cat_lord_2026_03_12_feishu_doc",
+      "block_ids": ["cat_lord_2026_03_12_block_08"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "stock",
+      "target_name": "腾讯音乐",
+      "target_symbol": "TME",
+      "market": "US",
+      "direction": "bullish",
+      "actionability": "watch",
+      "position_delta_hint": "open",
+      "conviction": 0.65,
+      "sentiment_score": 0.50,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "medium_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["ev_011", "ev_012"],
+      "ambiguity_flags": [
+        "limited_upside_without_catalyst",
+        "catalyst_dependency"
+      ],
+      "confidence": 0.75,
+      "metadata": {
+        "thesis": "底部价值支撑，但修复空间有限",
+        "upside_potential": "20%",
+        "key_risks": ["利润增长放缓见顶"],
+        "potential_catalysts": ["业绩超预期", "AI概念"]
+      }
+    },
+    {
+      "intent_id": "intent_006",
+      "schema_version": "v1.0",
+      "envelope_id": "cat_lord_2026_03_12_feishu_doc",
+      "block_ids": ["cat_lord_2026_03_12_block_06"],
+      "creator_id": "cat_lord_fire",
+      "target_type": "sector",
+      "target_name": "储能",
+      "target_symbol": null,
+      "market": null,
+      "direction": "bullish",
+      "actionability": "opinion",
+      "position_delta_hint": "exit",
+      "conviction": 0.65,
+      "sentiment_score": 0.50,
+      "risk_preference_hint": "balanced",
+      "time_horizon_hint": "short_term",
+      "temporal_anchor_ids": [],
+      "evidence_span_ids": ["ev_006", "ev_007"],
+      "ambiguity_flags": ["overvalued_warning"],
+      "confidence": 0.78,
+      "metadata": {
+        "theme": "算电协同",
+        "thesis": "绿电价值链条强化，储能受益",
+        "risk_warning": "短期上涨透支业绩"
+      }
+    }
+  ],
+  "extraction_metadata": {
+    "schema_version": "v1.0",
+    "extracted_at": "2026-04-27T00:00:00+08:00",
+    "extractor_version": "fixture_v1",
+    "total_intents": 6,
+    "intents_by_type": {
+      "stock": 4,
+      "sector": 2
+    },
+    "intents_by_direction": {
+      "bullish": 5,
+      "bearish": 1
+    },
+    "intents_by_actionability": {
+      "opinion": 2,
+      "watch": 2,
+      "explicit_action": 1
+    },
+    "coverage": {
+      "individual_stocks": ["LI", "600989", "CSIQ", "TME"],
+      "sectors": ["绿电", "储能"],
+      "has_risk_warnings": true
+    }
+  }
+}

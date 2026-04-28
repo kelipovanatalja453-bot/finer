@@ -1,0 +1,25 @@
+# finer - Financial AI Research Project
+
+finer is a modular, AI-native pipeline for turning non-standard creator content into structured, backtestable investment events.
+
+## File Map
+- /src/finer/ : Core logic components
+- /src/finer/ingestion/ : Multi-source ingestion (Feishu, Vision, NLM Sync)
+- /schemas/ : Pydantic data contracts (Source of Truth)
+- /docs/explanations/system-architecture.md : Detailed architecture design
+- /docs/how-to/feishu-integration.md : Feishu & NotebookLM setup guide
+- /configs/feishu.yaml.example : Template for Feishu/NLM configuration
+
+## Key Concepts
+- **TradingAction**: A sequence of structured trading intents (long, short, sell_put, etc.) with trigger conditions.
+- **21-Dimensional Matrix**: A comprehensive evaluation framework for financial sentiment and analysis quality.
+- **Feishu Integrator**: Automated message poller and attachment downloader.
+- **NotebookLM Sync**: Automated uploading of processed news/transcripts to personal knowledge bases.
+
+## Core Tech Stack
+- Language: Python 3.11+
+- Intelligence: Qwen-VL-Max / GPT-4o via Instructor
+- Data: Polars, Pydantic, Data-Juicer
+- Tools: lark-cli, nlm-cli
+
+For detailed documentation, visit: https://kelipovanatalja453-bot.github.io/finer/
