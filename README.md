@@ -9,6 +9,8 @@
   <img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="python">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license">
   <img src="https://img.shields.io/badge/AI-Ready-brightgreen.svg" alt="ai-ready">
+  <img src="https://img.shields.io/badge/MiMo-Orbit%20Ready-black.svg" alt="mimo-orbit-ready">
+  <img src="https://img.shields.io/badge/tests-597%20passed-success.svg" alt="tests">
 </p>
 
 ```
@@ -24,7 +26,32 @@
 
 Finer OS 将财经 KOL 的聊天记录、图片策略、飞书文档、PDF、音频/视频转录等复杂内容统一清洗为标准化内容块，再抽取可追溯证据的投资意图，最终映射为可复核、可回测的交易动作，用于评估“如果跟随某个 KOL 交易”的收益、风险和稳定性。
 
-[快速开始](#快速开始) · [功能特性](#功能特性) · [架构设计](#架构设计) · [API 文档](docs/API_REFERENCE.md)
+[快速开始](#快速开始) · [功能特性](#功能特性) · [架构设计](#架构设计) · [MiMo Orbit 申请说明](docs/MIMO_ORBIT_APPLICATION.md) · [API 文档](docs/API_REFERENCE.md)
+
+## Why Finer Matters
+
+Financial creators publish high-signal investment reasoning in noisy timelines: long chat logs, image-based strategy posts, Feishu docs, PDFs, livestream transcripts, and short-form market comments. A simple sentiment classifier cannot answer the real question:
+
+> If someone had followed this KOL over time, what would the portfolio outcome have been?
+
+Finer OS is built around that question. It turns unstructured KOL content into evidence-linked investment intents, maps those intents into reviewable trade actions, and connects them to timeline analysis and backtesting. The system is designed for high-volume AI/Agent workflows where large context windows, multimodal parsing, repeated extraction, and multi-agent validation are central.
+
+## MiMo Orbit Fit
+
+Finer is a strong candidate for Xiaomi MiMo 100T because it has a concrete token-intensive workflow:
+
+- **Multimodal standardization**: OCR/image strategy parsing, chat/document cleanup, transcript segmentation.
+- **Long-context reasoning**: KOL timelines require cross-document memory, relative-time resolution, and viewpoint evolution.
+- **Structured extraction**: natural language statements are converted into `NormalizedInvestmentIntent` with evidence spans.
+- **Agent collaboration**: architecture planning, schema contracts, fixture creation, extractor validation, and independent verification are executed as separate agent tasks.
+- **Model improvement loop**: outputs are designed for SFT/DPO/RLHF data generation and later local model fine-tuning.
+
+Application-ready materials:
+- [MiMo Orbit application note](docs/MIMO_ORBIT_APPLICATION.md)
+- [Architecture alignment plan](docs/architecture-alignment-plan.md)
+- [Multi-agent execution plan](docs/agent-execution-plan.md)
+- [V0/V1 validation report](docs/v0-v1-schema-contract-validation-report.md)
+- [Cat Lord fixture contracts](tests/fixtures/kol/)
 
 ---
 
