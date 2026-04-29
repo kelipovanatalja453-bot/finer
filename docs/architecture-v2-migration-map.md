@@ -1,6 +1,6 @@
 # Finer 架构 v2 迁移对照表
 
-> 版本: 1.0.0 | 创建: 2026-04-28
+> 版本: 1.1.0 | 创建: 2026-04-28 | 同步: 2026-04-29 (da540c8, 3b99e81)
 > 用途: L0-L8 和 V0-V6 到 F0-F8 的完整映射。旧命名仅保留于此文件，不再出现在主架构文档中。
 
 ---
@@ -45,7 +45,7 @@
 | **F1** | L2, L3 | V0 | Standardize | partial |
 | **F2** | L1, L3, L4 | V0.5 | Anchor | partial |
 | **F3** | — | V1 | Intent | partial |
-| **F4** | — | V2 | Policy | **missing** |
+| **F4** | — | V2 | Policy | **beta** |
 | **F5** | L5 | V3 | Execute | partial |
 | **F6** | L6 | — | Review | implemented |
 | **F7** | L7 | V4 | Timeline | partial |
@@ -87,11 +87,12 @@
 | `api/routes/aggregation.py` | L4 | → | F2 | 不变 |
 | `schemas/investment_intent.py` | new | → | F3 | 不变 |
 | `extraction/intent_extractor.py` | L5 | → | F3 | **需重写**（从 rule-based → LLM-based） |
-| **(新文件)** `policy/__init__.py` | — | → | **F4** | **待创建** |
-| **(新文件)** `policy/policy_mapper.py` | — | → | **F4** | **待创建** |
-| **(新文件)** `schemas/policy.py` | — | → | **F4** | **待创建** |
-| `schemas/trade_action.py` | L5 | → | F5 | 需增加 intent_id/policy_id/evidence_span_ids |
-| `extraction/trade_action_extractor.py` | L5 | → | F5 | 需改为接收 PolicyMappedIntent |
+| `policy/__init__.py` | — | → | **F4** | **已创建** (3b99e81) |
+| `policy/policy_mapper.py` | — | → | **F4** | **已创建** (3b99e81) |
+| `policy/global_base.py` | — | → | **F4** | **已创建** (3b99e81) |
+| `schemas/policy.py` | — | → | **F4** | **已创建** (3b99e81) |
+| `schemas/trade_action.py` | L5 | → | F5 | **已完成** intent_id/policy_id/evidence_span_ids (da540c8) |
+| `extraction/trade_action_extractor.py` | L5 | → | F5 | 需改为接收 PolicyMappedIntent（canonical 入口待实现） |
 | `extraction/enriched_extractor.py` | L5 | → | F5 | 不变（但需适配新输入） |
 | `extraction/extractor.py` | L5 | → | F5 | 不变 |
 | `api/routes/extraction.py` | L5 | → | F5 | 不变 |
@@ -167,17 +168,17 @@
 - [x] F1: ContentEnvelope, ContentBlock schema 完整
 - [x] F2: QualityCard, TemporalAnchor, EntityAnchor, EvidenceSpan schema 完整
 - [x] F3: NormalizedInvestmentIntent schema 完整
-- [ ] **F4: PolicyMappingResult schema 待创建**
-- [ ] **F5: TradeAction 增加 intent_id, policy_id, evidence_span_ids**
+- [x] **F4: PolicyMappingResult schema 已创建** (3b99e81)
+- [x] **F5: TradeAction 已增加 intent_id, policy_id, evidence_span_ids** (da540c8)
 
 ### 4.2 实现层
 
 - [x] F0: 飞书接入实现
 - [ ] F1: 非文本 block 化
 - [ ] F2: 时间自动解析
-- [ ] **F3: LLM-based IntentExtractor**
-- [ ] **F4: PolicyMapper 实现**
-- [ ] **F5: 接入 F4 输入，移除直接文本提取路径**
+- [x] **F3: LLM-based IntentExtractor** (4ef6c20)
+- [x] **F4: PolicyMapper 实现** (3b99e81)
+- [ ] **F5: 接入 F4 输入，移除直接文本提取路径**（canonical 入口待实现）
 
 ### 4.3 Pipeline 层
 
@@ -195,4 +196,4 @@
 
 ---
 
-*更新: 2026-04-28*
+*更新: 2026-04-29 (同步至 da540c8)*

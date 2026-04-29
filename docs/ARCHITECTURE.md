@@ -1,7 +1,7 @@
 # Finer OS 架构文档 v2.0
 
 > **版本**: 3.0.0
-> **最后更新**: 2026-04-28
+> **最后更新**: 2026-04-29
 > **状态**: **F0-F8 是 Finer OS 唯一主架构。** 本文档是 F0-F8 流水线的可执行契约。旧命名 L0-L8 和 V0-V6 已废弃（deprecated），仅在下文第 16 章 Legacy Mapping 和 `docs/specs/f-stage-contracts.md` 中保留供迁移参考。
 > **原则**: 所有代码、文档、commit message、API 设计、Agent 任务边界必须以 F0-F8 为唯一命名体系。任何新引入 L0-L8 或 V0-V6 命名的 PR 必须被拒绝。
 
@@ -112,7 +112,7 @@
 | **F1** | Standardize | F0 输出 | ContentEnvelope + ContentBlock[] | ContentEnvelope, ContentBlock | partial |
 | **F2** | Anchor | F1 输出 | +QualityCard +TemporalAnchor +EntityAnchor +EvidenceSpan | QualityCard, TemporalAnchor, EntityAnchor, EvidenceSpan | partial |
 | **F3** | Intent | F2 (gate≥soft_pass) | NormalizedInvestmentIntent[] | NormalizedInvestmentIntent | partial |
-| **F4** | Policy | F3 Intent[] | PolicyMappedIntent[] | PolicyMappingResult | **missing** |
+| **F4** | Policy | F3 Intent[] | PolicyMappedIntent[] | PolicyMappingResult | **partial** |
 | **F5** | Execute | F4 PolicyMappedIntent[] | TradeAction[] (+intent_id, +policy_id, +evidence_span_ids) | TradeAction | partial |
 | **F6** | Review | F5 TradeAction[] | Reviewed TradeAction + RLHFFeedback | RLHFFeedback | implemented |
 | **F7** | Timeline | F3/F5/F6 输出 | KOLTimeline + ViewpointState + TargetOpinionGraph | KOLTimeline, ViewpointState | partial |
@@ -309,7 +309,7 @@
 
 **输出**: `PolicyMappedIntent[]`（Intent + policy 参数：仓位比例、时间范围、风险约束）
 
-**Schema**: `PolicyMappingResult`（待创建）
+**Schema**: `PolicyMappingResult`（`schemas/policy.py`, 670 行，完整 Pydantic 模型）
 
 **5 层 Policy 结构**:
 
@@ -321,12 +321,18 @@ Global Base Policy          — 通用金融语言→动作基准映射（人工
         → Content Correction  — 当前上下文的临时修正（F3 抽取时动态生成）
 ```
 
-**Owning files**: **不存在 — 整个 F4 层代码缺失**
+**Owning files**:
+- `schemas/policy.py` (670 行) — PolicyMappingResult, PolicyMappedIntent, PolicyLayerTrace, PolicyDecision, PolicyRiskConstraints, PolicyContext, PolicyMappingBatch
+- `policy/__init__.py` — F4 模块入口
+- `policy/global_base.py` (340+ 行) — GlobalBasePolicy: 规则引擎，action/sizing/holding period 映射表
+- `policy/policy_mapper.py` (350+ 行) — PolicyMapper: 无状态 mapper，接受 F3 Intents → 输出 F4 PolicyMappedIntent[]
 
-**当前状态**: `missing`
+**当前状态**: `partial`
+- GlobalBasePolicy（第 1 层）已实现：通用金融语言→动作基准映射
+- PolicyMapper 完整：接受 F3 Intents，输出 PolicyMappingResult（含 trade_type / sizing / holding_period / risk_constraints）
 - `architecture-alignment-plan.md` 定义了 5 层 policy 架构
-- 代码库中无 PolicyMapper 类、无 policy 配置文件、无 persona 模型
-- 当前 `trade_action_extractor.py` 直接从文本生成 TradeAction，完全跳过 policy 层
+- 待实现：第 2-5 层（Style Archetype / Risk Preference / KOL Persona / Content Correction）
+- 当前 `trade_action_extractor.py` 仍有直接从文本生成 TradeAction 的 legacy 路径（绕过 F4）
 
 **禁止职责**:
 - ❌ 不生成新的 Intent（Intent 只能来自 F3）
@@ -354,10 +360,10 @@ Global Base Policy          — 通用金融语言→动作基准映射（人工
 - TradeActionExtractor 功能齐全（confidence 阈值、batch 提取、enrichment、validation）
 - **但存在三个关键缺陷**:
   1. **跳过了 F3/F4**：直接从原始文本生成 TradeAction，没有经过 Intent→Policy 路径
-  2. **缺少 intent_id / policy_id 字段**：TradeAction 与 Intent/Policy 之间没有 ID 关联
+  2. **legacy extractor 未接入 trace 字段传递**：schema 已有 intent_id / policy_id / evidence_span_ids，但 extractor 不从 F3/F4 传入，输出通常为 non_canonical
   3. **creator_id 几乎从未被填充**（ARCHITECTURE.md A4），KOL 归属链断裂
 
-**必须增加的字段**:
+**已实现的 canonical trace 字段** (da540c8):
 ```python
 class TradeAction(BaseModel):
     # 新增：上游追溯
@@ -503,7 +509,7 @@ F0 ContentRecord
 | `EntityAnchor` | F2 | `schemas/content_envelope.py` | implemented |
 | `EvidenceSpan` | F2 | `schemas/evidence.py` | implemented |
 | `NormalizedInvestmentIntent` | F3 | `schemas/investment_intent.py` | implemented |
-| `PolicyMappingResult` | F4 | (待创建) | **missing** |
+| `PolicyMappingResult` | F4 | `schemas/policy.py` | **implemented** |
 | `TradeAction` | F5 | `schemas/trade_action.py` | implemented |
 | `RLHFFeedback` | F6 | `schemas/trade_action.py` (嵌套) | implemented |
 | `KOLTimeline` | F7 | `timeline/models.py` | implemented |
@@ -622,8 +628,8 @@ const WORKFLOW_VIEWS: WorkflowView[] = [
 | F1 | Standardize | **partial** | 非文本内容 block 化不完整 |
 | F2 | Anchor | **partial** | QualityCard 未强制使用，时间解析缺失 |
 | **F3** | **Intent** | **partial** | **仅有 rule-based 原型，无 LLM 提取器** |
-| **F4** | **Policy** | **missing** | **整个层不存在** |
-| F5 | Execute | **partial** | 绕过 F3/F4，缺 intent_id/policy_id |
+| **F4** | **Policy** | **partial** | **GlobalBasePolicy + PolicyMapper 已实现，第 2-5 层待实现** |
+| F5 | Execute | **partial** | schema trace 字段已实现；legacy extractor 仍绕过 F3/F4 |
 | F6 | Review | **implemented** | RLHF 链路完整 |
 | F7 | Timeline | **partial** | ViewpointState/分歧图谱缺失，mock fallback |
 | F8 | Backtest | **partial** | Pipeline placeholder，mock 价格默认 |
@@ -647,7 +653,9 @@ const WORKFLOW_VIEWS: WorkflowView[] = [
 | `entity_registry.py` | F2 | implemented |
 | `schemas/investment_intent.py` | F3 | contract-only |
 | `extraction/intent_extractor.py` | F3 | partial (rule-based only) |
-| **(F4 Policy 模块不存在)** | F4 | **missing** |
+| `schemas/policy.py` | F4 | implemented |
+| `policy/global_base.py` | F4 | implemented |
+| `policy/policy_mapper.py` | F4 | implemented |
 | `schemas/trade_action.py` | F5 | implemented |
 | `extraction/trade_action_extractor.py` | F5 | partial (bypasses F3/F4) |
 | `api/routes/rlhf.py` | F6 | implemented |
@@ -670,7 +678,7 @@ const WORKFLOW_VIEWS: WorkflowView[] = [
 ```
 当前实际路径（LEGACY — 标记为 deprecated）:
   原始文本 → TradeActionExtractor(LLM) → TradeAction
-  跳过: F1 标准化 → F2 锚定 → F3 Intent → F4 Policy
+  跳过: F1 标准化 → F2 锚定 → F3 Intent → F4 Policy（F4 代码已存在但 legacy 路径未调用）
 
 目标路径（CANONICAL）:
   F0 原始内容 → F1 ContentEnvelope → F2 Quality/Temporal/Entity/Evidence
@@ -693,7 +701,7 @@ const WORKFLOW_VIEWS: WorkflowView[] = [
 | A3 | TemporalAnchor 四类时间未区分 | F2 | 🔴 高 |
 | A4 | creator_id 未稳定填充，KOL 归属断裂 | F0, F5 | 🔴 高 |
 | A5 | TradeAction 绕过 F3/F4，证据链弱 | F5 | 🔴 高 |
-| A6 | F4 Policy 层完全缺失 | F4 | 🔴 高 |
+| A6 | F4 Policy 层部分实现（GlobalBasePolicy 已存在，第 2-5 层缺失） | F4 | 🟡 中 |
 | A7 | F2 质量卡未强制作为 F3 门控 | F2→F3 | 🟡 中 |
 | A8 | F8 pipeline orchestrator 是 placeholder | F8 | 🟡 中 |
 | A9 | F7 ViewpointState/分歧图谱缺失 | F7 | 🟡 中 |
@@ -735,7 +743,7 @@ data/
 ├── F1_standardized/    ← ContentEnvelope + ContentBlock
 ├── F2_anchored/        ← +QualityCard +TemporalAnchor +EntityAnchor +EvidenceSpan
 ├── F3_intents/         ← NormalizedInvestmentIntent
-├── F4_policy_mapped/   ← PolicyMappingResult (待创建)
+├── F4_policy_mapped/   ← PolicyMappingResult（schema 已实现，pipeline 写入/目录迁移待完成）
 ├── F5_executed/        ← TradeAction
 ├── F6_reviewed/        ← Reviewed TradeAction + RLHFFeedback
 ├── F7_timeline/        ← KOLTimeline + ViewpointState
@@ -951,10 +959,10 @@ Code Review 和 CI 检查必须包含以下验证:
 | `enrichment/__init__.py` | F2 | 不变 |
 | `enrichment/market_context.py` | F2 | 不变 |
 | `extraction/intent_extractor.py` | F3 | 需升级为 LLM-based |
-| **(新文件)** `policy/policy_mapper.py` | F4 | **待创建** |
-| **(新文件)** `schemas/policy.py` | F4 | **待创建** |
-| `extraction/trade_action_extractor.py` | F5 | 需增加 intent_id/policy_id |
-| `schemas/trade_action.py` | F5 | 需增加 intent_id/policy_id/evidence_span_ids |
+| `policy/policy_mapper.py` | F4 | 已实现（需升级 5 层 policy） |
+| `schemas/policy.py` | F4 | 已实现 |
+| `extraction/trade_action_extractor.py` | F5 | 需接入 F3→F4→F5 canonical pipeline |
+| `schemas/trade_action.py` | F5 | trace 字段已实现；canonical 构造器待完成 |
 | `api/routes/rlhf.py` | F6 | 不变 |
 | `timeline/engine.py` | F7 | 需增加 ViewpointState |
 | `backtest/engine.py` | F8 | 不变 |
@@ -962,4 +970,4 @@ Code Review 和 CI 检查必须包含以下验证:
 
 ---
 
-*文档版本: 2.0.0 | 最后更新: 2026-04-28 | Canonical pipeline: F0-F8 | Legacy L/V naming: deprecated*
+*文档版本: 2.0.1 | 最后更新: 2026-04-29 | Canonical pipeline: F0-F8 | Legacy L/V naming: deprecated*

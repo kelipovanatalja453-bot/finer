@@ -60,13 +60,13 @@ Application-ready materials:
 <p align="center">
   <img src="docs/screenshots/dashboard-main.png" alt="Dashboard 主界面" width="800">
   <br>
-  <em>Dashboard 主界面 - L2 知识库视图</em>
+  <em>Dashboard 主界面 - F1 标准化内容库视图</em>
 </p>
 
 <p align="center">
   <img src="docs/screenshots/dashboard-l0.png" alt="L0 接入台" width="800">
   <br>
-  <em>L0 接入台 - 多源数据导入</em>
+  <em>F0 接入台 - 多源数据导入</em>
 </p>
 
 ---
@@ -80,40 +80,48 @@ Application-ready materials:
 - **微信公众号长图** - OCR 解析金融研报
 - **手动上传** - 支持任意格式文件导入
 
-### 🧱 V0/V1 语义标准化
-- **ContentEnvelope / ContentBlock** - 将图片、聊天、文档、PDF、转录稿统一成可追踪内容块
-- **QualityCard** - 用可读性、完整性、金融相关性、实体解析、时间解析、证据追溯六维评估清洗质量
-- **TemporalAnchor / EvidenceSpan** - 保留发布时间、文本提及时间、解析时间、交易生效时间与原文证据
-- **NormalizedInvestmentIntent** - 先抽取方向、可操作性、仓位变动暗示、信念强度，再进入交易动作映射
+### 🧱 F0-F2 多源标准化
+- **F0 Intake** — 飞书/B站/微信/PDF 多源内容接入，统一写入 ContentRecord
+- **F1 Standardize** — ContentEnvelope / ContentBlock 将图片、聊天、文档、PDF、转录稿统一成可追踪内容块
+- **F2 Anchor** — QualityCard 六维质量评估 + TemporalAnchor 时间解析 + EvidenceSpan 证据跨度锚定
 
-### 🎯 Trade Action 提取
-- **意图优先** - 区分“看好宁德时代”和“加仓宁德时代”，避免把观点直接误映射为交易
-- **多步操作链** - 从“短期看空520，目标480建仓”提取完整操作序列
-- **条件触发器** - 识别价格触发条件、止损止盈点位
-- **标的识别** - 支持 A 股、港股、美股代码与公司名映射
+### 🎯 F3 Intent 抽取
+- **意图优先** — 区分”看好宁德时代”和”加仓宁德时代”，避免把观点直接误映射为交易
+- **四轴输出** — direction / actionability / position_delta_hint / conviction，禁止输出仓位比例
+- **标的识别** — 支持 A 股、港股、美股代码与公司名映射
 
-### 📊 时间线与观点状态
-- **KOL 时间轴** - 以 KOL 为主轴串联同一标的的连续观点
-- **跨文档引用** - 支持从历史观点、后续修正、财报变化中恢复观点演化
-- **多 KOL 分歧** - 面向同一标的构建多 KOL 共识/分歧分析
-- **市场数据融合** - 结合价格、指数、行业与事件上下文
+### 🔀 F4 Policy 策略映射
+- **规则分层** — GlobalBase → StyleArchetype → RiskPreference → KOLPersona 四级策略层
+- **Hint 语义** — 输出动作 hint / 仓位 hint / 持仓期 hint，不生成 TradeAction
+- **可审计** — 每个映射附带 mapping_rationale，完整记录策略决策理由
 
-### ⭐ RLHF 评价系统
-- **双轨标注** - SFT 修正 + 偏好收集
-- **过程奖励模型** - 对推理链每一步独立评分
-- **DPO 训练导出** - 一键生成对齐训练数据
-- **多维度评估** - 21 维投资观点评估矩阵
+### ⚡ F5 Execute 交易动作
+- **Canonical trace** — TradeAction 必须携带 intent_id + policy_id + evidence_span_ids，确保可追溯
+- **条件触发器** — 识别价格触发条件与入场/出场规则
+- **多步操作链** — 从”短期看空520，目标480建仓”提取完整操作序列
 
-### 📈 回测引擎
-- **三种回测模式** - Simple Window / Trigger Entry / Action Chain
-- **七层评测指标** - 从实体识别到回测收益的全链路评估
-- **性能分析** - 胜率、Alpha、夏普比率自动计算
+### 🕐 F7 Timeline 时间线与观点状态
+- **KOL 时间轴** — 以 KOL 为主轴串联同一标的的连续观点
+- **ViewpointState** — 追踪每个 KOL 对每个标的的观点演化与分歧
+- **多 KOL 分歧** — 面向同一标的构建多 KOL 共识/分歧分析
+- **市场数据融合** — 结合价格、指数、行业与事件上下文
+
+### ⭐ F6 Review / RLHF 评价系统
+- **双轨标注** — SFT 修正 + 偏好收集
+- **过程奖励模型** — 对推理链每一步独立评分
+- **DPO 训练导出** — 一键生成对齐训练数据
+- **多维度评估** — 21 维投资观点评估矩阵
+
+### 📈 F8 回测引擎
+- **三种回测模式** — Simple Window / Trigger Entry / Action Chain
+- **七层评测指标** — 从实体识别到回测收益的全链路评估
+- **性能分析** — 胜率、Alpha、夏普比率自动计算
 
 ### 🖥️ Finer OS Dashboard
-- **多层级视图** - L0 接入台 → L6 复核台 → L8 回测
-- **实时预览** - 图片、PDF、Markdown 内嵌预览
-- **源过滤** - 按飞书群/NotebookLM/本地区分来源
-- **智能命名** - 时间戳文件名自动格式化
+- **F-stage 层级视图** — F0 接入台 → F1 标准化 → F6 复核台 → F8 回测
+- **实时预览** — 图片、PDF、Markdown 内嵌预览
+- **源过滤** — 按飞书群/NotebookLM/本地区分来源
+- **智能命名** — 时间戳文件名自动格式化
 
 ---
 
@@ -187,18 +195,20 @@ npm run dev
 
 ## 架构设计
 
-### 目标流水线架构
+### 目标流水线架构（F0-F8 Canonical Pipeline）
 
 ```mermaid
 flowchart LR
-    S0[Raw Sources] --> V0[V0 ContentEnvelope / ContentBlock]
-    V0 --> V05[V0.5 Quality / Time / Entity / Evidence]
-    V05 --> V1[V1 NormalizedInvestmentIntent]
-    V1 --> V2[V2 Policy Mapping]
-    V2 --> V3[V3 TradeAction]
-    V3 --> V4[V4 Timeline / Viewpoint State]
-    V4 --> V5[V5 Backtest / KOL Evaluation]
-    V5 --> V6[V6 Training Data / Model Improvement]
+    S0[Raw Sources] --> F0[F0 Intake / ContentRecord]
+    F0 --> F1[F1 Standardize / ContentEnvelope]
+    F1 --> F2[F2 Anchor / Quality + TemporalAnchor + EvidenceSpan]
+    F2 --> F3[F3 Intent / NormalizedInvestmentIntent]
+    F3 --> F4[F4 Policy / PolicyMappingResult]
+    F4 --> F5[F5 Execute / TradeAction]
+    F5 --> F6[F6 Review / Human + RLHF]
+    F6 --> F7[F7 Timeline / ViewpointState]
+    F7 --> F8[F8 Backtest / KOL Evaluation]
+    F8 -.-> FT[FT Training Loop / SFT + DPO]
 ```
 
 ### 数据流
@@ -206,30 +216,38 @@ flowchart LR
 ```
 原始 KOL 内容
     ↓
-V0 标准化内容块 + 证据跨度
+F0 Intake — 多源内容接入 (飞书/B站/微信/PDF)
     ↓
-V0.5 质量卡 + 时间锚 + 实体锚
+F1 Standardize — 内容块标准化 (ContentEnvelope / ContentBlock)
     ↓
-V1 投资意图: direction / actionability / position_delta_hint / conviction
+F2 Anchor — 质量评估 + 时间锚 + 证据跨度 (QualityCard / TemporalAnchor / EvidenceSpan)
     ↓
-V2 个性化 policy: 全局基线 / 风格层 / 风险偏好 / KOL 修正
+F3 Intent — 投资意图抽取 (direction / actionability / position_delta_hint / conviction)
     ↓
-V3 可执行 TradeAction
+F4 Policy — 策略映射 hint (GlobalBase → StyleArchetype → KOLPersona)
     ↓
-V4/V5 时间线、观点状态与跟随交易回测
+F5 Execute — 可追溯 TradeAction (intent_id + policy_id + evidence_span_ids)
+    ↓
+F6 Review + F7 Timeline — 人工复核、观点状态机、时间线分析
+    ↓
+F8 Backtest — 跟随交易模拟与 KOL 收益评估
+    ↓
+FT Training Loop — SFT / DPO / RLHF 模型改进 (跨阶段闭环)
 ```
 
 ### 核心模块
 
-| 模块 | 职责 | 关键文件 |
-|:---|:---|:---|
-| **接入层** | 多源数据导入 | `ingestion/feishu_poller.py` |
-| **标准化层** | V0 内容容器、质量卡、证据链 | `schemas/content_envelope.py`, `schemas/quality.py` |
-| **解析层** | OCR/ASR、图片/聊天/文档 block 化 | `parsing/content_standardizer.py`, `vision_utils.py` |
-| **意图层** | V1 投资意图抽取 | `schemas/investment_intent.py`, `extraction/intent_extractor.py` |
-| **动作层** | TradeAction 映射 | `extraction/trade_action_extractor.py` |
-| **复核层** | 人工校准、RLHF | `api/routes/rlhf.py` |
-| **回测层** | 跟随交易模拟与 KOL 评估 | `backtest/`, `timeline/` |
+| F-Stage | 模块 | 职责 | 关键文件 |
+|:---|:---|:---|:---|
+| **F0** | 接入层 | 多源数据导入 | `ingestion/feishu_poller.py` |
+| **F1** | 标准化层 | 内容容器、质量卡、证据链 | `schemas/content_envelope.py`, `schemas/quality.py` |
+| **F2** | 锚定层 | TemporalAnchor 时间解析、EvidenceSpan 锚定 | `schemas/temporal.py` |
+| **F3** | 意图层 | 投资意图抽取 (四轴输出) | `schemas/investment_intent.py`, `extraction/intent_extractor.py` |
+| **F4** | 策略层 | Policy 映射 (hint, 不生成 TradeAction) | `policy/policy_mapper.py`, `schemas/policy.py` |
+| **F5** | 执行层 | Canonical TradeAction 生成 | `extraction/trade_action_extractor.py` |
+| **F6** | 复核层 | 人工校准、RLHF | `api/routes/rlhf.py` |
+| **F7** | 时间线层 | ViewpointState、KOL 观点演化 | `timeline/` |
+| **F8** | 回测层 | 跟随交易模拟与 KOL 评估 | `backtest/` |
 
 ---
 
@@ -241,8 +259,8 @@ V4/V5 时间线、观点状态与跟随交易回测
 ### 事件复核工作台
 ![Review Workbench](./screenshots/review-workbench.png)
 
-### L1 富化层视图
-![L1 Enrichment](./screenshots/l1-enrichment.png)
+### F1 富化层视图
+![F1 Enrichment](./screenshots/l1-enrichment.png)
 
 ---
 
@@ -271,9 +289,9 @@ src/finer/
 ├── api/              # FastAPI 路由
 │   ├── routes/       # 各模块端点
 │   └── server.py     # 应用入口
-├── enrichment/       # L1 富化层
-├── extraction/       # L5 抽取层
-├── ingestion/        # 数据接入
+├── enrichment/       # F1 富化层
+├── extraction/       # F3/F5 抽取层
+├── ingestion/        # F0 数据接入
 ├── schemas/          # Pydantic 模型
 └── services/         # 外部服务
 

@@ -8,7 +8,7 @@
 
 - [多源数据导入](#多源数据导入)
 - [Trade Action 提取](#trade-action-提取)
-- [L1 富化层](#l1-富化层)
+- [F2 富化/锚定层](#f2-富化锚定层)
 - [RLHF 评价系统](#rlhf-评价系统)
 - [KOL 评价体系](#kol-评价体系)
 - [DPO 微调](#dpo-微调)
@@ -52,7 +52,7 @@ curl -X POST http://localhost:8000/api/integrations/feishu/fetch \
 # 2. 查看同步池
 curl http://localhost:8000/api/integrations/pool
 
-# 3. 导入到 L0
+# 3. 导入到 F0
 curl -X POST http://localhost:8000/api/integrations/import \
   -H "Content-Type: application/json" \
   -d '{"filenames": ["image.png"], "pool_type": "feishu"}'
@@ -288,9 +288,9 @@ class EntityExtractor:
 
 ---
 
-## L1 富化层
+## F2 富化/锚定层
 
-L1 层对原始内容进行"富化"处理，建立内容间的关联网络。
+F2 层对原始内容进行"富化"与"锚定"处理，建立内容间的关联网络。
 
 ### 话题拆分
 
@@ -698,15 +698,15 @@ def action_chain_backtest(event):
 
 ### 七层评测指标
 
-| 层级 | 指标 | 目标值 |
+| F-Stage | 指标 | 目标值 |
 |:---|:---|:---|
-| L7 | Backtest Alpha | >0 |
-| L6 | Human Preference Win Rate | >50% |
-| L5 | Action Chain Exact Match | >60% |
-| L4 | Slot-level F1 | >80% |
-| L3 | Parse Success Rate | >95% |
-| L2 | Entity F1 | >85% |
-| L1 | Direction Accuracy | >90% |
+| F8 | Backtest Alpha | >0 |
+| F6 | Human Preference Win Rate | >50% |
+| F5 | Action Chain Exact Match | >60% |
+| F4 | Slot-level F1 | >80% |
+| F3 | Parse Success Rate | >95% |
+| F2 | Entity F1 | >85% |
+| F1 | Direction Accuracy | >90% |
 
 ---
 

@@ -10,7 +10,7 @@
 
 - [认证](#认证)
 - [文件管理](#文件管理)
-- [L1 富化层](#l1-富化层)
+- [F2 富化/锚定层](#f2-富化锚定层)
 - [复核系统](#复核系统)
 - [RLHF 反馈](#rlhf-反馈)
 - [集成接口](#集成接口)
@@ -43,7 +43,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/files
 
 | 参数 | 类型 | 必需 | 默认值 | 说明 |
 |:---|:---|:---|:---|:---|
-| `tier` | string | 否 | `L2` | 层级（L0/L1/L2/L3/L5/L6/L8） |
+| `tier` | string | 否 | `F1` | 层级（F0/F1/F2/F3/F5/F6/F8）。旧 L 值（L0/L1/L2/L3/L5/L6/L8）仍兼容。 |
 | `source_type` | string | 否 | - | 过滤来源类型（feishu/notebooklm/local） |
 | `source_group_id` | string | 否 | - | 过滤来源组 ID |
 | `sort_by` | string | 否 | `file_timestamp` | 排序字段 |
@@ -53,8 +53,8 @@ curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/files
 ```json
 {
   "contract": "canonical_asset_v1",
-  "tier": "L2",
-  "workflow": "library",
+  "tier": "F1",
+  "workflow": "standardize",
   "files": [
     {
       "id": "content_001",
@@ -63,8 +63,8 @@ curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/files
       "date": "2026-04-20",
       "type": "md",
       "status": "canonical",
-      "workflowStage": "library",
-      "stageBadge": "L2",
+      "workflowStage": "standardize",
+      "stageBadge": "F1",
       "creatorName": "trader_jiu",
       "sourcePlatform": "feishu",
       "contentType": "weekly_strategy",
@@ -102,7 +102,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/files
 
 **POST** `/api/files`
 
-上传文件到 L0 接入台。
+上传文件到 F0 接入台。
 
 **请求**：
 
@@ -121,7 +121,7 @@ file: <binary>
   "message": "File test.pdf imported into canonical intake inbox",
   "path": "/data/raw/_inbox/unclassified/test.pdf",
   "workflow": "intake",
-  "stageBadge": "L0"
+  "stageBadge": "F0"
 }
 ```
 
@@ -199,7 +199,7 @@ file: <binary>
 
 ---
 
-## L1 富化层
+## F2 富化/锚定层
 
 ### 话题分割
 
@@ -345,7 +345,7 @@ file: <binary>
 
 **GET** `/api/enrichment/status`
 
-获取 L1 富化层状态。
+获取 F2 富化/锚定层状态。
 
 **响应示例**：
 
@@ -708,11 +708,11 @@ file: <binary>
 
 ---
 
-### 导入到 L0
+### 导入到 F0
 
 **POST** `/api/integrations/import`
 
-从同步池导入文件到 L0 接入台。
+从同步池导入文件到 F0 接入台。
 
 **请求**：
 
@@ -809,7 +809,7 @@ file: <binary>
 
 ```bash
 # 获取文件列表
-curl "http://localhost:8000/api/files?tier=L0"
+curl "http://localhost:8000/api/files?tier=F0"
 
 # 提交反馈
 curl -X POST http://localhost:8000/api/rlhf/submit \
@@ -823,7 +823,7 @@ curl -X POST http://localhost:8000/api/rlhf/submit \
 import httpx
 
 # 获取文件列表
-resp = httpx.get("http://localhost:8000/api/files", params={"tier": "L0"})
+resp = httpx.get("http://localhost:8000/api/files", params={"tier": "F0"})
 files = resp.json()["files"]
 
 # 提交反馈
@@ -841,7 +841,7 @@ resp = httpx.post(
 
 ```javascript
 // 获取文件列表
-const resp = await fetch('/api/files?tier=L0');
+const resp = await fetch('/api/files?tier=F0');
 const { files } = await resp.json();
 
 // 提交反馈
@@ -857,4 +857,4 @@ const resp = await fetch('/api/rlhf/submit', {
 
 ---
 
-*最后更新: 2026-04-23*
+*最后更新: 2026-04-29 (同步至 F0-F8 命名)*
