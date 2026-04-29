@@ -165,12 +165,85 @@ ContentBlock(
 
 ---
 
+## F1.5: Topic Assembly（主题组装）
+
+- **Purpose**: 将长聊天、长文档、音频转录稿等 multi-topic 内容从原子 `ContentBlock[]` 组装成按标的、行业、宏观、投资哲学等主题划分的 `TopicBlock[]`。F1.5 是 F1/F2 之间的 mandatory sub-stage，不改变 F0-F8 顶层架构。
+- **Maturity Status**: `placeholder`（契约已定义，schema 和 assembler 待实现）
+- **Allowed Input**: F1 `ContentEnvelope` + `ContentBlock[]`
+- **Required Output**: `TopicAssemblyResult` + `TopicBlock[]`
+
+### 输出 Schema
+
+```python
+TopicBlock(
+    topic_block_id: str,
+    envelope_id: str,
+    source_block_ids: List[str],     # -> F1 ContentBlock.block_id
+
+    topic_title: str,
+    topic_type: Literal[
+        "single_stock", "industry", "macro_policy",
+        "market_commentary", "investment_philosophy",
+        "portfolio_update", "news_forward", "other"
+    ],
+
+    primary_entity_ids: List[str],
+    secondary_entity_ids: List[str],
+
+    start_block_index: int,
+    end_block_index: int,
+    start_time: Optional[datetime],
+    end_time: Optional[datetime],
+
+    summary: str,
+    raw_text: str,
+    segmentation_reason: str,
+    confidence: float,
+    ambiguity_flags: List[str],
+)
+
+TopicAssemblyResult(
+    assembly_id: str,
+    envelope_id: str,
+    topic_blocks: List[TopicBlock],
+    unassigned_block_ids: List[str],
+    assembly_strategy: str,
+    created_at: datetime,
+)
+```
+
+### Owning Files
+
+- **(待创建)** `schemas/topic_block.py`
+- **(待创建)** `parsing/topic_assembler.py`
+- `parsing/content_standardizer.py` -- 仅提供 F1 原子 block 输入，不执行主题组装
+
+### Forbidden Responsibilities
+
+- 不抽取投资意图（F3）
+- 不生成 TradeAction（F5）
+- 不做交易判断或仓位判断
+- 不丢弃原始 ContentBlock
+- 不修改原始文本证据，只通过 `source_block_ids` 引用
+- 不替代 F2 的实体、时间、质量、证据锚定
+
+### Acceptance Checklist
+
+- [ ] 猫大人长聊天 fixture 可拆出泡泡玛特、新能源、巴菲特股东信、老铺黄金、卫星化学等独立 TopicBlock
+- [ ] 每个 TopicBlock 至少包含 1 个 `source_block_id`
+- [ ] TopicBlock 的 `raw_text` 由 source blocks 拼接得到，不凭空生成
+- [ ] `start_block_index` / `end_block_index` 与 source block 顺序一致
+- [ ] 无法归类的 block 进入 `unassigned_block_ids`
+- [ ] TopicBlock 不输出 direction / actionability / position_delta_hint / TradeAction
+
+---
+
 ## F2: Anchor（锚定）
 
-- **Purpose**: 对 F1 输出进行质量评估、时间锚定、实体锚定、证据链建立。决定哪些内容可以进入 F3。
+- **Purpose**: 对 F1.5 TopicBlock（或无主题组装时的 F1 ContentBlock）进行质量评估、时间锚定、实体锚定、证据链建立。决定哪些内容可以进入 F3。
 - **Maturity Status**: `beta`
-- **Allowed Input**: F1 `ContentEnvelope` + `ContentBlock[]`
-- **Required Output**: F1 完整结构 + `QualityCard`（6 维）+ `TemporalAnchor[]`（4 类时间）+ `EntityAnchor[]` + `EvidenceSpan[]`
+- **Allowed Input**: F1 `ContentEnvelope` + F1.5 `TopicBlock[]`
+- **Required Output**: F1/F1.5 完整结构 + `QualityCard`（6 维）+ `TemporalAnchor[]`（4 类时间）+ `EntityAnchor[]` + `EvidenceSpan[]`
 
 ### 输出 Schema
 
@@ -437,15 +510,15 @@ Global Base Policy          -> 通用语言->动作基准映射
 - **Purpose**: 从 F4 PolicyMappedIntent 生成可执行、可回测、可审计的 TradeAction。
 - **Maturity Status**: `beta`（schema 完整，但当前实际路径绕过 F3/F4）
 - **Allowed Input**: F4 `PolicyMappingResult[]`（canonical）；legacy 路径接受原始文本（已弃用，仅用于对照实验）
-- **Required Output**: `TradeAction[]`，每条 **必须** 包含 `intent_id`, `policy_id`, `evidence_span_ids`
+- **Required Output**: `TradeAction[]`，每条 **必须** 包含 `intent_id`, `policy_id`, `evidence_span_ids`, `execution_timing`
 
-> **CRITICAL BOUNDARY: F5 canonical TradeAction MUST include intent_id, policy_id, evidence_span_ids.**
-> 这三个字段是 TradeAction 可审计性的必要条件。`canonical_trace_status` 的判定：
+> **CRITICAL BOUNDARY: F5 canonical TradeAction MUST include intent_id, policy_id, evidence_span_ids, execution_timing.**
+> 前三个字段是 TradeAction 证据链可审计性的必要条件，`execution_timing` 是交易时间可复现和防未来函数的必要条件。`canonical_trace_status` 的判定：
 > - **canonical**: intent_id present + policy_id present + len(evidence_span_ids) >= 1
 > - **partial**: intent_id 或 policy_id 存在，但 evidence_span_ids 为空，或三者不完整
 > - **non_canonical**: 没有 intent_id **且** 没有 policy_id（legacy direct-extraction）
 > 
-> 只有 canonical 状态允许进入 F6 Review 和 F8 Backtest。
+> 只有 canonical 状态且包含 `execution_timing` 的 TradeAction 允许进入 F6 Review 和 F8 Backtest。
 
 ### 输出 Schema
 
@@ -455,6 +528,7 @@ TradeAction(
     intent_id: str,              # **REQUIRED** -> F3 Intent
     policy_id: str,              # **REQUIRED** -> F4 PolicyMappingResult
     evidence_span_ids: List[str],# **REQUIRED** -> F2 EvidenceSpan
+    execution_timing: ExecutionTiming,  # **REQUIRED** -> F5 timing contract
 
     timestamp: datetime,
     source: SourceInfo,
@@ -468,6 +542,22 @@ TradeAction(
     backtest_result: Optional[BacktestResult],
     rlhf_feedback: Optional[RLHFFeedback],
 )
+
+ExecutionTiming(
+    intent_published_at: datetime,          # KOL 内容发布时间
+    intent_effective_at: Optional[datetime],# KOL 文本指向的生效时间
+    action_decision_at: datetime,           # 系统生成 TradeAction 的时间
+    action_executable_at: datetime,         # 按交易日历计算的最早可执行时间
+
+    market: str,
+    timezone: str,
+    market_session_at_publish: Literal[
+        "pre_market", "regular", "after_close",
+        "non_trading_day", "unknown"
+    ],
+    execution_delay_reason: Optional[str],
+    timing_policy_id: str,
+)
 ```
 
 ### 新增字段（必须）
@@ -477,6 +567,13 @@ TradeAction(
 | `intent_id` | `str` | F3 | 追溯原始投资意图 |
 | `policy_id` | `str` | F4 | 追溯使用的 policy 版本 |
 | `evidence_span_ids` | `List[str]` | F2 | 追溯原文证据位置 |
+| `execution_timing` | `ExecutionTiming` | F5 | 区分 KOL 发布时间、intent 生效时间、系统决策时间和最早可执行时间 |
+
+### 三层择时系统
+
+1. **Market Calendar Rules**：确定性交易日历规则。盘中发布时 `action_executable_at = 当前时间 + 最小延迟`；盘后、周末、节假日发布时 `action_executable_at = 下一交易日开盘或 policy 指定的下一合法交易时段`。
+2. **Policy Timing Rules**：F4 policy 输出 timing hint，如 `follow_next_open`, `follow_after_open_30min`, `follow_vwap_window`, `wait_for_pullback`, `wait_for_breakout`, `review_required`, `no_action`。
+3. **Optional Timing Agent / Quant Bot**：LLM 或量化 bot 只能在交易日历和 F4 timing hint 给定的候选集合内辅助选择，并必须记录 rationale；不能自由生成交易时间。
 
 ### Owning Files
 
@@ -490,12 +587,18 @@ TradeAction(
 - 不跳过 F4 Policy 层自行决定仓位/触发条件
 - 不生成没有 intent_id 的 TradeAction
 - 不生成没有 evidence_span_ids 的 TradeAction
+- 不生成没有 execution_timing 的 TradeAction
+- 不让 LLM 直接自由决定 action_executable_at
+- 不绕过交易日历把盘后/休市观点按不可成交时间回测
 
 ### Acceptance Checklist
 
 - [ ] 每条 TradeAction 包含非空的 intent_id
 - [ ] 每条 TradeAction 包含非空的 policy_id
 - [ ] 每条 TradeAction 包含至少 1 个 evidence_span_id
+- [ ] 每条 TradeAction 包含 execution_timing
+- [ ] 周五盘后发布的 intent 不得生成周五盘后可成交的 action_executable_at
+- [ ] Timing Agent / Quant Bot 输出只能选择合法候选时间，并记录 timing_policy_id
 - [ ] TradeActionExtractor 的 canonical 入口方法只接收 PolicyMappedIntent（不接收原始文本）
 - [ ] Legacy `extract_from_text()` 标记为 `@deprecated`
 
@@ -508,10 +611,10 @@ TradeAction(
 ```
 Legacy path (DEPRECATED):
   原始文本 -> TradeActionExtractor.extract_from_text() -> TradeAction
-  跳过: F1 标准化 -> F2 锚定 -> F3 Intent -> F4 Policy
+  跳过: F1 标准化 -> F1.5 主题组装 -> F2 锚定 -> F3 Intent -> F4 Policy
 
 Canonical path:
-  F0 -> F1 -> F2 -> F3 Intent -> F4 Policy -> F5 TradeAction
+  F0 -> F1 -> F1.5 -> F2 -> F3 Intent -> F4 Policy -> F5 TradeAction
 ```
 
 ### 处理规则
@@ -711,8 +814,9 @@ Agent 在开始任务时必须声明自己所处的 F-stage，且只能修改该
 |---|---|---|---|
 | Intake Agent | F0 | `ingestion/`, `api/routes/files.py`, `schemas/content.py` | 无 |
 | Standardize Agent | F1 | `parsing/content_standardizer.py`, `parsing/vision_extractor.py`, `parsing/audio_extractor.py` | `schemas/content_envelope.py`, F0 输出 |
-| Anchor Agent | F2 | `enrichment/`, `aggregation/`, `entity_registry.py` | `schemas/content_envelope.py`, F1 输出 |
-| Intent Agent | F3 | `extraction/intent_extractor.py`, `schemas/investment_intent.py` | F1/F2 输出 |
+| Topic Assembly Agent | F1.5 | `parsing/topic_assembler.py`, `schemas/topic_block.py` | `schemas/content_envelope.py`, F1 输出 |
+| Anchor Agent | F2 | `enrichment/`, `aggregation/`, `entity_registry.py` | `schemas/content_envelope.py`, `schemas/topic_block.py`, F1.5 输出 |
+| Intent Agent | F3 | `extraction/intent_extractor.py`, `schemas/investment_intent.py` | F1.5/F2 输出 |
 | Policy Agent | F4 | `policy/`, `schemas/policy.py` | `schemas/investment_intent.py`, F3 输出 |
 | Execute Agent | F5 | `extraction/trade_action_extractor.py`, `schemas/trade_action.py` | `schemas/policy.py`, F4 输出 |
 | Review Agent | F6 | `api/routes/rlhf.py`, `api/routes/review.py` | F3/F5 输出 |

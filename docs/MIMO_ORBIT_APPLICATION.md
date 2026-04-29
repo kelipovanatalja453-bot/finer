@@ -86,7 +86,7 @@ As the number of KOLs grows from tens to hundreds, the workload becomes naturall
 Latest public-release validation:
 
 ```text
-597 passed, 21 skipped
+802 passed, 21 skipped, 31 warnings
 ```
 
 The skipped tests are async tests that require a dedicated pytest async runtime configuration. They are tracked as an engineering follow-up and are not related to the F1/F3 schema and fixture contract.

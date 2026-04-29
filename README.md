@@ -83,6 +83,7 @@ Application-ready materials:
 ### 🧱 F0-F2 多源标准化
 - **F0 Intake** — 飞书/B站/微信/PDF 多源内容接入，统一写入 ContentRecord
 - **F1 Standardize** — ContentEnvelope / ContentBlock 将图片、聊天、文档、PDF、转录稿统一成可追踪内容块
+- **F1.5 Topic Assembly** — 将长聊天/长文档按标的、行业、宏观、投资哲学等主题组装为 TopicBlock
 - **F2 Anchor** — QualityCard 六维质量评估 + TemporalAnchor 时间解析 + EvidenceSpan 证据跨度锚定
 
 ### 🎯 F3 Intent 抽取
@@ -97,6 +98,8 @@ Application-ready materials:
 
 ### ⚡ F5 Execute 交易动作
 - **Canonical trace** — TradeAction 必须携带 intent_id + policy_id + evidence_span_ids，确保可追溯
+- **ExecutionTiming** — 显式区分 KOL 发布时间、intent 生效时间、系统决策时间、最早可执行时间
+- **三层择时** — 交易日历硬规则 + F4 timing hint + 可选 LLM/量化 bot 辅助，禁止自由生成交易时间
 - **条件触发器** — 识别价格触发条件与入场/出场规则
 - **多步操作链** — 从”短期看空520，目标480建仓”提取完整操作序列
 
@@ -201,7 +204,8 @@ npm run dev
 flowchart LR
     S0[Raw Sources] --> F0[F0 Intake / ContentRecord]
     F0 --> F1[F1 Standardize / ContentEnvelope]
-    F1 --> F2[F2 Anchor / Quality + TemporalAnchor + EvidenceSpan]
+    F1 --> F15[F1.5 Topic Assembly / TopicBlock]
+    F15 --> F2[F2 Anchor / Quality + TemporalAnchor + EvidenceSpan]
     F2 --> F3[F3 Intent / NormalizedInvestmentIntent]
     F3 --> F4[F4 Policy / PolicyMappingResult]
     F4 --> F5[F5 Execute / TradeAction]
@@ -220,13 +224,15 @@ F0 Intake — 多源内容接入 (飞书/B站/微信/PDF)
     ↓
 F1 Standardize — 内容块标准化 (ContentEnvelope / ContentBlock)
     ↓
+F1.5 Topic Assembly — 长聊天/长文档主题组装 (TopicBlock / TopicAssemblyResult)
+    ↓
 F2 Anchor — 质量评估 + 时间锚 + 证据跨度 (QualityCard / TemporalAnchor / EvidenceSpan)
     ↓
 F3 Intent — 投资意图抽取 (direction / actionability / position_delta_hint / conviction)
     ↓
 F4 Policy — 策略映射 hint (GlobalBase → StyleArchetype → KOLPersona)
     ↓
-F5 Execute — 可追溯 TradeAction (intent_id + policy_id + evidence_span_ids)
+F5 Execute — 可追溯 TradeAction + ExecutionTiming (intent_id + policy_id + evidence_span_ids)
     ↓
 F6 Review + F7 Timeline — 人工复核、观点状态机、时间线分析
     ↓
@@ -241,10 +247,11 @@ FT Training Loop — SFT / DPO / RLHF 模型改进 (跨阶段闭环)
 |:---|:---|:---|:---|
 | **F0** | 接入层 | 多源数据导入 | `ingestion/feishu_poller.py` |
 | **F1** | 标准化层 | 内容容器、质量卡、证据链 | `schemas/content_envelope.py`, `schemas/quality.py` |
+| **F1.5** | 主题组装层 | 长聊天/长文档拆分为 TopicBlock | `schemas/topic_block.py`, `parsing/topic_assembler.py` |
 | **F2** | 锚定层 | TemporalAnchor 时间解析、EvidenceSpan 锚定 | `schemas/temporal.py` |
 | **F3** | 意图层 | 投资意图抽取 (四轴输出) | `schemas/investment_intent.py`, `extraction/intent_extractor.py` |
 | **F4** | 策略层 | Policy 映射 (hint, 不生成 TradeAction) | `policy/policy_mapper.py`, `schemas/policy.py` |
-| **F5** | 执行层 | Canonical TradeAction 生成 | `extraction/trade_action_extractor.py` |
+| **F5** | 执行层 | Canonical TradeAction + ExecutionTiming 生成 | `extraction/trade_action_extractor.py` |
 | **F6** | 复核层 | 人工校准、RLHF | `api/routes/rlhf.py` |
 | **F7** | 时间线层 | ViewpointState、KOL 观点演化 | `timeline/` |
 | **F8** | 回测层 | 跟随交易模拟与 KOL 评估 | `backtest/` |
@@ -259,8 +266,8 @@ FT Training Loop — SFT / DPO / RLHF 模型改进 (跨阶段闭环)
 ### 事件复核工作台
 ![Review Workbench](./screenshots/review-workbench.png)
 
-### F1 富化层视图
-![F1 Enrichment](./screenshots/l1-enrichment.png)
+### F2 锚定层视图
+![F2 Anchor](./screenshots/l1-enrichment.png)
 
 ---
 
@@ -273,7 +280,7 @@ FT Training Loop — SFT / DPO / RLHF 模型改进 (跨阶段闭环)
 | 端点 | 方法 | 用途 |
 |:---|:---|:---|
 | `/api/files` | GET | 获取资产列表 |
-| `/api/enrichment/split` | POST | 话题分割 |
+| `/api/enrichment/split` | POST | 话题分割/锚定（legacy API name，对应 F1.5/F2） |
 | `/api/enrichment/extract` | POST | 实体抽取 |
 | `/api/review/save` | POST | 保存复核结果 |
 | `/api/rlhf/submit` | POST | 提交 RLHF 反馈 |
@@ -289,9 +296,10 @@ src/finer/
 ├── api/              # FastAPI 路由
 │   ├── routes/       # 各模块端点
 │   └── server.py     # 应用入口
-├── enrichment/       # F1 富化层
+├── enrichment/       # F2 锚定层
 ├── extraction/       # F3/F5 抽取层
 ├── ingestion/        # F0 数据接入
+├── parsing/          # F1 标准化 + F1.5 主题组装
 ├── schemas/          # Pydantic 模型
 └── services/         # 外部服务
 
