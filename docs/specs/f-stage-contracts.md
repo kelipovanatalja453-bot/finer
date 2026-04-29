@@ -403,13 +403,13 @@ Global Base Policy          -> 通用语言->动作基准映射
 
 ### Owning Files
 
-- **(待创建)** `schemas/policy.py`
-- **(待创建)** `policy/__init__.py`
-- **(待创建)** `policy/policy_mapper.py`
-- **(待创建)** `policy/global_base.py`
-- **(待创建)** `policy/style_archetypes.py`
-- **(待创建)** `policy/risk_preferences.py`
-- **(待创建)** `policy/kol_persona.py`
+- `schemas/policy.py` — PolicyMappingResult, PolicyMappedIntent, PolicyLayerTrace 等（670 行）
+- `policy/__init__.py` — F4 模块入口
+- `policy/policy_mapper.py` — PolicyMapper: 无状态 mapper，F3 Intents → F4 PolicyMappedIntent[]
+- `policy/global_base.py` — GlobalBasePolicy: 规则引擎（第 1 层已实现）
+- **(待创建)** `policy/style_archetypes.py` — 第 2 层：Style Archetype Policy
+- **(待创建)** `policy/risk_preferences.py` — 第 3 层：Risk Preference Policy
+- **(待创建)** `policy/kol_persona.py` — 第 4 层：KOL Persona Policy
 
 ### Forbidden Responsibilities
 

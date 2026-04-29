@@ -399,11 +399,11 @@ tests/
 ### 6.2 中优先级（影响功能完整性和开发体验）
 
 #### 6.2.1 F3 Intent 和 F4 Policy 层的落地
-**问题**：F3（Intent）的 schema 已完善，`intent_extractor.py` 可产出 intent，但缺少独立 API 和前端视图。F4（Policy）完全缺失。
+**问题**（2026-04-29 更新）：F3（Intent）的 schema 和 LLMIntentExtractor 已实现 (4ef6c20)，F4（Policy）的 GlobalBasePolicy / PolicyMapper / schema 已实现 (3b99e81)，F4 spec-code 已对齐 (3b99e81)。剩余缺口：F3 独立 API 和前端视图、F4 StyleArchetype/KOLPersona 高阶策略层。
 
-**建议**：
+**后续建议**：
 - F3：新增 `api/routes/intent.py`，提供 `/api/intent/extract` 端点；前端 Sidebar 新增 F3 入口
-- F4：开始设计 Policy schema（风控规则、仓位映射），可在 F5 的 `trade_action_extractor.py` 中作为中间步骤集成
+- F4：补全 StyleArchetype/KOLPersona 高阶策略层，新增独立 API 和前端视图
 
 #### 6.2.2 F7 Timeline 纳入主导航
 **问题**：Timeline 引擎和后端 API 已实现，`opinion-timeline` 前端组件已完成，但 `/kol/*` 页面独立于六层工作流之外。

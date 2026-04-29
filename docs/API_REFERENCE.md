@@ -69,9 +69,9 @@ curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/files
       "sourcePlatform": "feishu",
       "contentType": "weekly_strategy",
       "contentId": "content_001",
-      "sourcePath": "/data/L0_ingest/trader_jiu/weekly_strategy/...",
+      "sourcePath": "/data/L0_ingest/trader_jiu/weekly_strategy/...",  // → F0 intake (legacy physical path)
       "manifestPath": "/data/processed/manifests/content_001.json",
-      "evidencePath": "/data/L3_aligned/documents/content_001.md",
+      "evidencePath": "/data/L3_aligned/documents/content_001.md",  // → F2 anchored (legacy physical path)
       "summary": "本周策略回顾...",
       "tags": ["weekly_strategy", "trader_jiu"],
       "sourceType": "feishu",

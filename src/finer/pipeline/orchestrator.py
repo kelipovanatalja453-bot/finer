@@ -139,7 +139,7 @@ class PipelineOrchestrator:
     Each stage is independently callable and failures are non-blocking.
     """
 
-    # Canonical stage order
+    # Legacy stage order (deprecated L0-L8; canonical F0-F8 not yet wired in)
     DEFAULT_STAGES = ["L0", "L1", "L3", "L4", "L5"]
 
     def __init__(

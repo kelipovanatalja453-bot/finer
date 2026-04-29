@@ -50,7 +50,7 @@ Application-ready materials:
 - [MiMo Orbit application note](docs/MIMO_ORBIT_APPLICATION.md)
 - [Architecture alignment plan](docs/architecture-alignment-plan.md)
 - [Multi-agent execution plan](docs/agent-execution-plan.md)
-- [V0/V1 validation report](docs/v0-v1-schema-contract-validation-report.md)
+- [V0/V1 validation report](docs/v0-v1-schema-contract-validation-report.md) *(historical)*
 - [Cat Lord fixture contracts](tests/fixtures/kol/)
 
 ---
@@ -64,7 +64,7 @@ Application-ready materials:
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/dashboard-l0.png" alt="L0 接入台" width="800">
+  <img src="docs/screenshots/dashboard-l0.png" alt="F0 接入台" width="800">
   <br>
   <em>F0 接入台 - 多源数据导入</em>
 </p>
