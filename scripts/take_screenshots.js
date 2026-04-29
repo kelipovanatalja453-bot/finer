@@ -20,21 +20,21 @@ async function takeScreenshots() {
     const screenshots = [
         {
             name: 'dashboard-main.png',
-            url: 'http://localhost:3000?tier=L2',
+            url: 'http://localhost:3000?tier=F1',
             wait: 3000,
-            description: 'Dashboard 主界面 - L2 知识库视图'
+            description: 'Dashboard 主界面 - F1 标准化台'
         },
         {
             name: 'dashboard-l0.png',
-            url: 'http://localhost:3000?tier=L0',
+            url: 'http://localhost:3000?tier=F0',
             wait: 2000,
-            description: 'L0 接入台视图'
+            description: 'F0 接入台视图'
         },
         {
             name: 'dashboard-l5.png',
-            url: 'http://localhost:3000?tier=L5',
+            url: 'http://localhost:3000?tier=F5',
             wait: 2000,
-            description: 'L5 抽取台视图'
+            description: 'F5 执行台视图'
         },
         {
             name: 'integrations-hub.png',
@@ -75,7 +75,7 @@ async function takeScreenshots() {
     // 截取侧边栏导航
     try {
         console.log('📷 截取: 侧边栏导航');
-        await page.goto('http://localhost:3000?tier=L2', { waitUntil: 'networkidle' });
+        await page.goto('http://localhost:3000?tier=F1', { waitUntil: 'networkidle' });
         await page.waitForTimeout(2000);
 
         // 截取侧边栏区域
