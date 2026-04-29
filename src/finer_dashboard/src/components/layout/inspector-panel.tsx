@@ -132,7 +132,7 @@ export function InspectorPanel({
     }
   }
 
-  // For L1 folders, find preview path from entity contents
+  // For F2 folders, find preview path from entity contents
   const firstEntityContent = entityContents[0];
   if (tier === "F2" && selectedAsset?.type === "folder" && firstEntityContent?.sourcePath) {
     previewPath = firstEntityContent.sourcePath;

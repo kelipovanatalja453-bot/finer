@@ -1,4 +1,4 @@
-"""测试 L4 聚合层持久化存储."""
+"""测试 F2 聚合层持久化存储."""
 
 import tempfile
 from datetime import datetime
@@ -210,7 +210,7 @@ class TestContextAggregatorWithStorage:
 
 
 class TestL4LayerWithStorage:
-    """测试带持久化的 L4 层."""
+    """测试带持久化的 F2 聚合层."""
 
     def test_create_with_db_path(self, tmp_path: Path):
         """通过 db_path 参数创建."""
@@ -262,7 +262,7 @@ class TestBackwardCompatibility:
         assert aggregator.storage is None
 
     def test_l4_layer_without_storage(self):
-        """L4 层无 storage 参数时应正常工作."""
+        """F2 聚合层无 storage 参数时应正常工作."""
         layer = L4AggregationLayer()
 
         context = layer.process_text(

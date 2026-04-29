@@ -1,4 +1,4 @@
-"""L1 Enrichment API — manage content enrichment and linking."""
+"""F1/F2 Enrichment API — manage content enrichment and linking."""
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -217,7 +217,7 @@ async def rebuild_index():
 
 @router.get("/status")
 async def get_enrichment_status():
-    """Get L1 enrichment status."""
+    """Get F1/F2 enrichment status."""
     index_path = L1_DIR / "content_index.json"
 
     status = {

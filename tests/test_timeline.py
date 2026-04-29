@@ -1,4 +1,4 @@
-"""Tests for L7 Timeline Engine."""
+"""Tests for F7 Timeline Engine."""
 
 from datetime import datetime
 

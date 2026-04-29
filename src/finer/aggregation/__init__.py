@@ -1,13 +1,13 @@
-"""L4 Aggregation Layer — 实体消歧 + 上下文聚合 + 摘要生成 + 市场预注入.
+"""F2 Anchor — 实体消歧 + 上下文聚合 + 摘要生成 + 市场预注入.
 
-L4 层位于 L3 解析和 L5 抽取之间，负责：
+F2 Anchor 层位于 F1 Standardize 和 F3 Intent 之间，负责：
 1. 实体消歧与链接：将不同表述的同一实体统一化
 2. 跨内容上下文聚合：同一标的在不同内容中的观点汇总
-3. 结构化摘要生成：为 L5 提供精炼的上下文
-4. 市场数据预注入：当前价格、52周范围等，供 L5 判断 trigger
+3. 结构化摘要生成：为 F3 Intent 提供精炼的上下文
+4. 市场数据预注入：当前价格、52周范围等，供 F5 Execute 判断 trigger
 
 数据流：
-L3 解析产物 (clean_segments) → L4 聚合 → L5 抽取
+F1 标准化产物 → F2 聚合/锚定 → F3 Intent 提取
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ class EntityReference:
 
 @dataclass
 class AggregatedContext:
-    """L4 聚合后的上下文，供 L5 抽取使用."""
+    """F2 聚合后的上下文，供 F3/F5 使用."""
     content_id: str
     clean_text: str
     entities: List[EntityReference]
@@ -54,7 +54,7 @@ class AggregatedContext:
 
 @dataclass
 class AggregationResult:
-    """L4 聚合结果."""
+    """F2 聚合结果."""
     success: bool
     contexts: List[AggregatedContext]
     entity_index: Dict[str, List[str]]  # normalized_entity -> content_ids
@@ -212,7 +212,7 @@ class ContextAggregator:
         """添加上下文到聚合器.
 
         Args:
-            context: L4 聚合后的上下文
+            context: F2 聚合后的上下文
         """
         self.content_store[context.content_id] = context
 
@@ -278,7 +278,7 @@ class ContextAggregator:
 class MarketPreInjector:
     """市场数据预注入.
 
-    为 L5 抽取提供市场上下文：
+    为 F5 Execute 提供市场上下文：
     - 当前价格
     - 52周最高/最低
     - PE、市值等基本面数据
@@ -297,7 +297,7 @@ class MarketPreInjector:
         """为上下文注入市场数据.
 
         Args:
-            context: L4 聚合后的上下文
+            context: F2 聚合后的上下文
 
         Returns:
             注入市场数据后的上下文
@@ -344,11 +344,11 @@ class MarketPreInjector:
 
 
 # ============================================
-# L4 Aggregation Layer
+# F2 Anchor — Aggregation Layer
 # ============================================
 
 class L4AggregationLayer:
-    """L4 聚合层主类.
+    """F2 聚合层主类 (class name kept as L4AggregationLayer for backward compat).
 
     整合实体消歧、上下文聚合、摘要生成、市场预注入。
     """
@@ -360,7 +360,7 @@ class L4AggregationLayer:
         custom_entities: Optional[Dict[str, Tuple[str, str, str]]] = None,
         storage: Optional["AggregationStorage"] = None,
     ):
-        """初始化 L4 聚合层.
+        """初始化 F2 聚合层.
 
         Args:
             finance_client: Finance-Skills 客户端
@@ -473,7 +473,7 @@ def create_l4_layer(
     storage: Optional["AggregationStorage"] = None,
     db_path: Optional[Path] = None,
 ) -> L4AggregationLayer:
-    """创建 L4 聚合层实例.
+    """创建 F2 聚合层实例 (function name kept as create_l4_layer for backward compat).
 
     Args:
         finance_client: Finance-Skills 客户端
@@ -482,7 +482,7 @@ def create_l4_layer(
         db_path: 数据库路径，若提供则自动创建 storage
 
     Returns:
-        L4AggregationLayer 实例
+        L4AggregationLayer 实例 (F2 聚合层)
     """
     # 如果提供了 db_path 但没有 storage，自动创建
     if storage is None and db_path is not None:

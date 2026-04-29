@@ -1,4 +1,4 @@
-"""Tests for L5 Extraction Layer — TradeAction extraction pipeline.
+"""Tests for F5 Execute — TradeAction extraction pipeline.
 
 Covers:
 - TradeActionExtractor: GLM-5.1 + Finance-Skills hybrid extraction

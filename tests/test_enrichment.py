@@ -1,4 +1,4 @@
-"""Tests for L1 Enrichment Layer — market data fusion and sentiment fusion.
+"""Tests for F2 Anchor — market data fusion and sentiment fusion.
 
 Covers:
 - MarketContextEnricher: Market data fetching and validation

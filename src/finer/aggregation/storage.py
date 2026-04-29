@@ -1,4 +1,4 @@
-"""L4 Aggregation Layer 持久化存储.
+"""F2 Anchor 聚合层持久化存储.
 
 使用 SQLite 存储聚合数据，支持冷启动恢复。
 """

@@ -339,7 +339,7 @@ async def get_pending_actions(
     This endpoint returns actions from the extraction results that
     may need human feedback.
     """
-    # Load extraction results from L0 data
+    # Load extraction results from F0 data (legacy L0_ingestion dir)
     extraction_dir = DATA_ROOT / "L0_ingestion" / "extractions"
     pending_items: List[PendingActionItem] = []
     index = load_index()

@@ -57,8 +57,8 @@ class KOLRatingResponse(BaseModel):
 # ============================================
 
 def _load_kol_data(kol_id: str) -> Optional[Dict[str, Any]]:
-    """Load KOL data from L5/L6 layers."""
-    # Try L6 first (annotated data)
+    """Load KOL data from F5/F6 layers (legacy L5_candidate/L6_annotated dirs)."""
+    # Try F6 first (annotated data, legacy L6_annotated dir)
     l6_dir = DATA_ROOT / "L6_annotated"
     if l6_dir.exists():
         for file_path in l6_dir.glob("**/*.action.json"):
@@ -69,7 +69,7 @@ def _load_kol_data(kol_id: str) -> Optional[Dict[str, Any]]:
             except Exception:
                 continue
 
-    # Try L5 (candidate data)
+    # Try F5 (candidate data, legacy L5_candidate dir)
     l5_dir = DATA_ROOT / "L5_candidate"
     if l5_dir.exists():
         for file_path in l5_dir.glob("**/*.action.json"):

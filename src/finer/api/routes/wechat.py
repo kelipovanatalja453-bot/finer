@@ -334,10 +334,10 @@ async def sync_articles(
             include_images=include_images,
         )
 
-        # Trigger L0 pipeline if requested
+        # Trigger F0 pipeline if requested
         l0_triggered = False
         if trigger_l0 and synced_paths:
-            # L0 pipeline integration would go here
+            # F0 pipeline integration would go here
             # Currently placeholder - files are saved to data/raw/wechat/{account_id}/
             # They can be imported via the integrations hub
             l0_triggered = False
