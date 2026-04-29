@@ -3,7 +3,7 @@
 Provides REST API for:
 - GET /api/bilibili/video/{bvid} - Get video info
 - POST /api/bilibili/transcribe/{bvid} - Download and transcribe
-- POST /api/bilibili/sync/{bvid} - Sync to L0
+- POST /api/bilibili/sync/{bvid} - Sync to F0 Intake
 
 All endpoints follow the project's API patterns.
 """
@@ -69,13 +69,13 @@ class TranscribeResponse(BaseModel):
 
 
 class SyncRequest(BaseModel):
-    """Sync to L0 request."""
+    """Sync to F0 Intake request."""
     tags: Optional[List[str]] = None
     category: Optional[str] = None
 
 
 class SyncResponse(BaseModel):
-    """Sync to L0 response."""
+    """Sync to F0 Intake response."""
     bvid: str
     content_id: str
     l0_path: str
@@ -294,19 +294,19 @@ async def sync_to_l0(
     bvid: str,
     req: Optional[SyncRequest] = None,
 ):
-    """Sync transcribed video to L0 layer.
+    """Sync transcribed video to F0 Intake layer.
 
     This endpoint:
     1. Checks if transcript exists
-    2. Creates L0 manifest
-    3. Copies to L0 ingestion directory
+    2. Creates F0 manifest
+    3. Copies to F0 ingestion directory
 
     Args:
         bvid: BV ID
         req: Optional sync parameters (tags, category)
 
     Returns:
-        SyncResponse with L0 paths
+        SyncResponse with F0 paths
     """
     try:
         client = BilibiliClient()
@@ -330,12 +330,12 @@ async def sync_to_l0(
                 detail=f"Transcript not found for {parsed_bvid}. Run /transcribe first."
             )
 
-        # Create L0 content ID
+        # Create F0 content ID
         import json
         metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
         content_id = f"bilibili_{parsed_bvid}"
 
-        # Create L0 directory structure
+        # Create F0 directory structure (legacy L0_ingestion path)
         l0_dir = DATA_ROOT / "L0_ingestion" / "bilibili" / str(metadata["uploader_id"])
         l0_dir.mkdir(parents=True, exist_ok=True)
 

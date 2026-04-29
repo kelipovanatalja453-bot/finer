@@ -1,6 +1,6 @@
 """Opinion Timeline API — 观点时间线数据查询.
 
-Reads real TradeAction data from L5/L6 layers via TradeActionRepository,
+Reads real TradeAction data from F5/F6 layers via TradeActionRepository,
 with mock data fallback when no real data is available.
 """
 
@@ -224,8 +224,8 @@ def _load_actions_from_dir(action_dir: Path) -> List[TradeAction]:
 
 def _has_real_data() -> bool:
     """Check if any TradeAction data exists in the file system."""
-    l5_dir = DATA_ROOT / "L5_candidate"
-    l6_dir = DATA_ROOT / "L6_annotated"
+    l5_dir = DATA_ROOT / "L5_candidate"    # legacy dir
+    l6_dir = DATA_ROOT / "L6_annotated"    # legacy dir
     for d in (l5_dir, l6_dir):
         if d.exists() and any(d.glob("**/*.action.json")):
             return True
@@ -243,7 +243,7 @@ def _query_real_timeline(
 ) -> tuple[List[TimelineOpinion], int]:
     """Query real TradeAction data and convert to TimelineOpinion list.
 
-    Reads from both L5_candidate (via repository index) and L6_annotated
+    Reads from both L5_candidate/F5 (via repository index) and L6_annotated/F6
     (direct file scan). Deduplicates by trade_action_id.
 
     Returns:
@@ -255,7 +255,7 @@ def _query_real_timeline(
     seen_ids: set[str] = set()
     all_actions: List[TradeAction] = []
 
-    # --- L5 data: use repository index for efficient querying ---
+    # --- F5 data: use repository index for efficient querying ---
     date_range = DateRange(start=start_time, end=end_time)
 
     if len(kol_list) == 1:
@@ -287,7 +287,7 @@ def _query_real_timeline(
         except Exception as e:
             logger.warning("Failed to load TradeAction from %s: %s", file_path, e)
 
-    # --- L6 data: direct file scan (annotated/reviewed actions) ---
+    # --- F6 data: direct file scan (annotated/reviewed actions, legacy L6_annotated dir) ---
     l6_dir = DATA_ROOT / "L6_annotated"
     for action in _load_actions_from_dir(l6_dir):
         if action.trade_action_id not in seen_ids:
@@ -321,7 +321,7 @@ def _query_real_timeline(
 
 
 def _load_all_actions() -> List[TradeAction]:
-    """Load all TradeAction data from L5 (via repository) and L6 (file scan).
+    """Load all TradeAction data from F5 (via repository) and F6 (file scan, legacy L6_annotated dir).
 
     Deduplicates by trade_action_id.
     """
@@ -329,7 +329,7 @@ def _load_all_actions() -> List[TradeAction]:
     seen_ids: set[str] = set()
     all_actions: List[TradeAction] = []
 
-    # L5 data via repository index
+    # F5 data via repository index
     records = repo.db.query(limit=100000, offset=0)
     for record in records:
         file_path = record.get("file_path")
@@ -343,7 +343,7 @@ def _load_all_actions() -> List[TradeAction]:
         except Exception as e:
             logger.warning("Failed to load TradeAction from %s: %s", file_path, e)
 
-    # L6 data via direct file scan
+    # F6 data via direct file scan (legacy L6_annotated dir)
     l6_dir = DATA_ROOT / "L6_annotated"
     for action in _load_actions_from_dir(l6_dir):
         if action.trade_action_id not in seen_ids:
@@ -354,7 +354,7 @@ def _load_all_actions() -> List[TradeAction]:
 
 
 def _get_real_meta() -> TimelineMeta:
-    """Get meta information from real data (L5 + L6)."""
+    """Get meta information from real data (F5 + F6)."""
     all_actions = _load_all_actions()
 
     tickers_set: set[str] = set()
@@ -382,7 +382,7 @@ def _get_real_meta() -> TimelineMeta:
 
 
 def _get_real_stats(time_range: str, ticker: Optional[str]) -> Dict[str, Any]:
-    """Get statistics summary from real data (L5 + L6)."""
+    """Get statistics summary from real data (F5 + F6)."""
     all_actions = _load_all_actions()
 
     now = datetime.now()
@@ -785,16 +785,16 @@ async def get_stats_summary(
 @router.get("/{opinion_id}", response_model=TimelineOpinion)
 async def get_opinion_detail(opinion_id: str):
     """获取单个观点详情."""
-    # 尝试从真实数据加载 (L5 via repository, then L6 via file scan)
+    # 尝试从真实数据加载 (F5 via repository, then F6 via file scan)
     if _has_real_data():
         try:
-            # Try L5 via repository first
+            # Try F5 via repository first
             repo = _get_repository()
             action = repo.load(opinion_id)
             if action:
                 return trade_action_to_opinion(action)
 
-            # Try L6 via direct file scan
+            # Try F6 via direct file scan
             l6_dir = DATA_ROOT / "L6_annotated"
             for file_path in l6_dir.glob("**/*.action.json"):
                 try:

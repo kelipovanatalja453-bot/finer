@@ -1,9 +1,9 @@
-"""Trade Action Extraction API — L5 层事件提取端点.
+"""Trade Action Extraction API — F5 Execute 层事件提取端点.
 
 提供 Trade Action 提取管线的前端触发接口：
 - POST /api/extraction/extract - 从文本提取 Trade Actions
 - POST /api/extraction/batch - 批量提取
-- POST /api/extraction/pipeline - 运行完整 L5 管线
+- POST /api/extraction/pipeline - 运行完整 F5 管线
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
@@ -20,8 +20,8 @@ from finer.paths import REPO_ROOT, DATA_ROOT
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
-L5_CANDIDATE_DIR = DATA_ROOT / "L5_candidate"
-L4_PARSED_DIR = DATA_ROOT / "L4_parsed"
+L5_CANDIDATE_DIR = DATA_ROOT / "L5_candidate"   # legacy dir; canonical is data/F5_executed
+L4_PARSED_DIR = DATA_ROOT / "L4_parsed"         # legacy dir; canonical is data/F2_anchored
 
 
 # ============================================
@@ -133,7 +133,7 @@ def _action_to_response(action) -> TradeActionResponse:
 async def extract_trade_actions(request: ExtractionRequest):
     """从文本提取 Trade Actions.
 
-    这是 L5 层的核心端点，使用 GLM-5.1 + Finance-Skills 混合策略。
+    这是 F5 Execute 层的核心端点，使用 GLM-5.1 + Finance-Skills 混合策略。
 
     Args:
         request: 包含文本和可选上下文的请求
@@ -249,13 +249,13 @@ async def batch_extract(request: BatchExtractionRequest):
 @router.post("/pipeline")
 async def run_extraction_pipeline(
     background_tasks: BackgroundTasks,
-    input_dir: Optional[str] = Query(None, description="输入目录 (L4 解析产物)"),
-    output_dir: Optional[str] = Query(None, description="输出目录 (L5 候选事件)"),
+    input_dir: Optional[str] = Query(None, description="输入目录 (legacy L4/F2 解析产物)"),
+    output_dir: Optional[str] = Query(None, description="输出目录 (legacy L5/F5 候选事件)"),
     limit: int = Query(100, description="最大处理文件数"),
 ):
-    """运行完整的 L5 提取管线.
+    """运行完整的 F5 提取管线.
 
-    从 L4_parsed 读取解析产物，提取 Trade Actions，写入 L5_candidate。
+    从 data/L4_parsed (legacy) 读取解析产物，提取 Trade Actions，写入 data/L5_candidate (legacy)。
 
     Args:
         background_tasks: FastAPI 后台任务
@@ -284,7 +284,7 @@ async def run_extraction_pipeline(
         "input_dir": str(input_path),
         "output_dir": str(output_path),
         "limit": limit,
-        "message": "L5 提取管线已在后台启动",
+        "message": "F5 提取管线已在后台启动",
     }
 
 
@@ -350,7 +350,7 @@ async def _run_extraction_pipeline_async(input_path: Path, output_path: Path, li
 
 @router.get("/status", response_model=PipelineStatusResponse)
 async def get_extraction_status():
-    """获取 L5 提取管线状态."""
+    """获取 F5 提取管线状态."""
     # 统计 L5_candidate 目录中的文件
     total_files = 0
     processed = 0
@@ -370,10 +370,10 @@ async def get_extraction_status():
             except:
                 failed += 1
 
-    # 统计 L4_parsed 中待处理的文件
+    # 统计 L4_parsed (legacy) 中待处理的文件
     if L4_PARSED_DIR.exists():
         for f in L4_PARSED_DIR.glob("**/*.json"):
-            # 检查是否已在 L5 中处理
+            # 检查是否已在 L5 (legacy) 中处理
             l5_file = L5_CANDIDATE_DIR / f"{f.stem}_actions.json"
             if not l5_file.exists():
                 pending += 1

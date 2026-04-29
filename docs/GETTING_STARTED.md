@@ -211,21 +211,21 @@ curl -X POST http://localhost:8000/api/integrations/feishu/fetch \
 # 3. 查看同步池文件
 curl http://localhost:8000/api/integrations/pool
 
-# 4. 导入文件到 L0
+# 4. 导入文件到 F0 Intake
 curl -X POST http://localhost:8000/api/integrations/import \
   -H "Content-Type: application/json" \
   -d '{"filenames": ["test.png"], "pool_type": "feishu"}'
 ```
 
-### 工作流 2: 事件抽取
+### 工作流 2: 内容处理与事件抽取
 
 ```bash
-# 1. L1 话题分割
+# 1. F1 话题分割（标准化）
 curl -X POST http://localhost:8000/api/enrichment/split \
   -H "Content-Type: application/json" \
   -d '{"content_id": "test", "content": "聊天记录..."}'
 
-# 2. 实体抽取
+# 2. F2 实体抽取（锚定）
 curl -X POST http://localhost:8000/api/enrichment/extract \
   -H "Content-Type: application/json" \
   -d '{"content_id": "test", "content": "..."}'
@@ -323,8 +323,8 @@ curl -X POST http://localhost:8000/api/files/cache/warmup
 ### Q: 数据目录不存在？
 
 ```bash
-# 系统会自动创建，但可以手动初始化
-mkdir -p data/{raw,L0_ingest,L1_enrichment,L3_aligned,processed,rlhf,backtests}
+# 系统会自动创建，但可以手动初始化（F-stage canonical 目录）
+mkdir -p data/{raw,F0_intake,F1_standardized,F2_anchored,F3_intents,F4_policy_mapped,F5_executed,F6_reviewed,F7_timeline,F8_metrics,processed,rlhf,cache}
 ```
 
 ### Q: 如何更新黑话词典？

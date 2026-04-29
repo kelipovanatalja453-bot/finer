@@ -73,7 +73,7 @@ class SyncRequest(BaseModel):
     include_images: bool = Field(False, description="Download images locally")
     include_comments: bool = Field(False, description="Include article comments")
     include_metadata: bool = Field(True, description="Include read/like counts")
-    trigger_l0: bool = Field(True, description="Trigger L0 ingestion after sync")
+    trigger_l0: bool = Field(True, description="Trigger F0 ingestion after sync")
 
 
 class ArticleListRequest(BaseModel):

@@ -4,7 +4,7 @@ Provides endpoints for:
 - QR code login
 - Account management
 - Article listing and syncing
-- Integration with L0 pipeline
+- Integration with F0 Intake pipeline
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
@@ -317,7 +317,7 @@ async def sync_articles(
         account_id: Account to sync
         max_articles: Maximum articles to sync (None for all)
         include_images: Download images locally
-        trigger_l0: Trigger L0 ingestion pipeline after sync
+        trigger_l0: Trigger F0 ingestion pipeline after sync
     """
     adapter = _get_adapter()
 

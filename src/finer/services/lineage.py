@@ -78,7 +78,7 @@ class LineageTracker:
         """Create a new lineage record.
 
         Args:
-            content_id: L0 original content ID
+            content_id: F0 original content ID
             source: Source system (feishu, bilibili, wechat)
             pipeline_run_id: Optional pipeline run ID for grouping
 

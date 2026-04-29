@@ -105,7 +105,7 @@ class VisionModelRegistry(BaseModelRegistry):
 
 @dataclass
 class TextModelRegistry(BaseModelRegistry):
-    """Registry of text/chat models for L1 enrichment."""
+    """Registry of text/chat models for F1/F2 enrichment."""
 
     models: List[ModelConfig] = field(default_factory=lambda: [
         ModelConfig(

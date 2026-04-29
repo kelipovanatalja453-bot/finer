@@ -1,12 +1,12 @@
 """
-Event Schemas — L5 extraction output models.
+Event Schemas — F5 Execute extraction output models.
 
 This module defines lightweight event models for extraction layer.
 TradingAction provides compatibility with ActionStep from trade_action.py
 through bidirectional conversion methods.
 
-ActionStep (from trade_action.py) is the authoritative definition for L7+ layers.
-TradingAction exists for L5 extraction and backward compatibility.
+ActionStep (from trade_action.py) is the authoritative definition for F7+ layers.
+TradingAction exists for F5 extraction and backward compatibility.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from datetime import datetime
 
 
 # =============================================================================
-# Action Type Literal (for L5 extraction, compatible with ActionType enum)
+# Action Type Literal (for F5 extraction, compatible with ActionType enum)
 # =============================================================================
 
 ACTION_TYPE_LITERAL = Literal[
@@ -33,7 +33,7 @@ INSTRUMENT_TYPE_LITERAL = Literal[
 
 class TradingAction(BaseModel):
     """
-    Lightweight trading action for L5 extraction layer.
+    Lightweight trading action for F5 extraction layer.
 
     This model is designed for extraction and provides seamless conversion
     to/from ActionStep (the authoritative model in trade_action.py).
@@ -44,7 +44,7 @@ class TradingAction(BaseModel):
     - Has `instrument_type` field (convenience field)
     - Uses `sequence_order` instead of `sequence` (historical naming)
 
-    For L7+ layers, convert to ActionStep using `to_action_step()`.
+    For F7+ layers, convert to ActionStep using `to_action_step()`.
     """
     model_config = ConfigDict(strict=True)
 
@@ -78,7 +78,7 @@ class TradingAction(BaseModel):
 
     def to_action_step(self) -> "ActionStep":
         """
-        Convert to ActionStep (authoritative model for L7+ layers).
+        Convert to ActionStep (authoritative model for F7+ layers).
 
         Returns:
             ActionStep instance with mapped fields.

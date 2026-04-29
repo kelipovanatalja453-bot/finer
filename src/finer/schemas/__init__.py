@@ -41,14 +41,14 @@ from finer.schemas.content_envelope import (
 )
 
 # =============================================================================
-# L5 Extraction Schemas
+# F5 Extraction Schemas
 # =============================================================================
 
 from finer.schemas.event import (
     TradingAction,
     EventWithActions,
     ExtractionResult,
-    # Type aliases for L5 extraction
+    # Type aliases for F5 extraction
     ACTION_TYPE_LITERAL,
     INSTRUMENT_TYPE_LITERAL,
 )
@@ -150,12 +150,12 @@ __all__ = [
     # From entity_anchor.py (V0/V0.5)
     "EntityAnchor",
     "ENTITY_TYPE_LITERAL",
-    # From content_envelope.py (V0/V0.5)
+    # From content_envelope.py (F1/F2)
     "ContentEnvelope",
     "ContentBlock",
     "BLOCK_TYPE_LITERAL",
     "SOURCE_TYPE_LITERAL",
-    # From event.py (L5 extraction)
+    # From event.py (F5 extraction)
     "TradingAction",
     "EventWithActions",
     "ExtractionResult",

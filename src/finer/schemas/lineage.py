@@ -1,10 +1,10 @@
 """Data Lineage and Version Control Schemas.
 
-This module defines schemas for tracking data lineage across the 8-layer Finer pipeline
+This module defines schemas for tracking data lineage across the F0-F8 pipeline
 and version control for reproducibility.
 
 Lineage Chain:
-    BacktestResult → TradeAction → EventWithActions → SegmentRecord → ContentRecord → Feishu message
+    BacktestResult (F8) → TradeAction (F5) → EvidenceSpan (F2) → ContentEnvelope (F1) → ContentRecord (F0)
 
 Key Features:
     - Full traceability from backtest to source
@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field, ConfigDict
 class DataLineage(BaseModel):
     """Data lineage tracking across pipeline layers.
 
-    Tracks the complete path from original content (L0) to final output,
+    Tracks the complete path from original content (F0) to final output,
     enabling:
         - Traceability: Find source for any TradeAction
         - Debugging: Identify which content produced which actions
@@ -43,36 +43,36 @@ class DataLineage(BaseModel):
     """
     model_config = ConfigDict(strict=True)
 
-    # L0: Original content
+    # F0: Original content
     original_content_id: str = Field(
         ...,
-        description="L0 original content ID (Feishu doc/message ID)"
+        description="F0 original content ID (Feishu doc/message ID)"
     )
     original_source: Optional[str] = Field(
         None,
         description="Source system (feishu, bilibili, wechat)"
     )
 
-    # L1: Enrichment
+    # F2: Anchor (enrichment)
     enrichment_content_ids: List[str] = Field(
         default_factory=list,
-        description="L1 enrichment related content IDs"
+        description="F2 anchor-related content IDs"
     )
 
-    # L3: Segments
+    # F1: Standardize (segments)
     segment_ids: List[str] = Field(
         default_factory=list,
-        description="L3 parsed segment IDs"
+        description="F1 standardized segment IDs"
     )
 
-    # L5: Events
+    # F5: Execute (events/trade actions)
     event_ids: List[str] = Field(
         default_factory=list,
-        description="L5 event IDs"
+        description="F5 event IDs"
     )
     extraction_id: Optional[str] = Field(
         None,
-        description="L5 extraction batch ID"
+        description="F5 extraction batch ID"
     )
 
     # Pipeline metadata

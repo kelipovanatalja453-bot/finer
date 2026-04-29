@@ -19,14 +19,14 @@
     <path d="M220 40 L232 48 L220 56" stroke="#64748B" stroke-width="3" fill="none"/>
 
     <rect x="242" y="0" width="168" height="96" rx="14" fill="#172554" stroke="#3B82F6"/>
-    <text x="266" y="38" fill="#E0F2FE" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">V0 Blocks</text>
-    <text x="266" y="68" fill="#BAE6FD" font-family="Inter, Arial, sans-serif" font-size="14">quality + evidence</text>
+    <text x="266" y="38" fill="#E0F2FE" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">F1 Standardize</text>
+    <text x="266" y="68" fill="#BAE6FD" font-family="Inter, Arial, sans-serif" font-size="14">blocks + evidence</text>
 
     <path d="M420 48 H470" stroke="#64748B" stroke-width="3"/>
     <path d="M462 40 L474 48 L462 56" stroke="#64748B" stroke-width="3" fill="none"/>
 
     <rect x="484" y="0" width="168" height="96" rx="14" fill="#052E16" stroke="#22C55E"/>
-    <text x="508" y="38" fill="#DCFCE7" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">V1 Intent</text>
+    <text x="508" y="38" fill="#DCFCE7" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">F3 Intent</text>
     <text x="508" y="68" fill="#BBF7D0" font-family="Inter, Arial, sans-serif" font-size="14">direction + actionability</text>
 
     <path d="M662 48 H712" stroke="#64748B" stroke-width="3"/>

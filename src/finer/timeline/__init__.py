@@ -1,4 +1,4 @@
-"""L7 Timeline Engine — KOL 时间线生成与查询.
+"""F7 Timeline Engine — KOL 时间线生成与查询.
 
 将 TradeAction 组织为 KOL 时间线，支持：
 - 按 KOL 构建时间线（时间倒序）

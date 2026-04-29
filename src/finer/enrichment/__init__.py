@@ -1,6 +1,6 @@
-"""L1 Enrichment — Topic splitting, entity extraction, content linking, and market data.
+"""F2 Anchor — Topic splitting, entity extraction, content linking, and market data.
 
-This module provides the core functionality for the L1 Enrichment layer:
+This module provides the core functionality for the F2 Anchor stage:
 1. Topic Splitter: Split long chat transcripts into topics
 2. Entity Extractor: Extract tickers, companies, events from content
 3. Content Linker: Build relationships between content pieces

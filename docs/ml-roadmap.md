@@ -1,21 +1,21 @@
 # Finer OS ML/AI 路线图
 
-> 最后更新: 2026-04-24
+> 最后更新: 2026-04-29
 
 ## 执行摘要
 
 Finer OS 是一个 AI-native 投研自动化流水线，核心目标是将 KOL 社交媒体内容转化为结构化、可回测、可审计的投资事件。本文档定义了 ML/AI 能力的发展路线图。
 
 **当前状态:**
-- ✅ 六层流水线架构 (L0-L8)
+- ✅ F0-F8 流水线架构（canonical，详见 AGENTS.md / docs/ARCHITECTURE.md）
 - ✅ TradeAction 抽取 (LLM)
 - ✅ 市场数据融合 (Finance-Skills)
 - ✅ DPO 训练数据导出
 - ✅ 数据血缘追踪
-- ❌ 回测引擎实现
-- ❌ KOL 评分模型
-- ❌ 本地情绪分析模型
-- ❌ ML 模型训练流程
+- ✅ 回测引擎实现 (`backtest/engine.py`)
+- ✅ KOL 评分模型 (`ml/kol_scorer.py`)
+- ✅ 本地情绪分析模块 (`ml/sentiment/`)
+- ❌ ML 模型训练流程（数据量不足，contract-only）
 
 ---
 

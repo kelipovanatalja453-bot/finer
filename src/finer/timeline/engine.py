@@ -1,4 +1,4 @@
-"""L7 Timeline Engine — 时间线构建、查询与对比的核心逻辑.
+"""F7 Timeline Engine — 时间线构建、查询与对比的核心逻辑.
 
 职责：
 1. 按 KOL 构建 TradeAction 时间线（时间倒序）

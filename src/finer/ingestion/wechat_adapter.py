@@ -745,7 +745,7 @@ class WeChatAdapter:
     Provides a unified interface for:
     - QR code login
     - Article listing and syncing
-    - Integration with L0 ingestion pipeline
+    - Integration with F0 ingestion pipeline
     """
 
     def __init__(
