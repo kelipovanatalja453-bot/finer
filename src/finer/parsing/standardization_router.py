@@ -8,8 +8,15 @@ Routing priority:
 2. .png/.jpg/.jpeg/.webp/.bmp → ImageOCRLayoutStandardizer
 3. .md + content_type in (chat_transcript, chat_export) → FeishuChatMarkdownStandardizer
 4. .md/.txt (fallback) → ManualTextStandardizer
-5. livestream_audio → StandardizationError (reserved, not implemented)
-6. No match → ocr_unreadable failure envelope
+5. livestream_audio → "unsupported" (placeholder adapter, not implemented)
+6. No match → "unsupported" (failure envelope)
+
+F1.5 Topic Assembly:
+    F1.5 (topic_assembler.py) is an independent sub-stage that runs AFTER F1
+    standardization. It assembles multi-topic content (long chats, documents)
+    into TopicBlock structures. This router does NOT invoke topic assembly --
+    that responsibility belongs to the downstream pipeline orchestrator, which
+    decides whether to call topic_assembler based on content complexity.
 """
 
 from __future__ import annotations
@@ -78,8 +85,8 @@ class StandardizationRouter:
     def _select_adapter(self, f0_record: ContentRecord, raw_path: Path) -> str:
         """Determine which adapter handles this record.
 
-        Returns: "pdf", "image", "feishu_chat", "manual_text"
-        Raises: StandardizationError for reserved/unsupported types.
+        Returns: "pdf", "image", "feishu_chat", "manual_text", "unsupported"
+        Never raises — unsupported types return "unsupported" for placeholder handling.
         """
         suffix = raw_path.suffix.lower()
 
@@ -98,12 +105,9 @@ class StandardizationRouter:
             # 4. Manual text fallback
             return "manual_text"
 
-        # 5. Reserved: audio
+        # 5. Audio → unsupported (placeholder adapter)
         if f0_record.content_type in _AUDIO_CONTENT_TYPES:
-            raise StandardizationError(
-                f"Audio standardization not implemented "
-                f"(content_type={f0_record.content_type})"
-            )
+            return "unsupported"
 
         # 6. No match — caller will build failure envelope
         return "unsupported"
@@ -125,12 +129,34 @@ class StandardizationRouter:
                 return self._run_feishu_chat(f0_record, raw_path)
             if adapter_name == "manual_text":
                 return self._run_manual_text(f0_record, raw_path)
-            # unsupported
-            return self._build_failure_envelope(
-                f0_record, raw_path,
-                reason=f"No adapter for suffix={raw_path.suffix}, "
-                       f"content_type={f0_record.content_type}",
-            )
+            # unsupported — use placeholder adapter (degrades gracefully)
+            if f0_record.content_type in _AUDIO_CONTENT_TYPES:
+                source_type = "audio_transcript"
+                reason = (
+                    f"Audio standardization not implemented "
+                    f"(content_type={f0_record.content_type})"
+                )
+            else:
+                source_type = "manual_text"
+                reason = (
+                    f"No adapter for suffix={raw_path.suffix}, "
+                    f"content_type={f0_record.content_type}"
+                )
+            try:
+                from finer.parsing.placeholder_adapters import create_unsupported_envelope
+                return create_unsupported_envelope(
+                    f0_record, raw_path,
+                    source_type=source_type,
+                    reason=reason,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "placeholder_adapter failed, falling back to _build_failure_envelope: %s",
+                    type(exc).__name__,
+                )
+                return self._build_failure_envelope(
+                    f0_record, raw_path, reason=reason,
+                )
         except StandardizationError:
             raise
         except Exception as exc:

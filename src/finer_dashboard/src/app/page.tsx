@@ -11,6 +11,9 @@ import { FileAudio, FileImage, FileText, ChevronRight, ChevronDown, Loader2, Dat
 import { cn } from "@/lib/utils";
 import type { AssetFile, SourceGroup, SourceType } from "@/lib/contracts";
 import { useState, useEffect, useCallback } from "react";
+import { apiFetch } from "@/lib/api-client";
+import type { ApiError } from "@/lib/api-client";
+import { ErrorPanel } from "@/components/error-panel";
 
 type EnrichmentContent = {
   id: string;
@@ -111,6 +114,7 @@ export default function Home() {
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [sourceGroups, setSourceGroups] = useState<SourceGroup[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
 
   // F2 Anchor enrichment expansion state
   const [expandedEntities, setExpandedEntities] = useState<Set<string>>(new Set());
@@ -127,6 +131,7 @@ export default function Home() {
 
   const fetchFiles = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       params.set("tier", tier);
@@ -137,8 +142,9 @@ export default function Home() {
         params.set("source_group_id", selectedGroupId);
       }
 
-      const res = await fetch(`/api/files?${params.toString()}`);
-      const data = await res.json();
+      const data = await apiFetch<{ files?: AssetFile[]; sourceGroups?: SourceGroup[] }>(
+        `/api/files?${params.toString()}`,
+      );
       setFiles(data.files || []);
       if (data.sourceGroups && JSON.stringify(data.sourceGroups) !== JSON.stringify(sourceGroups)) {
         setSourceGroups(data.sourceGroups);
@@ -149,7 +155,11 @@ export default function Home() {
         setSelectedAsset(null);
       }
     } catch (err) {
-      console.error(err);
+      if (err instanceof Error && err.name === "ApiError") {
+        setError(err as ApiError);
+      } else {
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }
@@ -348,6 +358,17 @@ export default function Home() {
           <div className="h-64 flex flex-col items-center justify-center gap-6 text-foreground/10">
             <Loader2 className="w-10 h-10 animate-spin" strokeWidth={1} />
             <span className="text-[10px] font-bold uppercase tracking-[0.2em]">FETCHING GLOBAL ASSETS...</span>
+          </div>
+        ) : error ? (
+          <div className="p-4">
+            <ErrorPanel
+              error={error}
+              onRetry={() => {
+                setError(null);
+                setRefreshKey((prev) => prev + 1);
+              }}
+              onDismiss={() => setError(null)}
+            />
           </div>
         ) : files.length === 0 ? (
           <div className="h-64 flex flex-col items-center justify-center gap-4 text-foreground/20 italic">

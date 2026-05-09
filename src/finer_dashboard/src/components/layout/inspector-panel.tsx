@@ -113,7 +113,7 @@ export function InspectorPanel({
     } else {
       setEntityContents([]);
     }
-  }, [tier, selectedAsset?.id, selectedAsset?.contentId]);
+  }, [tier, selectedAsset?.id, selectedAsset?.contentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Compute best path to preview
   // For image assets, prefer sourcePath (actual image) over evidencePath (OCR .md text)

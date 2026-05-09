@@ -11,7 +11,7 @@ import {
   GripHorizontal,
 } from "lucide-react";
 import { TimelineNode } from "./TimelineNode";
-import { TimelineFilter, TimeRange, TimelineFilters } from "./TimelineFilter";
+import { TimelineFilter, TimelineFilters } from "./TimelineFilter";
 import { OpinionDetailModal } from "./OpinionDetailModal";
 import { cn } from "@/lib/utils";
 
@@ -164,7 +164,7 @@ export function OpinionTimeline({
     setCursor(undefined);
     setOpinions([]);
     loadTimeline(true);
-  }, [filters]);
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 处理节点点击
   const handleNodeClick = useCallback((opinion: TimelineOpinion) => {

@@ -902,6 +902,95 @@ data/
 - Type: feat / fix / refactor / docs / test / chore
 - Scope 使用 F-stage: f0 / f1 / f2 / f3 / f4 / f5 / f6 / f7 / f8 / dashboard / schemas / ml
 
+### 12.4 错误处理流程
+
+Finer 使用统一的错误码系统（`src/finer/errors/`），所有 API 和管道错误均通过标准化错误码标识。
+
+#### 12.4.1 错误码体系
+
+```
+{DOMAIN}_{CATEGORY}_{SEQUENCE}
+```
+
+- **DOMAIN**: SYS / API / F0-F8 / F15 / LLM / WX / BILI / FEISHU / NLM
+- **CATEGORY**: IN(输入) / AUTH(认证) / PERM(权限) / NTF(不存在) / CNF(冲突) / STATE(状态) / SCHEMA(schema) / PARSE(解析) / POLICY(策略) / CFG(配置) / IO(文件) / INT(内部) / EXT(外部) / TMO(超时)
+
+#### 12.4.2 标准错误处理流程
+
+```
+报错 → 查码（RUNBOOK.md 或 GET /api/system/error-codes）→ 定位根因 → 修复 → 回归验证
+```
+
+1. **报错**：API 返回 `{"ok": false, "error": {"code": "...", "message": "...", "details": {...}}}`
+2. **查码**：用 `request_id` 关联后端日志，用错误码在 `RUNBOOK.md` 查找触发条件和修复建议
+3. **定位根因**：根据 `root_cause` 字段定位具体问题
+4. **修复**：按 `fix_hint` 执行修复操作
+5. **回归验证**：运行 `pytest tests/test_errors.py -v` 确保不破坏现有错误处理
+
+#### 12.4.3 如何新增错误码
+
+1. 在 `src/finer/errors/codes.py` 的 `ErrorCode` 枚举中添加新成员
+2. 在 `ERROR_CODE_DEFINITIONS` 字典中添加 `_info(...)` 元数据（title、root_cause、fix_hint）
+3. 选择合适的异常子类（如 `FinerExternalServiceError`、`FinerTimeoutError`）
+4. 在业务代码中抛出：`raise FinerError(ErrorCode.XXX_YYY_ZZZ, "具体消息")`
+5. 在 `RUNBOOK.md` 中补充对应行
+
+#### 12.4.4 如何在代码中使用
+
+```python
+# 推荐：使用最具体的异常子类
+from finer.errors import FinerExternalServiceError, FinerTimeoutError
+from finer.errors.codes import ErrorCode
+
+# 外部服务失败
+raise FinerExternalServiceError(
+    ErrorCode.LLM_EXT_002,
+    "Rate limited by provider",
+    service="mimo-api",
+    details={"retry_after": 60},
+)
+
+# 超时
+raise FinerTimeoutError(ErrorCode.F5_TMO_001, "Trade action construction timed out")
+
+# 通用错误（尽量用更具体的子类）
+from finer.errors import FinerError
+raise FinerError(ErrorCode.SYS_IN_001, "Missing content_id")
+```
+
+#### 12.4.5 前端错误展示
+
+```typescript
+// 统一错误响应类型
+interface FinerErrorResponse {
+  ok: false;
+  error: {
+    code: string;      // 如 "LLM_EXT_002"
+    message: string;   // 人类可读消息
+    details: {
+      request_id: string;  // 用于日志追踪
+      [key: string]: any;
+    };
+  };
+}
+
+// 前端展示策略
+// - 用 error.code 做精确匹配和国际化
+// - 用 error.message 做兜底展示
+// - 用 error.details.request_id 关联后端日志
+// - 429 错误码自动重试（指数退避）
+```
+
+#### 12.4.6 错误码查询 API
+
+```
+GET /api/system/error-codes                  # 全部错误码
+GET /api/system/error-codes?domain=F1        # 按 F-stage 过滤
+GET /api/system/error-codes?category=EXT     # 按错误类型过滤
+```
+
+详细 runbook 见 `src/finer/errors/RUNBOOK.md`。
+
 ---
 
 ## 13. 数据治理

@@ -5,7 +5,7 @@ from typing import Literal, List, Optional
 WorkflowStage = Literal["intake", "enrichment", "library", "parsing", "extraction", "review", "backtest"]
 ReviewDirection = Literal["bullish", "bearish", "neutral", "watchlist", "risk_warning"]
 ReviewActionStatus = Literal["draft", "active", "watch"]
-SourceType = Literal["feishu", "notebooklm", "local", "unknown"]
+SourceType = Literal["feishu", "notebooklm", "local", "wechat", "bilibili", "unknown"]
 
 class ReviewActionPayload(BaseModel):
     model_config = ConfigDict(populate_by_name=True)

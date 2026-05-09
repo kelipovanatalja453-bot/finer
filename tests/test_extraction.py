@@ -498,7 +498,7 @@ class TestExtractionEnrichment:
                 ActionStep(
                     sequence=1,
                     action_type=ActionType.LONG,
-                    target_price_low=150.0,  # Below current 175
+                    target_price_low=130.0,  # Below 175 * 0.8 = 140 threshold
                     target_price_high=200.0,
                 ),
             ],

@@ -8,7 +8,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Loader2,
 } from "lucide-react";
 import type { TimelineOpinion, OpinionDirection, VerificationStatus } from "./OpinionTimeline";
 import { cn } from "@/lib/utils";
@@ -94,7 +93,7 @@ export function TimelineNode({
   opinion,
   onClick,
   zoom = 1,
-  showConnector = true,
+  showConnector: _showConnector = true, // eslint-disable-line @typescript-eslint/no-unused-vars
 }: TimelineNodeProps) {
   const [isHovered, setIsHovered] = useState(false);
 

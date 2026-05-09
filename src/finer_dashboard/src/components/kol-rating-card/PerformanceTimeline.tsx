@@ -185,7 +185,7 @@ export function PerformanceTimeline({
   if (compact) {
     return (
       <div className={cn("flex items-center gap-2 overflow-x-auto pb-2", className)}>
-        {displayEvents.map((event, index) => {
+        {displayEvents.map((event) => {
           const dirStyle = getDirectionStyle(event.direction);
           return (
             <div

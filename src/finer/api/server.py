@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from finer.api.routes import files, review, stats, integrations, streams, sources, enrichment, bilibili, wechat, rlhf, extraction, aggregation, system, opinions, metrics, lineage, sentiment, backtest, bbdown, text_analysis, kol
 from finer.api.middleware import setup_auth_middleware
+from finer.errors import register_error_handlers
 
 
 def create_app() -> FastAPI:
@@ -11,6 +12,7 @@ def create_app() -> FastAPI:
         description="Lightweight routing for frontend communication.",
         version="0.1.0",
     )
+    register_error_handlers(app)
 
     # Configure CORS from environment variable (comma-separated origins)
     # Default to localhost:3000 for development

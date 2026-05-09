@@ -2,7 +2,6 @@
 
 import React from "react";
 import { FileText, Calendar, Highlighter } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 export interface OriginalTextCardProps {
   text: string;

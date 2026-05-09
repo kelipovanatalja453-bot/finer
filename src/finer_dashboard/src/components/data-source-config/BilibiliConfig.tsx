@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
   PlayCircle,
   Loader2,
@@ -52,11 +52,6 @@ export function BilibiliConfig() {
   const [transcribedVideos, setTranscribedVideos] = useState<TranscribedVideo[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // Load history on mount
-  React.useEffect(() => {
-    loadHistory();
-  }, []);
-
   const loadHistory = async () => {
     setLoadingHistory(true);
     try {
@@ -64,7 +59,7 @@ export function BilibiliConfig() {
       const res = await fetch("/api/bilibili/list");
       const data = await res.json();
       // 映射后端字段到前端期望的字段
-      const videos = (data.videos || []).map((v: any) => ({
+      const videos = (data.videos || []).map((v: Record<string, unknown>) => ({
         id: v.bvid,
         bvid: v.bvid,
         title: v.title,
@@ -80,6 +75,11 @@ export function BilibiliConfig() {
       setLoadingHistory(false);
     }
   };
+
+  // Load history on mount
+  React.useEffect(() => {
+    loadHistory();
+  }, []);
 
   // Extract BV ID from input
   const extractBvId = (input: string): string | null => {

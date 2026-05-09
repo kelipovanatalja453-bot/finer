@@ -150,7 +150,10 @@ async def refresh_source(req: RefreshRequest):
         ))
 
     else:
-        raise HTTPException(400, f"Unknown source type: {req.source_type}")
+        results.append(RefreshResult(
+            status="not_implemented",
+            errors=[f"Refresh for source type '{req.source_type}' not yet implemented"],
+        ))
 
     return {
         "sourceType": req.source_type,

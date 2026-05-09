@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, UploadFile, File, Query, HTTPException
 from typing import Optional
+import logging
 
 from finer.api.routes.files_utils import (
     DATA_ROOT,
@@ -13,7 +14,10 @@ from finer.api.routes.files_utils import (
     _build_source_summary,
 )
 from finer.api.routes.asset_builder import build_workflow_assets
+from finer.errors.exceptions import FinerError, FinerInternalError
+from finer.errors.codes import ErrorCode
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -43,10 +47,20 @@ async def get_files(
             "files": [f.model_dump(by_alias=True) for f in files],
             **summary,
         }
+    except FinerError:
+        raise
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Failed to build canonical asset view")
+        logger.exception(
+            "Failed to build canonical asset view for tier=%s workflow=%s",
+            tier, workflow,
+        )
+        raise FinerInternalError(
+            ErrorCode.API_INT_001,
+            f"Failed to build canonical asset view: {type(e).__name__}: {e}",
+            cause=e,
+            tier=tier,
+            workflow=workflow,
+        ) from e
 
 
 @router.post("")

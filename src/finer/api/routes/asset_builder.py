@@ -30,6 +30,14 @@ from finer.api.routes.files_utils import (
 logger = logging.getLogger(__name__)
 
 
+def _text_or(value: object, fallback: str) -> str:
+    """Return a non-empty string for strict AssetFile display fields."""
+    if value is None:
+        return fallback
+    text = str(value).strip()
+    return text or fallback
+
+
 # ---------------------------------------------------------------------------
 # Review payload builders
 # ---------------------------------------------------------------------------
@@ -158,7 +166,7 @@ def build_manifest_asset(
         review_payload = build_fallback_review_payload(summary, tags)
 
     size_str = format_file_size(Path(source_path)) if source_path and Path(source_path).exists() else "--"
-    pub_date = str(manifest.get("published_at", ""))[:10]
+    pub_date = str(manifest.get("published_at") or "")[:10]
     if not pub_date:
         pub_date = datetime.utcnow().isoformat()[:10]
 
@@ -244,7 +252,7 @@ def _build_workflow_assets_uncached(workflow_stage: str) -> List[AssetFile]:
     manifests_data = list(manifests_by_content_id.values())
 
     raw_paths = []
-    for p in collect_files_from_directories([DATA_ROOT / "raw", DATA_ROOT / "L0_ingest"]):
+    for p in collect_files_from_directories([DATA_ROOT / "raw", DATA_ROOT / "L0_ingest", DATA_ROOT / "F0_intake"]):
         if not p.name.endswith(".json"):
             raw_paths.append(p)
 
@@ -282,8 +290,14 @@ def _build_workflow_assets_uncached(workflow_stage: str) -> List[AssetFile]:
             manifest = manifest_tuple[0] if manifest_tuple else None
 
             parts = rp.relative_to(DATA_ROOT).parts
-            creator_name = manifest.get("creator_name") if manifest else (parts[1] if len(parts) > 1 else "_inbox")
-            content_type = manifest.get("content_type") if manifest else (parts[2] if len(parts) > 2 else "unclassified")
+            creator_name = _text_or(
+                manifest.get("creator_name") if manifest else (parts[1] if len(parts) > 1 else None),
+                "_inbox",
+            )
+            content_type = _text_or(
+                manifest.get("content_type") if manifest else (parts[2] if len(parts) > 2 else None),
+                "unclassified",
+            )
 
             summary_txt = "Raw asset waiting for classification, registration, or downstream parsing."
             if manifest and manifest.get("metadata", {}).get("context_text"):
@@ -292,7 +306,10 @@ def _build_workflow_assets_uncached(workflow_stage: str) -> List[AssetFile]:
             source_type, group_id, group_name = extract_source_info(manifest, str(rp))
             file_timestamp = extract_file_timestamp(manifest, rp)
 
-            file_id = manifest.get("content_id") if manifest else f"raw:{rp.relative_to(DATA_ROOT)}"
+            file_id = _text_or(
+                manifest.get("content_id") if manifest else f"raw:{rp.relative_to(DATA_ROOT)}",
+                f"raw:{rp.relative_to(DATA_ROOT)}",
+            )
             if any(a.id == file_id for a in assets):
                 import hashlib
                 path_hash = hashlib.md5(str(rp).encode()).hexdigest()[:8]
@@ -319,9 +336,12 @@ def _build_workflow_assets_uncached(workflow_stage: str) -> List[AssetFile]:
                 workflowStage="intake",
                 stageBadge=STAGE_BADGE_BY_WORKFLOW["intake"],
                 creatorName=creator_name,
-                sourcePlatform=manifest.get("source_platform", "manual_or_feishu") if manifest else "manual_or_feishu",
+                sourcePlatform=_text_or(
+                    manifest.get("source_platform") if manifest else None,
+                    "manual_or_feishu",
+                ),
                 contentType=content_type,
-                contentId=manifest.get("content_id") if manifest else source_name,
+                contentId=_text_or(manifest.get("content_id") if manifest else None, source_name),
                 sourcePath=str(rp),
                 manifestPath=str(manifest_tuple[1]) if manifest_tuple else None,
                 summary=summary_txt,
@@ -471,7 +491,7 @@ def _build_workflow_assets_uncached(workflow_stage: str) -> List[AssetFile]:
                 id=content_id,
                 name=manifest.get("title") if manifest else cp.name,
                 size=format_file_size(cp),
-                date=manifest.get("published_at", "")[:10] if manifest else datetime.fromtimestamp(cp.stat().st_mtime).isoformat()[:10],
+                date=(manifest.get("published_at") or "")[:10] if manifest else datetime.fromtimestamp(cp.stat().st_mtime).isoformat()[:10],
                 type="json",
                 status="approved" if approved_event_path else ("needs review" if workflow_stage == "review" else "candidate ready"),
                 workflowStage=workflow_stage,

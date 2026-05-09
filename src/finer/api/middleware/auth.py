@@ -12,10 +12,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Callable, List, Optional, Set
+from uuid import uuid4
 
-from fastapi import FastAPI, Request, Response, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from finer.errors import ErrorCode, error_response
 
 logger = logging.getLogger(__name__)
 
@@ -101,15 +103,10 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         # Authenticate request
         auth_result = self._authenticate(request)
         if not auth_result.success:
-            return JSONResponse(
-                status_code=401,
-                content={
-                    "ok": False,
-                    "error": {
-                        "code": "UNAUTHORIZED",
-                        "message": auth_result.error_message
-                    }
-                }
+            return error_response(
+                ErrorCode.SYS_AUTH_001,
+                auth_result.error_message,
+                details=self._request_details(request),
             )
 
         # Check sensitive operations
@@ -117,15 +114,10 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             # Require re-authentication for sensitive operations
             sensitive_auth = request.headers.get("X-Sensitive-Auth")
             if not sensitive_auth or not self._verify_sensitive_auth(sensitive_auth):
-                return JSONResponse(
-                    status_code=403,
-                    content={
-                        "ok": False,
-                        "error": {
-                            "code": "FORBIDDEN",
-                            "message": "Sensitive operation requires additional authentication"
-                        }
-                    }
+                return error_response(
+                    ErrorCode.SYS_PERM_001,
+                    "Sensitive operation requires additional authentication",
+                    details=self._request_details(request),
                 )
 
         # Store auth info in request state
@@ -251,6 +243,11 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         # Could implement TOTP here for additional security
         # For now, just require API key re-verification
         return False
+
+    def _request_details(self, request: Request) -> dict[str, str]:
+        return {
+            "request_id": request.headers.get("X-Request-ID") or str(uuid4()),
+        }
 
 
 @dataclass

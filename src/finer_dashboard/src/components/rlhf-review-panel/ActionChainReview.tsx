@@ -135,7 +135,7 @@ export function ActionChainReview({
                 暂无操作链数据
               </div>
             ) : (
-              displayActions.map((action, index) => (
+              displayActions.map((action) => (
                 <div
                   key={action.id}
                   className={cn(

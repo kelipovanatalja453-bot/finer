@@ -9,7 +9,6 @@ import {
   Bot,
   CheckCircle2,
   Gauge,
-  Layers3,
   Network,
   Radar,
   Settings,

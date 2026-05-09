@@ -58,7 +58,7 @@ export function SourceFilter({
 
         {showSourceDropdown && (
           <div className="absolute top-full left-0 mt-1 w-40 bg-white border border-stone-200 rounded-sm shadow-lg z-50">
-            {(["all", "feishu", "notebooklm", "local"] as const).map((type) => (
+            {(["all", "feishu", "notebooklm", "local", "wechat", "bilibili"] as const).map((type) => (
               <button
                 key={type}
                 onClick={() => {
@@ -136,7 +136,7 @@ export function SourceFilter({
       )}
 
       {/* Refresh Button */}
-      {onRefresh && sourceType !== "all" && sourceType !== "local" && (
+      {onRefresh && (sourceType === "feishu" || sourceType === "notebooklm") && (
         <button
           onClick={onRefresh}
           disabled={isRefreshing}

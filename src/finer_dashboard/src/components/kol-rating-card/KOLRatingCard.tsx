@@ -6,7 +6,7 @@ import { DimensionScores } from "./DimensionScores";
 import { PerformanceTimeline } from "./PerformanceTimeline";
 import { FocusAreas } from "./FocusAreas";
 import { RecentOpinions } from "./RecentOpinions";
-import { TrendingUp, TrendingDown, Minus, AlertCircle, Loader2 } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Types
@@ -77,49 +77,6 @@ interface KOLRatingResponse {
   focusAreas: FocusArea[];
   recentOpinions: RecentOpinion[];
 }
-
-// Mock data for development
-const mockKOLRating: KOLRatingResponse = {
-  rating: {
-    kolId: "kol_001",
-    name: "李大霄",
-    platform: "微博",
-    overallRating: 4,
-    totalOpinions: 156,
-    verifiedOpinions: 142,
-    accuracyRate: 68.3,
-    avgReturn: 12.5,
-    rank: 23,
-    badges: ["金牌分析师", "连续3年准确率>60%"],
-  },
-  dimensions: [
-    { name: "观点准确率", score: 68.3, weight: 0.35, description: "历史观点验证成功率" },
-    { name: "止损质量", score: 72.1, weight: 0.20, description: "风险提示及时性与有效性" },
-    { name: "一致性", score: 85.6, weight: 0.15, description: "观点逻辑前后一致性" },
-    { name: "时效性", score: 91.2, weight: 0.15, description: "观点发布的时效价值" },
-    { name: "信息密度", score: 78.4, weight: 0.15, description: "单条观点的有效信息量" },
-  ],
-  timeline: [
-    { id: "t1", date: "2024-04-20", ticker: "NVDA", direction: "bullish", verified: true, result: "profit", returnRate: 15.2, summary: "AI算力龙头，目标价上调" },
-    { id: "t2", date: "2024-04-18", ticker: "TSLA", direction: "bearish", verified: true, result: "profit", returnRate: 8.7, summary: "交付量不及预期，建议减仓" },
-    { id: "t3", date: "2024-04-15", ticker: "AAPL", direction: "neutral", verified: true, result: "neutral", returnRate: 0.5, summary: "财报前观望" },
-    { id: "t4", date: "2024-04-12", ticker: "AMD", direction: "bullish", verified: true, result: "loss", returnRate: -3.2, summary: "MI300放量预期" },
-    { id: "t5", date: "2024-04-10", ticker: "META", direction: "bullish", verified: false, summary: "AI广告变现加速" },
-  ],
-  focusAreas: [
-    { name: "AI芯片", count: 45, accuracy: 75.6, avgReturn: 18.3 },
-    { name: "新能源", count: 38, accuracy: 62.1, avgReturn: 9.8 },
-    { name: "消费电子", count: 28, accuracy: 71.4, avgReturn: 11.2 },
-    { name: "云计算", count: 25, accuracy: 68.0, avgReturn: 14.5 },
-    { name: "医疗健康", count: 20, accuracy: 55.0, avgReturn: 5.6 },
-  ],
-  recentOpinions: [
-    { id: "o1", date: "2024-04-22", ticker: "MSFT", direction: "bullish", title: "Azure增速超预期，AI云服务领跑", verified: false, status: "pending" },
-    { id: "o2", date: "2024-04-21", ticker: "GOOGL", direction: "bullish", title: "Gemini 2.0发布在即，广告业务稳健", verified: true, status: "correct", returnRate: 6.2 },
-    { id: "o3", date: "2024-04-19", ticker: "AMZN", direction: "neutral", title: "AWS增速放缓，零售业务承压", verified: true, status: "correct", returnRate: 1.1 },
-    { id: "o4", date: "2024-04-17", ticker: "NFLX", direction: "bearish", title: "会员增长见顶，内容成本攀升", verified: true, status: "incorrect", returnRate: -4.3 },
-  ],
-};
 
 export function KOLRatingCard({
   kolId,

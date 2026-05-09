@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { QrCode, RefreshCw, Trash2, FileText, Loader2, CheckCircle2, ExternalLink, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { RefreshCw, Trash2, Loader2, ExternalLink, AlertCircle } from "lucide-react";
 import { QRCodeDisplay } from "./QRCodeDisplay";
 import { SyncStatus, SyncStatusType } from "./SyncStatus";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ export function WeChatConfig() {
   useEffect(() => {
     loadAccounts();
     checkExporterHealth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkExporterHealth = async () => {
@@ -90,7 +91,7 @@ export function WeChatConfig() {
       setLoginSessionId(data.session_id);
       setLoginStatus(data.status || "qr_ready");
       setPollingLogin(true);
-    } catch (err) {
+    } catch {
       setLoginError("请求失败，请检查导出服务是否运行");
       setLoginStatus("failed");
     } finally {
@@ -128,6 +129,7 @@ export function WeChatConfig() {
     }, 2500);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pollingLogin, loginSessionId]);
 
   // Countdown timer
@@ -179,7 +181,7 @@ export function WeChatConfig() {
         setSyncStatus("error");
         setSyncMessage(data.detail || "同步失败");
       }
-    } catch (err) {
+    } catch {
       setSyncStatus("error");
       setSyncMessage("同步失败，请重试");
     }

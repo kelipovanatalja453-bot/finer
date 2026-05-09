@@ -1,4 +1,14 @@
-"""Content Standardizer — Minimal V0 Processor.
+"""DEPRECATED: This module outputs legacy SegmentRecord.
+
+New code should use the canonical F1 adapters in:
+- PDFStandardizer (parsing/pdf_standardizer.py)
+- ImageOCRLayoutStandardizer (parsing/image_ocr_standardizer.py)
+- FeishuChatMarkdownStandardizer (parsing/feishu_chat_standardizer.py)
+- ManualTextStandardizer (parsing/manual_text_standardizer.py)
+
+This module is preserved for backward compatibility only.
+
+Content Standardizer — Minimal V0 Processor.
 
 This module provides text standardization functions for converting
 markdown sources and plain text into ContentEnvelope format.

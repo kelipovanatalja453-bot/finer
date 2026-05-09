@@ -22,7 +22,9 @@ from finer.ingestion.bilibili_adapter import (
     BilibiliClient,
 )
 
+from finer.errors import ErrorCode, error_response
 from finer.paths import REPO_ROOT, DATA_ROOT
+from finer.manifests import ContentManifest, write_manifest, build_content_id
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ BILIBILI_DIR = DATA_ROOT / "raw" / "bilibili"
 class VideoInfoResponse(BaseModel):
     """Video metadata response."""
     bvid: str
+    aid: int = 0
     title: str
     uploader: str
     uploader_id: int
@@ -78,7 +81,7 @@ class SyncResponse(BaseModel):
     """Sync to F0 Intake response."""
     bvid: str
     content_id: str
-    l0_path: str
+    f0_path: str
     transcript_path: str
     metadata_path: str
     status: str
@@ -105,6 +108,7 @@ def video_info_to_response(info: BilibiliVideoInfo) -> VideoInfoResponse:
     """Convert BilibiliVideoInfo to response model."""
     return VideoInfoResponse(
         bvid=info.bvid,
+        aid=info.aid,
         title=info.title,
         uploader=info.uploader,
         uploader_id=info.uploader_id,
@@ -290,7 +294,7 @@ async def get_task_status(task_id: str):
 
 
 @router.post("/sync/{bvid}", response_model=SyncResponse)
-async def sync_to_l0(
+async def sync_to_f0_intake(
     bvid: str,
     req: Optional[SyncRequest] = None,
 ):
@@ -332,50 +336,50 @@ async def sync_to_l0(
 
         # Create F0 content ID
         import json
+        import shutil
         metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
         content_id = f"bilibili_{parsed_bvid}"
 
-        # Create F0 directory structure (legacy L0_ingestion path)
-        l0_dir = DATA_ROOT / "L0_ingestion" / "bilibili" / str(metadata["uploader_id"])
-        l0_dir.mkdir(parents=True, exist_ok=True)
+        # Create F0 directory structure
+        f0_dir = DATA_ROOT / "F0_intake" / "bilibili" / str(metadata["uploader_id"])
+        f0_dir.mkdir(parents=True, exist_ok=True)
 
-        l0_transcript = l0_dir / f"{parsed_bvid}.md"
-        l0_manifest = l0_dir / f"{parsed_bvid}_manifest.json"
+        f0_transcript = f0_dir / f"{parsed_bvid}.md"
 
         # Copy transcript
-        import shutil
-        shutil.copy(transcript_file, l0_transcript)
+        shutil.copy(transcript_file, f0_transcript)
 
-        # Create manifest
-        manifest = {
-            "content_id": content_id,
-            "source_type": "bilibili_video",
-            "source_id": parsed_bvid,
-            "source_url": f"https://www.bilibili.com/video/{parsed_bvid}",
-            "title": metadata["title"],
-            "author": metadata["uploader"],
-            "author_id": metadata["uploader_id"],
-            "publish_time": metadata["publish_time"],
-            "ingest_time": datetime.now().isoformat(),
-            "duration_seconds": metadata["duration"],
-            "file_path": str(l0_transcript),
-            "file_type": "transcript",
-            "tags": (req.tags if req else []) or metadata.get("tags", []),
-            "category": req.category if req else None,
-            "metadata": metadata,
-        }
-
-        l0_manifest.write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2),
-            encoding="utf-8"
+        # Build and persist manifest via canonical ContentManifest
+        manifest = ContentManifest(
+            content_id=content_id,
+            creator_name=metadata["uploader"],
+            source_platform="bilibili",
+            content_type="video",
+            published_at=metadata["publish_time"],
+            title=metadata["title"],
+            source_url=f"https://www.bilibili.com/video/{parsed_bvid}",
+            source_path=str(f0_transcript),
+            language="zh",
+            market_scope=["US", "HK", "A"],
+            metadata={
+                "bvid": parsed_bvid,
+                "aid": metadata.get("aid", 0),
+                "uploader_id": metadata["uploader_id"],
+                "duration": metadata["duration"],
+                "tags": (req.tags if req else []) or metadata.get("tags", []),
+                "category": req.category if req else None,
+                "ingest_time": datetime.now().isoformat(),
+            },
         )
+
+        manifest_path = write_manifest(REPO_ROOT, manifest)
 
         return SyncResponse(
             bvid=parsed_bvid,
             content_id=content_id,
-            l0_path=str(l0_dir),
-            transcript_path=str(l0_transcript),
-            metadata_path=str(l0_manifest),
+            f0_path=str(f0_dir),
+            transcript_path=str(f0_transcript),
+            metadata_path=str(manifest_path),
             status="synced",
         )
 
@@ -384,6 +388,34 @@ async def sync_to_l0(
     except Exception as e:
         logger.error(f"Sync failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Sync failed: {e}")
+
+
+@router.get("/search")
+async def search_bilibili_videos(
+    keyword: str = Query(default="", description="Search keyword"),
+    page: int = Query(default=1, ge=1, description="Page number"),
+    page_size: int = Query(default=20, ge=1, le=50, description="Results per page"),
+):
+    """Search Bilibili videos by keyword.
+
+    Args:
+        keyword: Search keyword (empty returns no results)
+        page: Page number (1-based)
+        page_size: Results per page (1-50)
+
+    Returns:
+        Search results with video metadata
+    """
+    if not keyword:
+        return {"ok": True, "data": {"videos": [], "total": 0}}
+
+    try:
+        client = BilibiliClient()
+        results = client.search_videos(keyword, page, page_size)
+        return {"ok": True, "data": results}
+    except Exception as e:
+        logger.error(f"Bilibili search failed: {e}")
+        return error_response(ErrorCode.BILI_EXT_001, str(e))
 
 
 @router.get("/list")

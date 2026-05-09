@@ -32,86 +32,6 @@ interface UseTimelineDataReturn {
 // 模拟数据生成
 // ============================================
 
-function generateMockOpinions(count: number, startIndex: number = 0): TimelineOpinion[] {
-  const tickers = [
-    { symbol: "NVDA", name: "英伟达" },
-    { symbol: "AAPL", name: "苹果" },
-    { symbol: "TSLA", name: "特斯拉" },
-    { symbol: "AMD", name: "超微半导体" },
-    { symbol: "MSFT", name: "微软" },
-    { symbol: "GOOGL", name: "谷歌" },
-    { symbol: "AMZN", name: "亚马逊" },
-    { symbol: "META", name: "Meta" },
-  ];
-
-  const authors = ["分析师张三", "李四", "王五", "财通证券", "中信证券", "高盛研究"];
-  const platforms = ["财通证券", "中信证券", "高盛研究", "摩根士丹利", "内部研究"];
-
-  const directions: ("bullish" | "bearish" | "neutral")[] = ["bullish", "bearish", "neutral"];
-  const verificationStatuses: ("success" | "failed" | "pending")[] = ["success", "failed", "pending"];
-
-  const actionVerbs = ["回调至", "突破", "站稳", "跌破", "反弹至"];
-  const priceRanges = [
-    { low: "100", high: "120" },
-    { low: "150", high: "180" },
-    { low: "200", high: "250" },
-    { low: "300", high: "350" },
-    { low: "450", high: "500" },
-  ];
-
-  return Array.from({ length: count }, (_, i) => {
-    const ticker = tickers[Math.floor(Math.random() * tickers.length)];
-    const direction = directions[Math.floor(Math.random() * directions.length)];
-    const status = verificationStatuses[Math.floor(Math.random() * verificationStatuses.length)];
-
-    const baseTime = Date.now() - (startIndex + i) * 24 * 60 * 60 * 1000 * (0.5 + Math.random());
-
-    const hasActionChain = Math.random() > 0.3;
-
-    return {
-      id: `opinion-${startIndex + i}`,
-      timestamp: new Date(baseTime).toISOString(),
-      ticker: ticker.symbol,
-      tickerName: ticker.name,
-      direction,
-      confidence: 0.5 + Math.random() * 0.5,
-      verificationStatus: status,
-      priceChange: status !== "pending" ? (Math.random() - 0.5) * 30 : undefined,
-      holdingDays: status !== "pending" ? Math.floor(Math.random() * 30) + 1 : undefined,
-      sourceText: generateMockSourceText(ticker.symbol, direction),
-      author: authors[Math.floor(Math.random() * authors.length)],
-      platform: platforms[Math.floor(Math.random() * platforms.length)],
-      actionChain: hasActionChain ? generateMockActionChain() : undefined,
-      rlhfStatus: Math.random() > 0.5 ? "pending" : Math.random() > 0.5 ? "reviewed" : "skipped",
-      rlhfRating: Math.random() > 0.5 ? Math.floor(Math.random() * 5) + 1 : undefined,
-    };
-  });
-}
-
-function generateMockSourceText(ticker: string, direction: string): string {
-  const templates = [
-    `分析师认为${ticker}在当前市场环境下具有较好的投资价值，建议关注后续走势。`,
-    `${ticker}近期表现强劲，技术面显示有进一步上涨空间，可考虑逢低布局。`,
-    `从基本面分析来看，${ticker}估值处于合理区间，短期看${direction === "bullish" ? "多" : direction === "bearish" ? "空" : "中性"}。`,
-    `${ticker}发布了超预期的财报，市场反应积极，建议关注后续催化剂。`,
-    `考虑到宏观经济环境，${ticker}面临一定压力，建议谨慎操作。`,
-  ];
-  return templates[Math.floor(Math.random() * templates.length)];
-}
-
-function generateMockActionChain() {
-  const actionTypes = ["watch", "long", "short", "close_long"] as const;
-  const count = Math.floor(Math.random() * 2) + 1;
-
-  return Array.from({ length: count }, (_, i) => ({
-    id: `step-${i}`,
-    actionType: actionTypes[Math.floor(Math.random() * actionTypes.length)],
-    triggerCondition: i === 0 ? "突破前高" : undefined,
-    targetPriceLow: String(100 + Math.floor(Math.random() * 50)),
-    targetPriceHigh: String(150 + Math.floor(Math.random() * 100)),
-  }));
-}
-
 // ============================================
 // Hook: useTimelineData
 // ============================================
@@ -336,9 +256,11 @@ export function useKeyboardNavigation(options: UseKeyboardNavigationOptions) {
   }, [enabled, onPrevious, onNext, onSelect, onEscape]);
 }
 
-export default {
+const hooks = {
   useTimelineData,
   useTimelineScroll,
   useDragScroll,
   useKeyboardNavigation,
 };
+
+export default hooks;

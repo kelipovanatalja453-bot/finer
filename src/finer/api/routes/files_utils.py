@@ -483,6 +483,10 @@ def extract_source_info(manifest: Optional[Dict], source_path: Optional[str]) ->
     group_id = None
     group_name = None
 
+    # Normalize platform aliases
+    if source_platform == "nlm":
+        source_platform = "notebooklm"
+
     feishu_chat_id = metadata.get("feishu_chat_id")
     if feishu_chat_id or source_platform == "feishu":
         source_type = "feishu"
@@ -495,6 +499,16 @@ def extract_source_info(manifest: Optional[Dict], source_path: Optional[str]) ->
         source_type = "notebooklm"
         group_id = metadata.get("nlm_notebook_id")
         group_name = metadata.get("nlm_notebook_name", group_id)
+
+    elif source_platform == "wechat":
+        source_type = "wechat"
+        group_id = metadata.get("account_id")
+        group_name = metadata.get("account_name", group_id)
+
+    elif source_platform == "bilibili":
+        source_type = "bilibili"
+        group_id = metadata.get("uploader_id")
+        group_name = metadata.get("uploader", group_id)
 
     elif source_platform in ("manual", "local", "upload") or not feishu_chat_id:
         if source_path:
@@ -541,7 +555,7 @@ def extract_file_timestamp(manifest: Optional[Dict], file_path: Optional[Path]) 
 
 def _build_source_summary(assets: List[AssetFile]) -> Dict[str, Any]:
     """Build summary of source groups and counts."""
-    source_counts: Dict[str, int] = {"feishu": 0, "notebooklm": 0, "local": 0, "unknown": 0}
+    source_counts: Dict[str, int] = {"feishu": 0, "notebooklm": 0, "local": 0, "wechat": 0, "bilibili": 0, "unknown": 0}
     group_counts: Dict[str, Dict[str, Any]] = {}
 
     for a in assets:

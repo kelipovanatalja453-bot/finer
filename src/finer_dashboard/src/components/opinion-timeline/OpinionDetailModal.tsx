@@ -9,12 +9,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  ExternalLink,
-  Calendar,
-  User,
   BarChart3,
   Target,
-  AlertCircle,
   Star,
   MessageSquare,
   ChevronRight,
@@ -363,7 +359,7 @@ export function OpinionDetailModal({ opinion, open, onClose }: OpinionDetailModa
             </div>
             <div className={cn(STYLES.card, STYLES.cardHighlight)}>
               <blockquote className={STYLES.quote}>
-                "{opinion.sourceText}"
+                &ldquo;{opinion.sourceText}&rdquo;
               </blockquote>
             </div>
           </div>

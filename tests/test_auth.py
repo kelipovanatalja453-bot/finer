@@ -7,6 +7,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from finer.errors import ErrorCode
 from finer.api.middleware.auth import (
     AuthConfig,
     APIKeyAuthMiddleware,
@@ -88,7 +89,7 @@ def test_api_key_auth_requires_header(app_with_api_key):
     # Protected endpoint without API key should fail
     response = client.get("/api/protected")
     assert response.status_code == 401
-    assert "UNAUTHORIZED" in response.json()["error"]["code"]
+    assert response.json()["error"]["code"] == ErrorCode.SYS_AUTH_001.value
 
 
 def test_api_key_auth_valid_key(app_with_api_key):
@@ -125,6 +126,7 @@ def test_delete_requires_sensitive_auth(app_with_api_key):
         headers={"X-API-Key": "test-api-key-123"}
     )
     assert response.status_code == 403
+    assert response.json()["error"]["code"] == ErrorCode.SYS_PERM_001.value
     assert "Sensitive operation" in response.json()["error"]["message"]
 
     # DELETE with sensitive auth should work

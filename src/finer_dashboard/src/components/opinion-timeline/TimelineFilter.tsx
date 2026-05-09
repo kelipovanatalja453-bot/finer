@@ -3,11 +3,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Calendar,
-  Filter,
   ChevronDown,
   Check,
   X,
-  Loader2,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -247,8 +245,6 @@ function ActiveFilterTags({
 
   if (!hasFilters) return null;
 
-  const tagCount = (filters.timeRange !== "1M" ? 1 : 0) + filters.tickers.length + filters.directions.length + filters.kols.length;
-
   return (
     <div className="flex items-center gap-2 pl-4 border-l border-stone-200">
       <div className="flex items-center gap-1.5 flex-wrap">
@@ -312,11 +308,8 @@ export function TimelineFilter({ filters, onChange }: TimelineFilterProps) {
   // 模拟数据 - 实际应从 API 获取
   const [availableTickers, setAvailableTickers] = useState<string[]>([]);
   const [availableKols, setAvailableKols] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-
   // 加载可用选项
   useEffect(() => {
-    setLoading(true);
     fetch("/api/opinions/meta")
       .then(res => res.json())
       .then(data => {
@@ -328,8 +321,7 @@ export function TimelineFilter({ filters, onChange }: TimelineFilterProps) {
         // 使用模拟数据
         setAvailableTickers(["NVDA", "AAPL", "TSLA", "AMD", "MSFT"]);
         setAvailableKols(["分析师张三", "李四", "王五", "财通证券"]);
-      })
-      .finally(() => setLoading(false));
+      });
   }, []);
 
   // 更新器

@@ -43,6 +43,7 @@ class BilibiliVideoInfo:
     duration: int  # seconds
     description: str
     cover_url: str
+    aid: int = 0
     page_count: int = 1
     tags: list[str] = field(default_factory=list)
 
@@ -124,6 +125,32 @@ class BilibiliClient:
 
         raise ValueError(f"Cannot parse BV ID from: {url_or_bvid}")
 
+    def search_videos(
+        self,
+        keyword: str,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
+        """Search Bilibili videos by keyword.
+
+        Placeholder implementation — returns empty results until
+        a real search API integration is wired up.
+
+        Args:
+            keyword: Search keyword
+            page: Page number (1-based)
+            page_size: Results per page
+
+        Returns:
+            Dict with keys: videos, total, page, page_size
+        """
+        return {
+            "videos": [],
+            "total": 0,
+            "page": page,
+            "page_size": page_size,
+        }
+
     def get_video_info(self, bvid: str) -> BilibiliVideoInfo:
         """Fetch video metadata from B站 API."""
         url = f"https://api.bilibili.com/x/web-interface/view?bvid={bvid}"
@@ -147,6 +174,7 @@ class BilibiliClient:
             duration=info["duration"],
             description=info["desc"],
             cover_url=info["pic"],
+            aid=info.get("aid", 0),
             page_count=info.get("videos", 1),
             tags=[tag.get("tag_name", "") for tag in info.get("tag", []) if isinstance(tag, dict)],
         )
@@ -563,6 +591,7 @@ class BilibiliAdapter:
 
         metadata = {
             "bvid": result.video_info.bvid,
+            "aid": result.video_info.aid,
             "title": result.video_info.title,
             "uploader": result.video_info.uploader,
             "uploader_id": result.video_info.uploader_id,

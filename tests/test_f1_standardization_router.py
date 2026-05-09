@@ -20,7 +20,6 @@ import pytest
 
 from finer.parsing.manual_text_standardizer import ManualTextStandardizer
 from finer.parsing.standardization_router import (
-    StandardizationError,
     StandardizationReport,
     StandardizationRouter,
 )
@@ -110,14 +109,14 @@ class TestSelectAdapter:
         f0 = _make_f0(source_path="/tmp/notes.txt")
         assert router._select_adapter(f0, Path("/tmp/notes.txt")) == "manual_text"
 
-    def test_livestream_audio_raises(self):
+    def test_livestream_audio_returns_unsupported(self):
+        """Audio is not implemented but should not raise — returns 'unsupported' for placeholder handling."""
         router = StandardizationRouter()
         f0 = _make_f0(
             content_type="livestream_audio",
             source_path="/tmp/audio.mp3",
         )
-        with pytest.raises(StandardizationError, match="Audio standardization"):
-            router._select_adapter(f0, Path("/tmp/audio.mp3"))
+        assert router._select_adapter(f0, Path("/tmp/audio.mp3")) == "unsupported"
 
     def test_unknown_suffix_returns_unsupported(self):
         router = StandardizationRouter()
@@ -366,14 +365,20 @@ class TestFailureHandling:
         assert envelope.blocks[0].block_type == "ocr_unreadable"
         assert "unsupported" in report["adapter"] or report["adapter"] == "unsupported"
 
-    def test_audio_type_raises_standardization_error(self):
+    def test_audio_type_returns_placeholder_envelope(self):
+        """Audio type should return a placeholder envelope, not raise."""
         router = StandardizationRouter()
         f0 = _make_f0(
             content_type="livestream_audio",
             source_path="/tmp/audio.mp3",
         )
-        with pytest.raises(StandardizationError):
-            router.route(f0, Path("/tmp/audio.mp3"))
+        envelope, report = router.route(f0, Path("/tmp/audio.mp3"))
+
+        assert isinstance(envelope, ContentEnvelope)
+        assert envelope.standardization_profile == "placeholder"
+        assert envelope.source_type == "audio_transcript"
+        assert envelope.blocks[0].block_type == "ocr_unreadable"
+        assert report["adapter"] == "unsupported"
 
     def test_failure_envelope_passes_canonical_validator(self, tmp_path):
         f = tmp_path / "bad.pdf"
@@ -404,16 +409,31 @@ class TestFailureHandling:
         envelope, _ = router.route(f0, img)
         assert envelope.source_type == "image"
 
-    def test_failure_envelope_has_intended_source_type_metadata(self, tmp_path):
-        """P2: failure block metadata should record intended_source_type."""
+    def test_unsupported_envelope_has_placeholder_profile(self, tmp_path):
+        """Unsupported types use placeholder adapter with profile='placeholder'."""
         f = tmp_path / "data.csv"
         f.write_bytes(b"a,b,c")
 
         router = StandardizationRouter()
         f0 = _make_f0(source_path=str(f))
+        envelope, report = router.route(f0, f)
+
+        assert envelope.standardization_profile == "placeholder"
+        assert envelope.blocks[0].quality.quality_flags == ["unsupported_source_type"]
+        assert report["adapter"] == "unsupported"
+
+    def test_corrupt_adapter_failure_has_error_metadata(self, tmp_path):
+        """P2: adapter failure should record error metadata (adapter-specific)."""
+        f = tmp_path / "bad.pdf"
+        f.write_bytes(b"not a pdf")
+
+        router = StandardizationRouter()
+        f0 = _make_f0(source_path=str(f))
         envelope, _ = router.route(f0, f)
 
-        assert envelope.blocks[0].metadata.get("intended_source_type") is not None
+        # PDFStandardizer handles corrupt files internally with its own metadata
+        assert envelope.blocks[0].metadata is not None
+        assert len(envelope.blocks[0].metadata) > 0
 
 
 # ---------------------------------------------------------------------------

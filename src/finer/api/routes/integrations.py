@@ -10,18 +10,27 @@ from finer.config import load_feishu_config
 from finer.ingestion.feishu_poller import FeishuPoller, SyncState
 from finer.ingestion.classifier import FileClassifier
 from finer.ingestion.vision_utils import VisionDescriptor, get_vision_transcript_path
-from finer.manifests import ContentManifest, build_content_id, write_manifest
+from finer.manifests import ContentManifest, build_content_id, write_manifest, register_file
 from finer.paths import REPO_ROOT, DATA_ROOT
 
 router = APIRouter()
 
 FEISHU_POOL_DIR = DATA_ROOT / "feishu_sync_pool"
 NLM_POOL_DIR = DATA_ROOT / "nlm_sync_pool"
-L0_INGEST_DIR = DATA_ROOT / "L0_ingest"
+RAW_DIR = DATA_ROOT / "raw"
 
 # Ensure directories exist
-for d in [FEISHU_POOL_DIR, NLM_POOL_DIR, L0_INGEST_DIR]:
+for d in [FEISHU_POOL_DIR, NLM_POOL_DIR, RAW_DIR]:
     d.mkdir(parents=True, exist_ok=True)
+
+# pool_type -> canonical source_platform mapping
+_POOL_TYPE_TO_PLATFORM: Dict[str, str] = {
+    "nlm": "notebooklm",
+    "feishu": "feishu",
+    "wechat": "wechat",
+    "bilibili": "bilibili",
+    "local": "local",
+}
 
 
 class FetchRequest(BaseModel):
@@ -150,29 +159,52 @@ async def fetch_nlm_notebook(req: NLMFetchRequest):
         for source in sources:
             source_id = source.get("id")
             title = source.get("title", f"Unknown_Source_{source_id}")
-            
+
             # Sanitize filename
             safe_title = "".join([c if c.isalnum() or c in (" ", "-", "_") else "_" for c in title]).strip()
-            
+
             try:
                 content_res = subprocess.run([nlm_cli_path, "source", "content", source_id], capture_output=True, text=True, check=True)
                 source_data = json.loads(content_res.stdout)
-                
+
                 content_text = source_data.get("value", {}).get("content", "")
                 if content_text:
                     filename = f"NLM_{safe_title}.md"
                     target_path = NLM_POOL_DIR / filename
-                    
+
                     md_content = f"# {title}\n\n"
                     md_content += f"- **Notebook ID**: {req.notebook_id}\n"
                     md_content += f"- **Source ID**: {source_id}\n"
                     md_content += f"- **Type**: {source_data.get('value', {}).get('source_type', 'unknown')}\n\n"
                     md_content += "---\n\n"
                     md_content += content_text
-                    
+
                     target_path.write_text(md_content, encoding="utf-8")
+
+                    # Create manifest for NLM source
+                    content_id = build_content_id("notebooklm", "nlm_source", filename)
+                    manifest = ContentManifest(
+                        content_id=content_id,
+                        creator_name="notebooklm",
+                        source_platform="notebooklm",
+                        content_type="nlm_source",
+                        published_at=datetime.utcnow().isoformat(),
+                        title=title,
+                        source_url=None,
+                        source_path=str(target_path),
+                        language="zh",
+                        market_scope=["US", "HK", "A"],
+                        metadata={
+                            "nlm_notebook_id": req.notebook_id,
+                            "nlm_source_id": source_id,
+                            "nlm_notebook_name": req.notebook_id,
+                            "source_type": source_data.get("value", {}).get("source_type", "unknown"),
+                        }
+                    )
+                    write_manifest(REPO_ROOT, manifest)
+
                     downloaded.append(filename)
-                    
+
             except Exception as inner_e:
                 print(f"Error fetching source {source_id}: {inner_e}")
                 continue
@@ -225,7 +257,7 @@ async def list_pool_files():
 @router.post("/import")
 async def import_from_pool(req: ImportRequest):
     """
-    Imports files from sync pools into L0_ingest, triggering the downstream
+    Imports files from sync pools into raw/, triggering the downstream
     classification and physical placement logic.
     """
     config = load_feishu_config(REPO_ROOT)
@@ -252,11 +284,11 @@ async def import_from_pool(req: ImportRequest):
                 chat_default_creator="_inbox"
             )
             
-            # 2. Move to L0_ingest/creator_id/content_type
+            # 2. Move to raw/creator_id/content_type
             creator_id = classification.creator_id or "_inbox"
             content_type = classification.content_type or "unclassified"
-            
-            target_dir = L0_INGEST_DIR / creator_id / content_type
+
+            target_dir = RAW_DIR / creator_id / content_type
             target_dir.mkdir(parents=True, exist_ok=True)
             
             target_path = target_dir / filename
@@ -272,7 +304,7 @@ async def import_from_pool(req: ImportRequest):
             manifest = ContentManifest(
                 content_id=content_id,
                 creator_name=creator_id,
-                source_platform=req.pool_type,
+                source_platform=_POOL_TYPE_TO_PLATFORM.get(req.pool_type, req.pool_type),
                 content_type=content_type,
                 published_at=datetime.utcnow().isoformat(),
                 title=filename,

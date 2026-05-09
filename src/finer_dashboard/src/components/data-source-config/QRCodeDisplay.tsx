@@ -2,7 +2,6 @@
 
 import React from "react";
 import { QrCode, Loader2, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { WeChatLoginStatus } from "@/lib/contracts";
 
 interface QRCodeDisplayProps {

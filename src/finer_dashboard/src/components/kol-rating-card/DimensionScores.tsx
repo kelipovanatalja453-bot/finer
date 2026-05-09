@@ -213,8 +213,6 @@ export function DimensionMiniChart({
   dimensions: DimensionScore[];
   className?: string;
 }) {
-  const maxScore = Math.max(...dimensions.map(d => d.score));
-
   return (
     <div className={cn("flex items-end gap-1 h-8", className)}>
       {dimensions.map((dim, index) => {

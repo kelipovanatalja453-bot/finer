@@ -1,4 +1,4 @@
-"""System API — cache management and diagnostics."""
+"""System API — cache management, diagnostics, and error code catalog."""
 
 from fastapi import APIRouter
 import json as json_mod
@@ -11,6 +11,12 @@ from finer.api.routes.files_utils import (
     get_manifests_index,
 )
 from finer.api.routes.asset_builder import build_workflow_assets
+from finer.errors.codes import (
+    CATEGORY_STATUS,
+    ErrorCodeInfo,
+    list_error_codes,
+    lookup_error_codes,
+)
 
 router = APIRouter()
 
@@ -67,5 +73,37 @@ async def get_diagnostics():
         "cacheStatus": {
             "assets_cache_entries": len(_assets_cache),
             "manifests_index_built": _manifests_index is not None,
+        },
+    }
+
+
+def _info_to_dict(info: ErrorCodeInfo) -> dict[str, object]:
+    """Convert ErrorCodeInfo to API response dict."""
+    return {
+        "code": info.code.value,
+        "domain": info.domain,
+        "category": info.category,
+        "status_code": info.status_code,
+        "title": info.title,
+        "root_cause": info.root_cause,
+        "fix_hint": info.fix_hint,
+    }
+
+
+@router.get("/error-codes")
+async def get_error_codes(
+    domain: str | None = None,
+    category: str | None = None,
+):
+    """查询 Finer 错误码目录。
+
+    支持按 domain（如 SYS、F1、LLM）和 category（如 IN、EXT、TMO）过滤。
+    """
+    codes = lookup_error_codes(domain=domain, category=category)
+    return {
+        "ok": True,
+        "data": {
+            "codes": [_info_to_dict(info) for info in codes],
+            "categories": list(CATEGORY_STATUS.keys()),
         },
     }

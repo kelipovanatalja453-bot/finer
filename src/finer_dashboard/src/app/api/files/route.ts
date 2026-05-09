@@ -4,10 +4,18 @@ const UPSTREAM_URL = "http://127.0.0.1:8000/api/files";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const tier = searchParams.get("tier") || "F1";
-  
+
   try {
-    const res = await fetch(`${UPSTREAM_URL}?tier=${tier}`, { cache: "no-store" });
+    const url = new URL(UPSTREAM_URL);
+    // Forward all query parameters
+    searchParams.forEach((value, key) => {
+      url.searchParams.set(key, value);
+    });
+    // Ensure tier defaults to F1 if not provided
+    if (!url.searchParams.has("tier")) {
+      url.searchParams.set("tier", "F1");
+    }
+    const res = await fetch(url.toString(), { cache: "no-store" });
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (error) {

@@ -2,7 +2,6 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { TrendingUp, TrendingDown } from "lucide-react";
 import type { FocusArea } from "./KOLRatingCard";
 
 export interface FocusAreasProps {

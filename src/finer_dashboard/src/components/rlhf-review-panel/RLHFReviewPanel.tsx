@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { X, ChevronLeft, ChevronRight, AlertTriangle, Check, XCircle } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, AlertTriangle, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OriginalTextCard } from "./OriginalTextCard";
 import { TickerReview } from "./TickerReview";
@@ -98,7 +98,7 @@ export function RLHFReviewPanel({ isOpen, onClose, onComplete }: RLHFReviewPanel
     if (isOpen && items.length === 0) {
       fetchPendingItems();
     }
-  }, [isOpen]);
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard shortcuts
   React.useEffect(() => {
@@ -137,7 +137,7 @@ export function RLHFReviewPanel({ isOpen, onClose, onComplete }: RLHFReviewPanel
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, currentItem, reviewState, rating]);
+  }, [isOpen, currentItem, reviewState, rating]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset state when moving to next item
   React.useEffect(() => {
@@ -151,7 +151,7 @@ export function RLHFReviewPanel({ isOpen, onClose, onComplete }: RLHFReviewPanel
       setActiveCorrectionField(null);
       setHighlightedText(null);
     }
-  }, [currentIndex, currentItem?.id]);
+  }, [currentIndex, currentItem?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update ready state
   React.useEffect(() => {
