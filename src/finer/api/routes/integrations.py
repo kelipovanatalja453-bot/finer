@@ -10,8 +10,9 @@ from finer.config import load_feishu_config
 from finer.ingestion.feishu_poller import FeishuPoller, SyncState
 from finer.ingestion.classifier import FileClassifier
 from finer.ingestion.vision_utils import VisionDescriptor, get_vision_transcript_path
-from finer.manifests import ContentManifest, build_content_id, write_manifest, register_file
+from finer.manifests import ContentManifest, _infer_file_type, build_content_id, write_manifest, register_file
 from finer.paths import REPO_ROOT, DATA_ROOT
+from finer.errors import FinerError, ErrorCode
 
 router = APIRouter()
 
@@ -51,8 +52,16 @@ async def get_feishu_chats():
         config = load_feishu_config(REPO_ROOT)
         chats = config.get("feishu", {}).get("watched_chats", [])
         return {"chats": chats}
-    except FileNotFoundError:
-        return {"chats": [], "error": "feishu config not found. please configure first."}
+    except FileNotFoundError as e:
+        raise FinerError(
+            ErrorCode.SYS_CFG_001,
+            "Feishu config not found. Please configure first.",
+            stage="F0",
+            operation="feishu_list_chats",
+            source_channel="feishu",
+            retryable=False,
+            cause=e,
+        )
 
 
 @router.post("/feishu/fetch")
@@ -124,7 +133,15 @@ async def fetch_feishu_chat(req: FetchRequest):
         }
         
     except Exception as e:
-        raise HTTPException(500, f"Error fetching Feishu data: {e}")
+        raise FinerError(
+            ErrorCode.F0_EXT_001,
+            f"Error fetching Feishu data: {e}",
+            stage="F0",
+            operation="feishu_fetch",
+            source_channel="feishu",
+            retryable=True,
+            cause=e,
+        )
 
 
 import subprocess
@@ -140,7 +157,15 @@ async def get_nlm_notebooks():
         notebooks = json.loads(res.stdout)
         return {"notebooks": notebooks}
     except Exception as e:
-        return {"notebooks": [], "error": f"Failed to list notebooks: {e}"}
+        raise FinerError(
+            ErrorCode.NLM_EXT_001,
+            f"Failed to list notebooks: {e}",
+            stage="F0",
+            operation="nlm_list_notebooks",
+            source_channel="nlm",
+            retryable=True,
+            cause=e,
+        )
 
 @router.post("/nlm/fetch")
 async def fetch_nlm_notebook(req: NLMFetchRequest):
@@ -185,21 +210,26 @@ async def fetch_nlm_notebook(req: NLMFetchRequest):
                     content_id = build_content_id("notebooklm", "nlm_source", filename)
                     manifest = ContentManifest(
                         content_id=content_id,
-                        creator_name="notebooklm",
+                        source_type="nlm_source",
                         source_platform="notebooklm",
-                        content_type="nlm_source",
+                        creator_id="notebooklm",
+                        creator_name="notebooklm",
                         published_at=datetime.utcnow().isoformat(),
+                        collected_at=datetime.utcnow().replace(microsecond=0).isoformat(),
                         title=title,
-                        source_url=None,
-                        source_path=str(target_path),
-                        language="zh",
-                        market_scope=["US", "HK", "A"],
+                        raw_path=str(target_path),
+                        file_type=_infer_file_type(target_path.suffix),
                         metadata={
                             "nlm_notebook_id": req.notebook_id,
                             "nlm_source_id": source_id,
                             "nlm_notebook_name": req.notebook_id,
                             "source_type": source_data.get("value", {}).get("source_type", "unknown"),
-                        }
+                        },
+                        source_url=None,
+                        external_source_id=None,
+                        dedupe_fingerprint=None,
+                        language="zh",
+                        market_scope=["US", "HK", "A"],
                     )
                     write_manifest(REPO_ROOT, manifest)
 
@@ -217,7 +247,15 @@ async def fetch_nlm_notebook(req: NLMFetchRequest):
         }
         
     except Exception as e:
-        raise HTTPException(500, f"Error fetching NLM data: {e}")
+        raise FinerError(
+            ErrorCode.NLM_EXT_001,
+            f"Error fetching NLM data: {e}",
+            stage="F0",
+            operation="nlm_fetch",
+            source_channel="nlm",
+            retryable=True,
+            cause=e,
+        )
 
 
 @router.get("/pool")
@@ -303,19 +341,24 @@ async def import_from_pool(req: ImportRequest):
             content_id = build_content_id(creator_id, content_type, filename)
             manifest = ContentManifest(
                 content_id=content_id,
-                creator_name=creator_id,
+                source_type=content_type,
                 source_platform=_POOL_TYPE_TO_PLATFORM.get(req.pool_type, req.pool_type),
-                content_type=content_type,
+                creator_id=creator_id,
+                creator_name=creator_id,
                 published_at=datetime.utcnow().isoformat(),
+                collected_at=datetime.utcnow().replace(microsecond=0).isoformat(),
                 title=filename,
-                source_url=None,
-                source_path=str(target_path),
-                language="zh",
-                market_scope=["US", "HK", "A"],
+                raw_path=str(target_path),
+                file_type=_infer_file_type(target_path.suffix),
                 metadata={
                     "classification_rule": classification.matched_rule,
                     "classification_confidence": classification.confidence
-                }
+                },
+                source_url=None,
+                external_source_id=None,
+                dedupe_fingerprint=None,
+                language="zh",
+                market_scope=["US", "HK", "A"],
             )
             write_manifest(REPO_ROOT, manifest)
             

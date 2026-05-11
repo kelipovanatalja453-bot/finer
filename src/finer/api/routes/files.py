@@ -1,6 +1,6 @@
-"""Files API — asset listing, upload, and enrichment entity contents."""
+"""Files API — asset listing and upload (F0 intake)."""
 
-from fastapi import APIRouter, UploadFile, File, Query, HTTPException
+from fastapi import APIRouter, UploadFile, File, Query
 from typing import Optional
 import logging
 
@@ -8,9 +8,6 @@ from finer.api.routes.files_utils import (
     DATA_ROOT,
     WORKFLOW_BY_TIER,
     _assets_cache,
-    get_manifests_index,
-    format_display_name,
-    file_type_for,
     _build_source_summary,
 )
 from finer.api.routes.asset_builder import build_workflow_assets
@@ -85,56 +82,12 @@ async def upload_file(file: UploadFile = File(...)):
             "stageBadge": "F0"
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Failed to upload file")
-
-
-@router.get("/enrichment/{entity}")
-async def get_enrichment_entity_contents(entity: str):
-    """Get contents associated with an enrichment entity (ticker/company/topic)."""
-    import json
-    enrichment_index_path = DATA_ROOT / "L1_enrichment" / "content_index.json"
-
-    if not enrichment_index_path.exists():
-        return {"entity": entity, "contents": []}
-
-    try:
-        enrichment_index = json.loads(enrichment_index_path.read_text(encoding="utf-8"))
-    except Exception:
-        return {"entity": entity, "contents": []}
-
-    content_ids = enrichment_index.get("index", {}).get(entity, [])
-    if not content_ids:
-        return {"entity": entity, "contents": []}
-
-    index = get_manifests_index()
-    manifests_by_content_id = index["by_content_id"]
-
-    contents = []
-    seen_ids = set()
-
-    for content_id in content_ids:
-        if content_id in seen_ids:
-            continue
-        seen_ids.add(content_id)
-
-        manifest_tuple = manifests_by_content_id.get(content_id)
-        if manifest_tuple:
-            manifest, manifest_path = manifest_tuple
-            source_path = manifest.get("source_path", "")
-            title = manifest.get("title", content_id)
-            content_type = manifest.get("content_type", "unknown")
-            creator_name = manifest.get("creator_name", "unknown")
-
-            display_name = format_display_name(title, content_type)
-
-            contents.append({
-                "id": content_id,
-                "name": display_name,
-                "type": file_type_for(source_path or title),
-                "creatorName": creator_name,
-                "contentType": content_type,
-                "sourcePath": source_path,
-                "manifestPath": str(manifest_path),
-            })
-
-    return {"entity": entity, "contents": contents}
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            f"Failed to upload file: {e}",
+            stage="F0",
+            operation="file_upload",
+            source_channel="local",
+            retryable=True,
+            cause=e,
+        )

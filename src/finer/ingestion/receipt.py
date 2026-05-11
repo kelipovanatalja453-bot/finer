@@ -40,7 +40,6 @@ def _send_markdown(lark_cli: str, chat_id: str, markdown: str) -> bool:
         return False
 
 
-@staticmethod
 def _format_file_entry(
     filename: str,
     creator_id: str,

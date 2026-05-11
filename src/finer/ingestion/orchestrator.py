@@ -23,7 +23,7 @@ from finer.ingestion.feishu_poller import (
 from finer.ingestion.nlm_sync import NLMSync
 from finer.ingestion.receipt import ReceiptSender
 from finer.ingestion.vision_utils import VisionDescriptor, get_vision_transcript_path
-from finer.manifests import ContentManifest, build_content_id, write_manifest
+from finer.manifests import ContentManifest, _infer_file_type, build_content_id, write_manifest
 from finer.services.summary_generator import SummaryGenerator, init_summary_cache
 
 logger = logging.getLogger(__name__)
@@ -93,16 +93,21 @@ def _create_manifest(
 
     manifest = ContentManifest(
         content_id=content_id,
-        creator_name=classification.creator_id,
+        source_type=classification.content_type,
         source_platform="feishu",
-        content_type=classification.content_type,
+        creator_id=classification.creator_id,
+        creator_name=classification.creator_id,
         published_at=classification.published_at.isoformat(),
+        collected_at=datetime.utcnow().replace(microsecond=0).isoformat(),
         title=file.original_name,
+        raw_path=str(archived_path),
+        file_type=_infer_file_type(archived_path.suffix),
+        metadata=metadata,
         source_url=None,
-        source_path=str(archived_path),
+        external_source_id=None,
+        dedupe_fingerprint=None,
         language="zh",
         market_scope=["US", "HK", "A"],
-        metadata=metadata,
     )
     
     manifest_path = write_manifest(root, manifest)
@@ -133,16 +138,21 @@ def _create_chat_transcript_manifest(
 
     manifest = ContentManifest(
         content_id=content_id,
-        creator_name=creator_id,
+        source_type="chat_transcript",
         source_platform="feishu",
-        content_type="chat_transcript",
+        creator_id=creator_id,
+        creator_name=creator_id,
         published_at=datetime.now().isoformat(),
+        collected_at=datetime.utcnow().replace(microsecond=0).isoformat(),
         title=transcript_path.name,
+        raw_path=str(transcript_path),
+        file_type=_infer_file_type(transcript_path.suffix),
+        metadata=metadata,
         source_url=None,
-        source_path=str(transcript_path),
+        external_source_id=None,
+        dedupe_fingerprint=None,
         language="zh",
         market_scope=["US", "HK", "A"],
-        metadata=metadata,
     )
 
     manifest_path = write_manifest(root, manifest)

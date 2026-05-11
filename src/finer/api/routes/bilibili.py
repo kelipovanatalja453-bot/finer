@@ -22,9 +22,9 @@ from finer.ingestion.bilibili_adapter import (
     BilibiliClient,
 )
 
-from finer.errors import ErrorCode, error_response
+from finer.errors import FinerError, ErrorCode, error_response
 from finer.paths import REPO_ROOT, DATA_ROOT
-from finer.manifests import ContentManifest, write_manifest, build_content_id
+from finer.manifests import ContentManifest, _infer_file_type, write_manifest, build_content_id
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +172,15 @@ async def get_video_info(bvid: str):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to get video info: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch video info: {e}")
+        raise FinerError(
+            ErrorCode.BILI_EXT_001,
+            f"Failed to fetch video info: {e}",
+            stage="F0",
+            operation="bilibili_video_info",
+            source_channel="bilibili",
+            retryable=True,
+            cause=e,
+        )
 
 
 @router.post("/transcribe/{bvid}", response_model=TranscribeResponse)
@@ -214,7 +222,15 @@ async def transcribe_video(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Transcription failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Transcription failed: {e}")
+        raise FinerError(
+            ErrorCode.BILI_EXT_001,
+            f"Transcription failed: {e}",
+            stage="F0",
+            operation="bilibili_transcribe",
+            source_channel="bilibili",
+            retryable=True,
+            cause=e,
+        )
 
 
 @router.post("/transcribe-async/{bvid}", response_model=TaskStatusResponse)
@@ -352,15 +368,15 @@ async def sync_to_f0_intake(
         # Build and persist manifest via canonical ContentManifest
         manifest = ContentManifest(
             content_id=content_id,
-            creator_name=metadata["uploader"],
+            source_type="bilibili_video",
             source_platform="bilibili",
-            content_type="video",
+            creator_id=str(metadata["uploader_id"]),
+            creator_name=metadata["uploader"],
             published_at=metadata["publish_time"],
+            collected_at=datetime.utcnow().replace(microsecond=0).isoformat(),
             title=metadata["title"],
-            source_url=f"https://www.bilibili.com/video/{parsed_bvid}",
-            source_path=str(f0_transcript),
-            language="zh",
-            market_scope=["US", "HK", "A"],
+            raw_path=str(f0_transcript),
+            file_type=_infer_file_type(f0_transcript.suffix),
             metadata={
                 "bvid": parsed_bvid,
                 "aid": metadata.get("aid", 0),
@@ -370,6 +386,11 @@ async def sync_to_f0_intake(
                 "category": req.category if req else None,
                 "ingest_time": datetime.now().isoformat(),
             },
+            source_url=f"https://www.bilibili.com/video/{parsed_bvid}",
+            external_source_id=parsed_bvid,
+            dedupe_fingerprint=None,
+            language="zh",
+            market_scope=["US", "HK", "A"],
         )
 
         manifest_path = write_manifest(REPO_ROOT, manifest)
@@ -387,7 +408,15 @@ async def sync_to_f0_intake(
         raise
     except Exception as e:
         logger.error(f"Sync failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Sync failed: {e}")
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            f"Sync failed: {e}",
+            stage="F0",
+            operation="bilibili_sync",
+            source_channel="bilibili",
+            retryable=True,
+            cause=e,
+        )
 
 
 @router.get("/search")
