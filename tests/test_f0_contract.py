@@ -29,7 +29,11 @@ class TestContentRecordSchema:
 
     def test_source_type_literal_values(self) -> None:
         field_info = ContentRecord.model_fields["source_type"]
-        expected = {"feishu_chat", "bilibili_video", "wechat_article", "manual_upload", "nlm_note"}
+        expected = {
+            "feishu_chat", "bilibili_video", "wechat_article", "manual_upload", "nlm_note",
+            "chat_transcript", "chat_export", "livestream_audio",
+            "weekly_strategy", "daily_pre", "daily_post", "research_report", "unclassified",
+        }
         assert set(field_info.annotation.__args__) == expected
 
     def test_file_type_literal_values(self) -> None:
@@ -238,7 +242,7 @@ class TestDirectoryContract:
             rel = str(p).replace(str(tmp_path), "")
             assert any(
                 rel.startswith(f"/data/{d}")
-                for d in ("raw", "processed", "cache", "inbox", "backtests")
+                for d in ("raw", "processed", "cache", "inbox", "backtests", "market")
             ), f"Unexpected directory: {rel}"
 
     def test_ensure_storage_no_downstream_dirs(self, tmp_path) -> None:

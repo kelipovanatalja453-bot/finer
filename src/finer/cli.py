@@ -65,6 +65,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     inbox_cmd.add_argument("--root", type=Path, default=Path.cwd())
 
+    # ── Market data commands ────────────────────────────────────
+    md_cmd = subparsers.add_parser(
+        "market-data",
+        help="Tushare market data sync and status",
+    )
+    md_sub = md_cmd.add_subparsers(dest="md_command", required=True)
+
+    md_sync = md_sub.add_parser("sync", help="Sync market data from Tushare")
+    md_sync.add_argument("--all", action="store_true", help="Sync all tables")
+    md_sync.add_argument(
+        "--table",
+        choices=["trade_cal", "basic", "daily_kline", "adj_factor"],
+        help="Sync a specific table",
+    )
+    md_sync.add_argument("--start", help="Start date (YYYYMMDD)")
+    md_sync.add_argument("--end", help="End date (YYYYMMDD)")
+
+    md_status = md_sub.add_parser("status", help="Show sync status")
+
     return parser
 
 
@@ -161,6 +180,55 @@ def _cmd_inbox_status(args: argparse.Namespace) -> dict:
     }
 
 
+def _cmd_market_data_sync(args: argparse.Namespace) -> dict:
+    from finer.market_data.config import load_market_data_config
+    from finer.market_data.service import MarketDataSyncService
+
+    config = load_market_data_config()
+    start = _parse_date_arg(args.start) if args.start else None
+    end = _parse_date_arg(args.end) if args.end else None
+
+    with MarketDataSyncService(config) as svc:
+        if args.all:
+            return svc.sync_all()
+        elif args.table == "trade_cal":
+            svc.sync_trade_cal()
+            return {"trade_cal": "ok"}
+        elif args.table == "basic":
+            svc.sync_basic()
+            return {"basic": "ok"}
+        elif args.table == "daily_kline":
+            svc.sync_daily_kline(start, end)
+            return {"daily_kline": "ok"}
+        elif args.table == "adj_factor":
+            svc.sync_adj_factor(start, end)
+            return {"adj_factor": "ok"}
+        else:
+            return {"error": "specify --all or --table"}
+
+
+def _cmd_market_data_status(_args: argparse.Namespace) -> dict:
+    from finer.market_data.config import load_market_data_config
+    from finer.market_data.service import MarketDataSyncService
+
+    config = load_market_data_config()
+    with MarketDataSyncService(config) as svc:
+        status = svc.sync_status()
+    return {k: str(v) if v else "never" for k, v in status.items()}
+
+
+def _parse_date_arg(value: str) -> "date":
+    from datetime import date as _date
+    for fmt in ("%Y%m%d", "%Y-%m-%d"):
+        try:
+            return _date.fromisoformat(value) if "-" in value else _date(
+                int(value[:4]), int(value[4:6]), int(value[6:8])
+            )
+        except (ValueError, IndexError):
+            continue
+    raise ValueError(f"invalid date: {value}")
+
+
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
@@ -185,6 +253,14 @@ def main() -> None:
         result = _cmd_feishu_watch(args)
     elif args.command == "inbox-status":
         result = _cmd_inbox_status(args)
+    elif args.command == "market-data":
+        if args.md_command == "sync":
+            result = _cmd_market_data_sync(args)
+        elif args.md_command == "status":
+            result = _cmd_market_data_status(args)
+        else:
+            parser.error(f"unknown market-data subcommand: {args.md_command}")
+            return
     else:
         parser.error(f"unknown command: {args.command}")
         return

@@ -497,6 +497,28 @@ class MockPriceProvider:
 
 
 # =============================================================================
+# CN Market Provider Builder
+# =============================================================================
+
+
+def _build_cn_provider() -> PriceProvider:
+    """Build CN price provider — try TusharePriceProvider, fallback to MockPriceProvider."""
+    try:
+        from finer.market_data.providers import TusharePriceProvider
+        from finer.paths import MARKET_PARQUET_DIR
+
+        if MARKET_PARQUET_DIR.exists():
+            return TusharePriceProvider(MARKET_PARQUET_DIR)
+    except Exception as e:
+        logger.debug("TusharePriceProvider unavailable, using MockPriceProvider: %s", e)
+
+    return MockPriceProvider({
+        '000001.SZ': 12.0,
+        '600519.SH': 1800.0,
+    })
+
+
+# =============================================================================
 # Multi-Market Price Provider
 # =============================================================================
 
@@ -523,10 +545,7 @@ class MultiMarketPriceProvider:
             '00941.HK': 80.0,
             '01810.HK': 35.0,
         })
-        self.cn_provider = cn_provider or MockPriceProvider({
-            '000001.SZ': 12.0,
-            '600519.SH': 1800.0,
-        })
+        self.cn_provider = cn_provider or _build_cn_provider()
         self.crypto_provider = crypto_provider or MockPriceProvider({
             'BTC-USD': 40000.0,
             'ETH-USD': 2500.0,

@@ -28,6 +28,11 @@ dev = [
   "pytest-asyncio>=0.21.0",
   "pytest-cov>=4.0.0",
 ]
+market-data = [
+  "tushare>=1.4",
+  "duckdb>=1.0",
+  "pyarrow>=15.0",
+]
 
 [project.scripts]
 finer = "finer.cli:main"

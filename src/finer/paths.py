@@ -47,6 +47,7 @@ def ensure_storage(root: Path) -> list[str]:
         data_root / "processed" / "review_store",
         data_root / "processed" / "approved_events",
         data_root / "backtests",
+        data_root / "market" / "tushare" / "parquet",  # Tushare Parquet storage
     ]:
         path.mkdir(parents=True, exist_ok=True)
         created.append(str(path))
@@ -61,3 +62,8 @@ def ensure_storage(root: Path) -> list[str]:
 
 # F0 Project Memory SQLite index path
 F0_INDEX_DB_PATH = DATA_ROOT / "f0_index.db"
+
+# Market data (Tushare A-share local pipeline)
+MARKET_DATA_ROOT = DATA_ROOT / "market" / "tushare"
+MARKET_PARQUET_DIR = MARKET_DATA_ROOT / "parquet"
+MARKET_DUCKDB_PATH = MARKET_DATA_ROOT / "meta.duckdb"
