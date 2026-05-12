@@ -43,11 +43,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 FIXTURE_DIR = PROJECT_ROOT / "tests" / "fixtures" / "f1_standardization"
 
 # ---------------------------------------------------------------------------
-# F1 source_type → F0 content_type mapping
+# F1 source_type → F0 source_type mapping (for test fixture compatibility)
 # ---------------------------------------------------------------------------
 
-# F0 ContentRecord uses a different content_type taxonomy than F1 source_type.
-# This mapping translates manifest source_type to valid F0 content_type values.
+# Test fixtures use a richer source_type taxonomy than ContentRecord's Literal.
+# This mapping translates manifest source_type to valid ContentRecord source_type values.
 _F1_SOURCE_TYPE_TO_F0_CONTENT_TYPE: Dict[str, str] = {
     "feishu_chat": "chat_transcript",
     "feishu_doc": "unclassified",
@@ -128,10 +128,11 @@ def _build_f0_record(manifest: Dict[str, Any]) -> ContentRecord:
         content_id=manifest["source_record_id"],
         creator_name=manifest.get("creator_name", ""),
         source_platform="feishu",
-        content_type=f0_content_type,
+        source_type=f0_content_type,
         published_at=published_at,
         title=raw_path.name,
-        source_path=str(raw_path),
+        raw_path=str(raw_path),
+        file_type="text",
         language="zh",
         metadata=manifest.get("metadata", {}),
     )
@@ -549,7 +550,7 @@ class TestFixtureF0Record:
     def test_f0_record_source_path_matches(self, manifest: Dict):
         record = _build_f0_record(manifest)
         expected = str(_resolve_raw_path(manifest))
-        assert record.source_path == expected
+        assert record.raw_path == expected
 
 
 class TestFixtureRawFiles:

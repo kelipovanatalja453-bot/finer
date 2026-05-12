@@ -63,7 +63,7 @@ class AudioExtractor:
         return segments
 
     def extract_audio(self, content_record: ContentRecord) -> list[SegmentRecord]:
-        source_path = Path(content_record.source_path)
+        source_path = Path(content_record.raw_path)
         
         # Check if the user provided a transcript alongside the audio 
         # (e.g. 20260125-内部直播音频.mp3.pdf)

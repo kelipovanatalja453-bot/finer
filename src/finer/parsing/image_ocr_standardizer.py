@@ -663,7 +663,7 @@ class ImageOCRLayoutStandardizer:
             schema_version="v1.0",
             source_type="image",
             standardization_profile="image_ocr_layout_v1",
-            source_uri=f0_record.source_path,
+            source_uri=f0_record.raw_path,
             source_title=raw_path.name,
             raw_path=str(raw_path),
             creator_id=f0_record.metadata.get("creator_id") if f0_record.metadata else None,

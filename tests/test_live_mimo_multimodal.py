@@ -76,14 +76,18 @@ def _build_f0(manifest: Dict) -> ContentRecord:
     if isinstance(published_at, str):
         published_at = datetime.fromisoformat(published_at)
 
+    suffix = raw_path.suffix.lower()
+    file_type = "pdf" if suffix == ".pdf" else "image" if suffix in (".png", ".jpg", ".jpeg") else "text"
+
     return ContentRecord(
         content_id=manifest["source_record_id"],
         creator_name=manifest.get("creator_name", ""),
         source_platform="feishu",
-        content_type="unclassified",
+        source_type="unclassified",
         published_at=published_at,
         title=raw_path.name,
-        source_path=str(raw_path),
+        raw_path=str(raw_path),
+        file_type=file_type,
         language="zh",
         metadata=manifest.get("metadata", {}),
     )
@@ -225,10 +229,11 @@ class TestLiveScannedPDFProbe:
             content_id="probe_scanned_pdf",
             creator_name="probe",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime(2026, 5, 2),
             title="scanned_probe.pdf",
-            source_path=str(pdf_path),
+            raw_path=str(pdf_path),
+            file_type="pdf",
             language="zh",
             metadata={},
         )
@@ -308,10 +313,11 @@ class TestFailureReporting:
             content_id="fail_test",
             creator_name="test",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime(2026, 5, 2),
             title="test.png",
-            source_path=str(img_path),
+            raw_path=str(img_path),
+            file_type="image",
             language="zh",
             metadata={},
         )
@@ -342,10 +348,11 @@ class TestFailureReporting:
             content_id="empty_resp_test",
             creator_name="test",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime(2026, 5, 2),
             title="test.png",
-            source_path=str(img_path),
+            raw_path=str(img_path),
+            file_type="image",
             language="zh",
             metadata={},
         )
@@ -373,10 +380,11 @@ class TestFailureReporting:
             content_id="corrupt_pdf",
             creator_name="test",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime(2026, 5, 2),
             title="corrupt.pdf",
-            source_path=str(corrupt_path),
+            raw_path=str(corrupt_path),
+            file_type="pdf",
             language="zh",
             metadata={},
         )

@@ -48,7 +48,7 @@ class VisionExtractor:
         """
         Calls MiMo-V2.5 to extract text from a single image and parse it into manageable segments.
         """
-        source_path = Path(content_record.source_path)
+        source_path = Path(content_record.raw_path)
         if not source_path.exists():
             logging.error(f"Image not found: {source_path}")
             return []

@@ -54,10 +54,11 @@ def _make_f0_record(
         content_id=content_id,
         creator_name=creator_name,
         source_platform="feishu",
-        content_type="chat_transcript",
+        source_type="chat_transcript",
         published_at=datetime(2026, 4, 20, 20, 47, 44),
         title="test_chat.md",
-        source_path="/tmp/test_chat.md",
+        raw_path="/tmp/test_chat.md",
+        file_type="text",
         language="zh",
         metadata=metadata or {},
     )

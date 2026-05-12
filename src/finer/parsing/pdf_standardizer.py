@@ -815,7 +815,7 @@ class PDFStandardizer:
             schema_version="v1.0",
             source_type="pdf",
             standardization_profile="pdf_layout_v1",
-            source_uri=f0_record.source_path,
+            source_uri=f0_record.raw_path,
             source_title=raw_path.name,
             raw_path=str(raw_path),
             creator_name=f0_record.creator_name,

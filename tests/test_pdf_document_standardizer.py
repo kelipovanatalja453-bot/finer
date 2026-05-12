@@ -48,10 +48,11 @@ def _make_f0_record(
         content_id=content_id,
         creator_name=creator_name,
         source_platform="feishu",
-        content_type="unclassified",
+        source_type="unclassified",
         published_at=datetime(2026, 4, 15, 15, 46),
         title="test.pdf",
-        source_path="/tmp/test.pdf",
+        raw_path="/tmp/test.pdf",
+        file_type="pdf",
         language="zh",
         metadata=metadata or {},
     )
@@ -381,10 +382,11 @@ class TestFixtureIntegration:
             content_id=manifest["source_record_id"],
             creator_name=manifest.get("creator_name", ""),
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
-            source_path=str(raw_path),
+            raw_path=str(raw_path),
+            file_type="pdf",
             language="zh",
             metadata=manifest.get("metadata", {}),
         )
@@ -414,10 +416,10 @@ class TestFixtureIntegration:
             content_id=manifest["source_record_id"],
             creator_name="",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
-            source_path=str(raw_path),
+            raw_path=str(raw_path),
             metadata=manifest.get("metadata", {}),
         )
 
@@ -440,10 +442,10 @@ class TestFixtureIntegration:
             content_id=manifest["source_record_id"],
             creator_name="",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
-            source_path=str(raw_path),
+            raw_path=str(raw_path),
             metadata=manifest.get("metadata", {}),
         )
 
@@ -469,10 +471,10 @@ class TestFixtureIntegration:
             content_id=manifest["source_record_id"],
             creator_name="",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
-            source_path=str(raw_path),
+            raw_path=str(raw_path),
             metadata=manifest.get("metadata", {}),
         )
 
@@ -494,10 +496,10 @@ class TestFixtureIntegration:
             content_id=manifest["source_record_id"],
             creator_name="",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
-            source_path=str(raw_path),
+            raw_path=str(raw_path),
             metadata=manifest.get("metadata", {}),
         )
 
@@ -518,10 +520,10 @@ class TestFixtureIntegration:
             content_id=manifest["source_record_id"],
             creator_name="",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
-            source_path=str(raw_path),
+            raw_path=str(raw_path),
             metadata=manifest.get("metadata", {}),
         )
 
@@ -543,10 +545,10 @@ class TestFixtureIntegration:
             content_id=manifest["source_record_id"],
             creator_name="",
             source_platform="feishu",
-            content_type="unclassified",
+            source_type="unclassified",
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
-            source_path=str(raw_path),
+            raw_path=str(raw_path),
             metadata=manifest.get("metadata", {}),
         )
 

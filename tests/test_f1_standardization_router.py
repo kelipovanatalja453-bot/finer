@@ -1,7 +1,7 @@
 """Tests for StandardizationRouter — F1 unified entry point.
 
 Covers:
-- Adapter selection logic (suffix, content_type, source_platform)
+- Adapter selection logic (suffix, source_type, source_platform)
 - End-to-end routing for each adapter type
 - StandardizationReport fields
 - Failure handling (corrupt files, missing files, unsupported types)
@@ -32,19 +32,20 @@ FIXTURE_DIR = PROJECT_ROOT / "tests" / "fixtures" / "f1_standardization"
 
 def _make_f0(
     content_id: str = "test_001",
-    content_type: str = "unclassified",
+    source_type: str = "manual_upload",
     source_platform: str = "manual",
-    source_path: str = "/tmp/test.txt",
+    raw_path: str = "/tmp/test.txt",
     metadata: dict | None = None,
 ) -> ContentRecord:
     return ContentRecord(
         content_id=content_id,
         creator_name="test_creator",
         source_platform=source_platform,
-        content_type=content_type,
+        source_type=source_type,
         published_at=datetime(2026, 4, 30, 12, 0, 0),
         title="test",
-        source_path=source_path,
+        raw_path=raw_path,
+        file_type="text",
         metadata=metadata or {},
     )
 
@@ -56,34 +57,34 @@ def _make_f0(
 class TestSelectAdapter:
     def test_pdf_suffix_selects_pdf(self):
         router = StandardizationRouter()
-        f0 = _make_f0(source_path="/tmp/report.pdf")
+        f0 = _make_f0(raw_path="/tmp/report.pdf")
         assert router._select_adapter(f0, Path("/tmp/report.pdf")) == "pdf"
 
     def test_png_suffix_selects_image(self):
         router = StandardizationRouter()
-        f0 = _make_f0(source_path="/tmp/slide.png")
+        f0 = _make_f0(raw_path="/tmp/slide.png")
         assert router._select_adapter(f0, Path("/tmp/slide.png")) == "image"
 
     def test_jpg_suffix_selects_image(self):
         router = StandardizationRouter()
-        f0 = _make_f0(source_path="/tmp/photo.jpg")
+        f0 = _make_f0(raw_path="/tmp/photo.jpg")
         assert router._select_adapter(f0, Path("/tmp/photo.jpg")) == "image"
 
     def test_md_chat_transcript_selects_feishu_chat(self):
         router = StandardizationRouter()
         f0 = _make_f0(
-            content_type="chat_transcript",
-            source_path="/tmp/chat.md",
+            source_type="chat_transcript",
+            raw_path="/tmp/chat.md",
         )
         assert router._select_adapter(f0, Path("/tmp/chat.md")) == "feishu_chat"
 
     def test_md_feishu_platform_alone_selects_manual_text(self):
-        """P1: feishu platform without chat content_type should NOT route to chat adapter."""
+        """P1: feishu platform without chat source_type should NOT route to chat adapter."""
         router = StandardizationRouter()
         f0 = _make_f0(
             source_platform="feishu",
-            content_type="unclassified",
-            source_path="/tmp/note.md",
+            source_type="unclassified",
+            raw_path="/tmp/note.md",
         )
         assert router._select_adapter(f0, Path("/tmp/note.md")) == "manual_text"
 
@@ -91,43 +92,43 @@ class TestSelectAdapter:
         router = StandardizationRouter()
         f0 = _make_f0(
             source_platform="feishu",
-            content_type="chat_transcript",
-            source_path="/tmp/chat.md",
+            source_type="chat_transcript",
+            raw_path="/tmp/chat.md",
         )
         assert router._select_adapter(f0, Path("/tmp/chat.md")) == "feishu_chat"
 
     def test_md_unclassified_selects_manual_text(self):
         router = StandardizationRouter()
         f0 = _make_f0(
-            content_type="unclassified",
-            source_path="/tmp/article.md",
+            source_type="unclassified",
+            raw_path="/tmp/article.md",
         )
         assert router._select_adapter(f0, Path("/tmp/article.md")) == "manual_text"
 
     def test_txt_selects_manual_text(self):
         router = StandardizationRouter()
-        f0 = _make_f0(source_path="/tmp/notes.txt")
+        f0 = _make_f0(raw_path="/tmp/notes.txt")
         assert router._select_adapter(f0, Path("/tmp/notes.txt")) == "manual_text"
 
     def test_livestream_audio_returns_unsupported(self):
         """Audio is not implemented but should not raise — returns 'unsupported' for placeholder handling."""
         router = StandardizationRouter()
         f0 = _make_f0(
-            content_type="livestream_audio",
-            source_path="/tmp/audio.mp3",
+            source_type="livestream_audio",
+            raw_path="/tmp/audio.mp3",
         )
         assert router._select_adapter(f0, Path("/tmp/audio.mp3")) == "unsupported"
 
     def test_unknown_suffix_returns_unsupported(self):
         router = StandardizationRouter()
-        f0 = _make_f0(source_path="/tmp/data.csv")
+        f0 = _make_f0(raw_path="/tmp/data.csv")
         assert router._select_adapter(f0, Path("/tmp/data.csv")) == "unsupported"
 
     def test_chat_export_selects_feishu_chat(self):
         router = StandardizationRouter()
         f0 = _make_f0(
-            content_type="chat_export",
-            source_path="/tmp/export.md",
+            source_type="chat_export",
+            raw_path="/tmp/export.md",
         )
         assert router._select_adapter(f0, Path("/tmp/export.md")) == "feishu_chat"
 
@@ -142,7 +143,7 @@ class TestManualText:
         f.write_text("# Title\n\nSome body text here.\n\nMore content.")
 
         std = ManualTextStandardizer()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope = std.standardize(f0, f)
 
         assert isinstance(envelope, ContentEnvelope)
@@ -156,7 +157,7 @@ class TestManualText:
         f.write_text("# My Heading\n\nBody text.")
 
         std = ManualTextStandardizer()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope = std.standardize(f0, f)
 
         types = {b.block_type for b in envelope.blocks}
@@ -167,7 +168,7 @@ class TestManualText:
         f.write_text("Check https://example.com for details")
 
         std = ManualTextStandardizer()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope = std.standardize(f0, f)
 
         types = {b.block_type for b in envelope.blocks}
@@ -178,7 +179,7 @@ class TestManualText:
         f.write_text("")
 
         std = ManualTextStandardizer()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope = std.standardize(f0, f)
 
         assert len(envelope.blocks) == 1
@@ -189,7 +190,7 @@ class TestManualText:
         f.write_text("# Title\n\nBody paragraph with enough text to pass quality checks.")
 
         std = ManualTextStandardizer()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope = std.standardize(f0, f)
 
         violations = envelope.validate_canonical_f1()
@@ -200,7 +201,7 @@ class TestManualText:
         f.write_text("Para one.\n\nPara two.\n\nPara three.")
 
         std = ManualTextStandardizer()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope = std.standardize(f0, f)
 
         for block in envelope.blocks:
@@ -213,7 +214,7 @@ class TestManualText:
         f.write_text("First.\n\nSecond.\n\nThird.")
 
         std = ManualTextStandardizer()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope = std.standardize(f0, f)
 
         for i, block in enumerate(envelope.blocks):
@@ -244,10 +245,11 @@ class TestRouteEndToEnd:
             content_id=manifest["source_record_id"],
             creator_name=manifest.get("creator_name", ""),
             source_platform=source_platform,
-            content_type=content_type,
+            source_type=content_type,
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
-            source_path=manifest["raw_path"],
+            raw_path=manifest["raw_path"],
+            file_type="text",
             metadata=manifest.get("metadata", {}),
         )
 
@@ -303,7 +305,7 @@ class TestReport:
         f.write_text("# Heading\n\nBody text with enough content for quality.")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, report = router.route(f0, f)
 
         assert report["envelope_id"] == envelope.envelope_id
@@ -318,7 +320,7 @@ class TestReport:
         f.write_text("# Title\n\nParagraph with enough text for quality scoring.")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         _, report = router.route(f0, f)
 
         assert report["canonical_validation_passed"] is True
@@ -335,7 +337,7 @@ class TestFailureHandling:
         f.write_bytes(b"not a pdf")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, report = router.route(f0, f)
 
         assert isinstance(envelope, ContentEnvelope)
@@ -347,7 +349,7 @@ class TestFailureHandling:
         missing = tmp_path / "nope.pdf"
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(missing))
+        f0 = _make_f0(raw_path=str(missing))
         envelope, report = router.route(f0, missing)
 
         assert isinstance(envelope, ContentEnvelope)
@@ -358,7 +360,7 @@ class TestFailureHandling:
         f.write_bytes(b"a,b,c\n1,2,3")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, report = router.route(f0, f)
 
         assert isinstance(envelope, ContentEnvelope)
@@ -369,8 +371,8 @@ class TestFailureHandling:
         """Audio type should return a placeholder envelope, not raise."""
         router = StandardizationRouter()
         f0 = _make_f0(
-            content_type="livestream_audio",
-            source_path="/tmp/audio.mp3",
+            source_type="livestream_audio",
+            raw_path="/tmp/audio.mp3",
         )
         envelope, report = router.route(f0, Path("/tmp/audio.mp3"))
 
@@ -385,7 +387,7 @@ class TestFailureHandling:
         f.write_bytes(b"garbage")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, _ = router.route(f0, f)
 
         violations = envelope.validate_canonical_f1()
@@ -398,14 +400,14 @@ class TestFailureHandling:
         # PDF → source_type should be "pdf"
         pdf = tmp_path / "bad.pdf"
         pdf.write_bytes(b"not a pdf")
-        f0 = _make_f0(source_path=str(pdf))
+        f0 = _make_f0(raw_path=str(pdf))
         envelope, _ = router.route(f0, pdf)
         assert envelope.source_type == "pdf"
 
         # Image → source_type should be "image"
         img = tmp_path / "bad.png"
         img.write_bytes(b"not an image")
-        f0 = _make_f0(source_path=str(img))
+        f0 = _make_f0(raw_path=str(img))
         envelope, _ = router.route(f0, img)
         assert envelope.source_type == "image"
 
@@ -415,7 +417,7 @@ class TestFailureHandling:
         f.write_bytes(b"a,b,c")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, report = router.route(f0, f)
 
         assert envelope.standardization_profile == "placeholder"
@@ -428,7 +430,7 @@ class TestFailureHandling:
         f.write_bytes(b"not a pdf")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, _ = router.route(f0, f)
 
         # PDFStandardizer handles corrupt files internally with its own metadata
@@ -446,7 +448,7 @@ class TestCanonicalValidation:
         f.write_text("# Report\n\nMarket analysis shows strong momentum in Q2.")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, _ = router.route(f0, f)
 
         violations = envelope.validate_canonical_f1()
@@ -457,7 +459,7 @@ class TestCanonicalValidation:
         f.write_text("")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, _ = router.route(f0, f)
 
         violations = envelope.validate_canonical_f1()
@@ -468,7 +470,7 @@ class TestCanonicalValidation:
         f.write_bytes(b"random bytes")
 
         router = StandardizationRouter()
-        f0 = _make_f0(source_path=str(f))
+        f0 = _make_f0(raw_path=str(f))
         envelope, _ = router.route(f0, f)
 
         violations = envelope.validate_canonical_f1()

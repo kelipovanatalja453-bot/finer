@@ -1,12 +1,12 @@
 """Standardization Router — unified F1 entry point.
 
 Routes F0 ContentRecord to the correct F1 canonical adapter based on
-file type (suffix), content_type, and source_platform.
+file type (suffix), source_type, and source_platform.
 
 Routing priority:
 1. .pdf → PDFStandardizer
 2. .png/.jpg/.jpeg/.webp/.bmp → ImageOCRLayoutStandardizer
-3. .md + content_type in (chat_transcript, chat_export) → FeishuChatMarkdownStandardizer
+3. .md + source_type in (chat_transcript, chat_export) → FeishuChatMarkdownStandardizer
 4. .md/.txt (fallback) → ManualTextStandardizer
 5. livestream_audio → "unsupported" (placeholder adapter, not implemented)
 6. No match → "unsupported" (failure envelope)
@@ -100,13 +100,13 @@ class StandardizationRouter:
 
         # 3. Feishu chat markdown (content_type must be chat — platform alone is insufficient)
         if suffix in _TEXT_SUFFIXES:
-            if f0_record.content_type in _CHAT_CONTENT_TYPES:
+            if f0_record.source_type in _CHAT_CONTENT_TYPES:
                 return "feishu_chat"
             # 4. Manual text fallback
             return "manual_text"
 
         # 5. Audio → unsupported (placeholder adapter)
-        if f0_record.content_type in _AUDIO_CONTENT_TYPES:
+        if f0_record.source_type in _AUDIO_CONTENT_TYPES:
             return "unsupported"
 
         # 6. No match — caller will build failure envelope
@@ -130,17 +130,17 @@ class StandardizationRouter:
             if adapter_name == "manual_text":
                 return self._run_manual_text(f0_record, raw_path)
             # unsupported — use placeholder adapter (degrades gracefully)
-            if f0_record.content_type in _AUDIO_CONTENT_TYPES:
+            if f0_record.source_type in _AUDIO_CONTENT_TYPES:
                 source_type = "audio_transcript"
                 reason = (
                     f"Audio standardization not implemented "
-                    f"(content_type={f0_record.content_type})"
+                    f"(source_type={f0_record.source_type})"
                 )
             else:
                 source_type = "manual_text"
                 reason = (
                     f"No adapter for suffix={raw_path.suffix}, "
-                    f"content_type={f0_record.content_type}"
+                    f"source_type={f0_record.source_type}"
                 )
             try:
                 from finer.parsing.placeholder_adapters import create_unsupported_envelope
@@ -195,13 +195,13 @@ class StandardizationRouter:
 
     @staticmethod
     def _infer_source_type(f0_record: ContentRecord, raw_path: Path) -> str:
-        """Map suffix/content_type to a meaningful source_type for failure envelopes."""
+        """Map suffix/source_type to a meaningful source_type for failure envelopes."""
         suffix = raw_path.suffix.lower()
         if suffix in _PDF_SUFFIXES:
             return "pdf"
         if suffix in _IMAGE_SUFFIXES:
             return "image"
-        if f0_record.content_type in _CHAT_CONTENT_TYPES:
+        if f0_record.source_type in _CHAT_CONTENT_TYPES:
             return "feishu_chat"
         return "manual_text"
 
@@ -241,7 +241,7 @@ class StandardizationRouter:
             schema_version="v1.0",
             source_type=source_type,
             standardization_profile="failure",
-            source_uri=f0_record.source_path,
+            source_uri=f0_record.raw_path,
             source_title=raw_path.name,
             raw_path=str(raw_path),
             creator_name=f0_record.creator_name,
