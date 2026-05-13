@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 import json as json_mod
+import logging
 
 from finer.api.routes.files_utils import (
     DATA_ROOT,
@@ -17,6 +18,8 @@ from finer.errors.codes import (
     list_error_codes,
     lookup_error_codes,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -49,7 +52,7 @@ async def warmup_cache():
 
 @router.get("/diagnostics")
 async def get_diagnostics():
-    """Get diagnostic info about data and sync status."""
+    """Get diagnostic info about data, sync status, and Project Memory."""
     l0_count = sum(1 for _ in (DATA_ROOT / "L0_ingest").rglob("*") if _.is_file() and not _.name.endswith(".json"))
     raw_count = sum(1 for _ in (DATA_ROOT / "raw").rglob("*") if _.is_file() and not _.name.endswith(".json")) if (DATA_ROOT / "raw").exists() else 0
     manifest_count = len(get_manifests_index()["by_content_id"])
@@ -61,7 +64,7 @@ async def get_diagnostics():
 
     feishu_pool_count = sum(1 for _ in (DATA_ROOT / "feishu_sync_pool").iterdir() if _.is_file()) if (DATA_ROOT / "feishu_sync_pool").exists() else 0
 
-    return {
+    result = {
         "dataRoot": str(DATA_ROOT),
         "fileCounts": {
             "l0_ingest": l0_count,
@@ -75,6 +78,107 @@ async def get_diagnostics():
             "manifests_index_built": _manifests_index is not None,
         },
     }
+
+    # Add Project Memory diagnostics
+    result["projectMemory"] = _get_project_memory_diagnostics()
+
+    return result
+
+
+def _get_project_memory_diagnostics() -> dict:
+    """Build Project Memory diagnostics block."""
+    from finer.paths import PROJECT_MEMORY_DB
+
+    if not PROJECT_MEMORY_DB.exists():
+        return {
+            "status": "missing",
+            "projectId": None,
+            "schemaVersion": None,
+            "dbPath": str(PROJECT_MEMORY_DB),
+            "contentCount": 0,
+            "contentVersionCount": 0,
+            "blockCount": 0,
+            "topicBlockCount": 0,
+            "objectCount": 0,
+            "artifactCount": 0,
+            "assetIndexCount": 0,
+            "assetFtsCount": 0,
+            "lastRebuildAt": None,
+        }
+
+    try:
+        from finer.services.project_memory.connection import get_connection
+        from finer.services.project_memory.schema import SchemaInspector
+
+        conn = get_connection(PROJECT_MEMORY_DB)
+        inspector = SchemaInspector(conn)
+        report = inspector.validate_schema()
+        counts = report.counts
+
+        # Get project_id
+        project_id = None
+        try:
+            row = conn.execute(
+                "SELECT project_id FROM projects WHERE is_active = 1 LIMIT 1"
+            ).fetchone()
+            if row:
+                project_id = row["project_id"]
+        except Exception:
+            pass
+
+        # Get last rebuild timestamp
+        last_rebuild_at = None
+        try:
+            row = conn.execute(
+                "SELECT value FROM project_memory_meta WHERE key = 'last_asset_index_rebuild_at'"
+            ).fetchone()
+            if row:
+                last_rebuild_at = row["value"]
+        except Exception:
+            pass
+
+        # FTS count
+        asset_fts_count = 0
+        try:
+            row = conn.execute("SELECT COUNT(*) FROM asset_index_fts").fetchone()
+            if row:
+                asset_fts_count = row[0]
+        except Exception:
+            pass
+
+        return {
+            "status": report.status.value,
+            "projectId": project_id,
+            "schemaVersion": str(report.version) if report.version else None,
+            "dbPath": str(PROJECT_MEMORY_DB),
+            "contentCount": counts.get("contents", 0),
+            "contentVersionCount": counts.get("content_versions", 0),
+            "blockCount": counts.get("content_blocks", 0),
+            "topicBlockCount": counts.get("topic_blocks", 0),
+            "objectCount": counts.get("storage_objects", 0),
+            "artifactCount": counts.get("artifacts", 0),
+            "assetIndexCount": counts.get("asset_index", 0),
+            "assetFtsCount": asset_fts_count,
+            "lastRebuildAt": last_rebuild_at,
+        }
+
+    except Exception as e:
+        logger.warning("Failed to read Project Memory diagnostics: %s", e)
+        return {
+            "status": "corrupt",
+            "projectId": None,
+            "schemaVersion": None,
+            "dbPath": str(PROJECT_MEMORY_DB),
+            "contentCount": 0,
+            "contentVersionCount": 0,
+            "blockCount": 0,
+            "topicBlockCount": 0,
+            "objectCount": 0,
+            "artifactCount": 0,
+            "assetIndexCount": 0,
+            "assetFtsCount": 0,
+            "lastRebuildAt": None,
+        }
 
 
 def _info_to_dict(info: ErrorCodeInfo) -> dict[str, object]:

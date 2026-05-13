@@ -9,6 +9,7 @@ import {
   Users,
   Calendar,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import type { KOL } from "@/lib/contracts";
 import { mockKOLs } from "@/lib/mock-data";
@@ -33,6 +34,8 @@ export default function KOLListPage() {
   const [kols, setKOLs] = useState<KOL[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"score" | "accuracy" | "return">("score");
+  // Project Memory source: "catalog" | "degraded_scan" — set when connected to real API
+  const [dataSource, setDataSource] = useState<"catalog" | "degraded_scan">("catalog");
 
   useEffect(() => {
     // Simulate API call
@@ -65,6 +68,14 @@ export default function KOLListPage() {
           跟踪和评估 KOL 的投资观点表现
         </p>
       </div>
+
+      {/* Project Memory degraded scan warning */}
+      {dataSource === "degraded_scan" && (
+        <div className="mb-6 flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          <span>Project Memory 不可用 — 显示文件系统扫描结果</span>
+        </div>
+      )}
 
       {/* Sort options */}
       <div className="flex items-center gap-4 mb-6">

@@ -63,6 +63,11 @@ def ensure_storage(root: Path) -> list[str]:
 # F0 Project Memory SQLite index path
 F0_INDEX_DB_PATH = DATA_ROOT / "f0_index.db"
 
+# Project Memory Storage v1
+PROJECT_MEMORY_ROOT = DATA_ROOT / "project_memory"
+PROJECT_MEMORY_DB = PROJECT_MEMORY_ROOT / "finer.project.sqlite3"
+STORAGE_ROOT = DATA_ROOT / "storage"
+
 # Market data (Tushare A-share local pipeline)
 MARKET_DATA_ROOT = DATA_ROOT / "market" / "tushare"
 MARKET_PARQUET_DIR = MARKET_DATA_ROOT / "parquet"

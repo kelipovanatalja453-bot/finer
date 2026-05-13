@@ -881,6 +881,68 @@ export type ExporterHealth = {
 };
 
 // =============================================================================
+// Project Memory Storage v1 — Types (mirrors docs/specs/project-memory-storage-v1.md §10)
+// =============================================================================
+
+/** Project Memory metadata returned by /api/files and /api/system/diagnostics. */
+export interface ProjectMemoryMeta {
+  projectId: string;
+  schemaVersion: string;
+  dbPath: string;
+  assetIndexUpdatedAt: string | null;
+  degraded: boolean;
+}
+
+/** Structured name lineage for a content item across pipeline stages. */
+export interface NameLineage {
+  originalFilename?: string;
+  f0DisplayName?: string;
+  f1EnvelopeTitle?: string;
+  splitFilename?: string;
+  materializedFilename?: string;
+}
+
+/** Asset file with Project Memory lineage fields. */
+export interface AssetFileWithLineage {
+  id: string;
+  contentId: string;
+  contentVersionId: string;
+  stage: string;
+  name: string;
+  sourceRecordId: string;
+  sourceGroupId: string;
+  latestArtifactId: string;
+  manifestId: string;
+  nameLineage: NameLineage;
+}
+
+/** Response shape for GET /api/files with Project Memory metadata. */
+export interface FilesApiResponse {
+  source: "catalog" | "degraded_scan";
+  projectMemory?: ProjectMemoryMeta;
+  files: AssetFileWithLineage[];
+}
+
+/** Response shape for GET /api/system/diagnostics. */
+export interface SystemDiagnostics {
+  projectMemory: {
+    status: "healthy" | "degraded" | "missing" | "corrupt" | "schema_mismatch";
+    projectId: string;
+    schemaVersion: string;
+    dbPath: string;
+    contentCount: number;
+    contentVersionCount: number;
+    blockCount: number;
+    topicBlockCount: number;
+    objectCount: number;
+    artifactCount: number;
+    assetIndexCount: number;
+    assetFtsCount: number;
+    lastRebuildAt: string | null;
+  };
+}
+
+// =============================================================================
 // F0 Project Memory — Index Health & Query (mirrors src/finer/schemas/f0_index.py)
 // =============================================================================
 

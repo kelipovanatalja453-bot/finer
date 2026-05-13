@@ -13,8 +13,10 @@ import {
   BarChart3,
   PieChart,
   Loader2,
+  FileText,
+  Tag,
 } from "lucide-react";
-import type { KOL, KOLTimelineEvent } from "@/lib/contracts";
+import type { KOL, KOLTimelineEvent, NameLineage } from "@/lib/contracts";
 
 type KOLDetail = KOL & {
   stats: {
@@ -25,7 +27,10 @@ type KOLDetail = KOL & {
     minReturn: number;
     avgHoldingDays: number;
   };
-  timeline: KOLTimelineEvent[];
+  timeline: (KOLTimelineEvent & {
+    nameLineage?: NameLineage;
+    contentVersionId?: string;
+  })[];
 };
 
 const mockDetail: KOLDetail = {
@@ -64,6 +69,12 @@ const mockDetail: KOLDetail = {
       direction: "bullish",
       summary: "半导体周期底部已过，AI需求持续强劲",
       return: 8.5,
+      contentVersionId: "cv-001",
+      nameLineage: {
+        originalFilename: "投研老王_20260420_半导体观点.xlsx",
+        f0DisplayName: "投研老王 - 半导体周期分析",
+        f1EnvelopeTitle: "半导体行业周期底部判断与AI需求展望",
+      },
     },
     {
       id: "e2",
@@ -72,6 +83,7 @@ const mockDetail: KOLDetail = {
       ticker: "AAPL",
       direction: "neutral",
       summary: "财报前观望，关注服务收入增速",
+      contentVersionId: "cv-002",
     },
     {
       id: "e3",
@@ -81,6 +93,11 @@ const mockDetail: KOLDetail = {
       direction: "bearish",
       summary: "估值过高，竞争加剧",
       return: -5.2,
+      // No contentVersionId — tests graceful handling of missing version
+      nameLineage: {
+        originalFilename: "TSLA_analysis.pdf",
+        materializedFilename: "F1_TSLA_analysis_cv-003.json",
+      },
     },
   ],
 };
@@ -105,6 +122,36 @@ function getDirectionLabel(direction: string): string {
     default:
       return "中性";
   }
+}
+
+/** Display name lineage for an asset, showing all known names across pipeline stages. */
+function NameLineageDisplay({ lineage }: { lineage: NameLineage }) {
+  const entries = [
+    { label: "原始文件名", value: lineage.originalFilename },
+    { label: "F0 显示名", value: lineage.f0DisplayName },
+    { label: "F1 标题", value: lineage.f1EnvelopeTitle },
+    { label: "拆分文件名", value: lineage.splitFilename },
+    { label: "物化文件名", value: lineage.materializedFilename },
+  ].filter((e) => e.value);
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="mt-3 p-3 bg-stone-50 rounded-md border border-stone-100">
+      <div className="flex items-center gap-2 mb-2 text-xs font-medium text-foreground/60">
+        <Tag className="w-3 h-3" />
+        <span>名称沿革</span>
+      </div>
+      <div className="space-y-1.5">
+        {entries.map((entry) => (
+          <div key={entry.label} className="flex items-baseline gap-2 text-xs">
+            <span className="text-foreground/50 w-20 flex-shrink-0">{entry.label}</span>
+            <span className="text-foreground/80 font-mono break-all">{entry.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function KOLDetailPage() {
@@ -257,8 +304,17 @@ export default function KOLDetailPage() {
                       {getDirectionLabel(event.direction)}
                     </span>
                     <span className="text-xs text-foreground/50">{event.date}</span>
+                    {event.contentVersionId && (
+                      <span className="text-[10px] font-mono text-foreground/30 px-1.5 py-0.5 bg-stone-50 rounded">
+                        {event.contentVersionId}
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-foreground/70">{event.summary}</p>
+                  {/* Name lineage detail */}
+                  {event.nameLineage && (
+                    <NameLineageDisplay lineage={event.nameLineage} />
+                  )}
                 </div>
                 {event.return !== undefined && (
                   <div
