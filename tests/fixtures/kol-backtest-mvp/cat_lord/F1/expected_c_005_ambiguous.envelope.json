@@ -1,0 +1,52 @@
+{
+  "envelope_id": "env_c_005_ambiguous",
+  "source_record_id": "c_005_ambiguous",
+  "schema_version": "v1.0",
+  "source_type": "wechat_article",
+  "standardization_profile": "wechat_article_v1",
+  "source_title": "NVDA估值分析",
+  "creator_id": "kol_cat_lord_fire",
+  "creator_name": "猫大人FIRE",
+  "published_at": "2026-04-01T15:00:00+08:00",
+  "collected_at": "2026-05-01T12:00:00+00:00",
+  "ingested_at": "2026-05-01T12:00:00+00:00",
+  "blocks": [
+    {
+      "block_id": "block_c_005_ambiguous_0",
+      "envelope_id": "env_c_005_ambiguous",
+      "block_type": "paragraph",
+      "text": "NVDA估值偏高，但AI capex周期刚起步。短期回调风险与长期机会并存。",
+      "order_index": 0,
+      "quality": {
+        "readability": 0.82,
+        "extraction_confidence": 0.85,
+        "structural_confidence": 0.84,
+        "completeness": 0.88,
+        "noise_score": 0.06,
+        "quality_flags": []
+      },
+      "provenance": {
+        "raw_path": "data/raw/kol_cat_lord_fire/c_005_ambiguous.raw.md",
+        "extractor": "wechat_article_standardizer",
+        "extractor_version": "1.0.0"
+      },
+      "evidence_spans": [],
+      "metadata": {}
+    }
+  ],
+  "quality_card": {
+    "schema_version": "v0.5",
+    "readability_score": 0.82,
+    "semantic_completeness_score": 0.85,
+    "financial_relevance_score": 0.88,
+    "entity_resolution_score": 0.80,
+    "temporal_resolution_score": 0.75,
+    "evidence_traceability_score": 0.80,
+    "overall_score": 0.82,
+    "gate_status": "pass",
+    "gate_reasons": []
+  },
+  "temporal_anchors": [],
+  "entity_anchors": [],
+  "metadata": {}
+}

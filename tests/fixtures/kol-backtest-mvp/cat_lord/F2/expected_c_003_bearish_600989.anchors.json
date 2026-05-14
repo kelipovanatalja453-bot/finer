@@ -1,0 +1,51 @@
+{
+  "envelope_id": "env_c_003_bearish_600989",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_003_bearish_600989_0_0",
+      "block_id": "block_c_003_bearish_600989_0",
+      "char_start": 0,
+      "char_end": 4,
+      "text": "宝丰能源",
+      "confidence": 0.90,
+      "span_type": "entity"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_003_bearish_600989_0_1",
+      "block_id": "block_c_003_bearish_600989_0",
+      "char_start": 8,
+      "char_end": 13,
+      "text": "风险高于价值",
+      "confidence": 0.92,
+      "span_type": "action"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_c_003_bearish_600989_0",
+      "entity_type": "stock",
+      "raw_text": "宝丰能源",
+      "resolved_name": "宝丰能源",
+      "resolved_symbol": "600989",
+      "market": "CN",
+      "confidence": 0.90,
+      "evidence_span_id": "span_c_003_bearish_600989_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "time_c_003_bearish_600989_0",
+      "anchor_type": "published_at",
+      "raw_text": "2026-03-20T14:00:00+08:00",
+      "resolved_time": "2026-03-20T14:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

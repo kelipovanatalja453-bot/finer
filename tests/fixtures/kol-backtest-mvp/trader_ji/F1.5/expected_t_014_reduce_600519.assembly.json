@@ -1,0 +1,29 @@
+{
+  "assembly_id": "asm_t_014_reduce_600519",
+  "envelope_id": "env_t_014_reduce_600519",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_t_014_reduce_600519_0",
+      "envelope_id": "env_t_014_reduce_600519",
+      "source_block_ids": [
+        "block_t_014_reduce_600519_0"
+      ],
+      "topic_title": "trader_ji signal: t_014_reduce_600519",
+      "topic_type": "single_stock",
+      "primary_entity_ids": [
+        "600519"
+      ],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "茅台减仓一半，锁定部分利润。",
+      "raw_text": "茅台减仓一半，锁定部分利润。",
+      "segmentation_reason": "single-block content, wrapping as single topic",
+      "confidence": 0.95,
+      "ambiguity_flags": []
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "single_block_wrap",
+  "created_at": "2026-03-15T00:00:00+08:00"
+}

@@ -1,0 +1,45 @@
+{
+  "total_trades": 2,
+  "return_pct": -1.15,
+  "max_drawdown_pct": 1.56,
+  "sharpe_ratio": 0.0,
+  "win_rate": 0.5,
+  "backtest_period": "2026-03-02 to 2026-05-08",
+  "initial_capital": 100000.0,
+  "trading_days": 49,
+  "commission_pct": 0,
+  "slippage_pct": 0,
+  "max_holding_days": 30,
+  "trade_details": [
+    {
+      "trade_action_id": "action_c_007_mixed_1",
+      "ticker": "CSIQ",
+      "direction": "long",
+      "entry_date": "2026-04-13",
+      "entry_price": 15.07,
+      "exit_date": "2026-05-08",
+      "exit_price": 11.31,
+      "exit_reason": "end_of_period",
+      "return_pct": -24.95,
+      "holding_days": 25,
+      "max_drawdown_pct": 0.0,
+      "position_size_pct": 0.1,
+      "pnl_absolute": -1247.51
+    },
+    {
+      "trade_action_id": "action_c_010_multi_intent_1",
+      "ticker": "TSLA",
+      "direction": "long",
+      "entry_date": "2026-04-28",
+      "entry_price": 168.8,
+      "exit_date": "2026-05-08",
+      "exit_price": 172.43,
+      "exit_reason": "end_of_period",
+      "return_pct": 2.15,
+      "holding_days": 10,
+      "max_drawdown_pct": 0.0,
+      "position_size_pct": 0.1,
+      "pnl_absolute": 102.15
+    }
+  ]
+}

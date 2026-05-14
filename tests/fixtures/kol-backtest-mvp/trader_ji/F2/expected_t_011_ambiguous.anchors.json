@@ -1,0 +1,41 @@
+{
+  "envelope_id": "env_t_011_ambiguous",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_011_ambiguous_0_0",
+      "block_id": "block_t_011_ambiguous_0",
+      "char_start": 0,
+      "char_end": 4,
+      "text": "隆基绿能",
+      "confidence": 0.9,
+      "span_type": "entity"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_t_011_ambiguous_0",
+      "entity_type": "stock",
+      "raw_text": "隆基绿能",
+      "resolved_name": "隆基绿能",
+      "resolved_symbol": "601012",
+      "market": "CN",
+      "confidence": 0.9,
+      "evidence_span_id": "span_t_011_ambiguous_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_011_ambiguous_pub",
+      "anchor_type": "published_at",
+      "raw_text": "published_at",
+      "resolved_time": "2026-03-11T09:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

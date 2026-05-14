@@ -1,0 +1,34 @@
+{
+  "envelope_id": "env_t_015_ambiguous_multi",
+  "intents": [
+    {
+      "intent_id": "intent_t_015_ambiguous_multi_0",
+      "schema_version": "1.0",
+      "envelope_id": "env_t_015_ambiguous_multi",
+      "block_ids": [
+        "block_t_015_ambiguous_multi_0"
+      ],
+      "target_type": "stock",
+      "target_name": "五粮液",
+      "target_symbol": "000858",
+      "market": "CN",
+      "direction": "unknown",
+      "actionability": "review_required",
+      "position_delta_hint": "unknown",
+      "conviction": 0.25,
+      "confidence": 0.45,
+      "evidence_span_ids": [
+        "span_t_015_ambiguous_multi_0_0"
+      ],
+      "temporal_anchor_ids": [],
+      "ambiguity_flags": [],
+      "time_horizon_hint": "unknown",
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    }
+  ],
+  "extraction_timestamp": "2026-05-10T12:00:00+00:00",
+  "model_version": "v1.0",
+  "total_intents": 1,
+  "actionable_count": 0
+}

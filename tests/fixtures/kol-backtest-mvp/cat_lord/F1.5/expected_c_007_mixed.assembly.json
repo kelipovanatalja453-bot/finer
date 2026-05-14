@@ -1,0 +1,41 @@
+{
+  "assembly_id": "asm_c_007_mixed",
+  "envelope_id": "env_c_007_mixed",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_c_007_mixed_0",
+      "envelope_id": "env_c_007_mixed",
+      "source_block_ids": ["block_c_007_mixed_0"],
+      "topic_title": "理想汽车看空",
+      "topic_type": "single_stock",
+      "primary_entity_ids": ["LI"],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "理想汽车短期看空",
+      "raw_text": "理想汽车短期看空，",
+      "segmentation_reason": "Multi-ticker content split by entity",
+      "confidence": 0.85,
+      "ambiguity_flags": []
+    },
+    {
+      "topic_block_id": "tb_c_007_mixed_1",
+      "envelope_id": "env_c_007_mixed",
+      "source_block_ids": ["block_c_007_mixed_0"],
+      "topic_title": "阿特斯太阳能建仓",
+      "topic_type": "single_stock",
+      "primary_entity_ids": ["CSIQ"],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "阿特斯太阳能在15元以下可以建仓",
+      "raw_text": "但阿特斯太阳能在15元以下可以建仓。",
+      "segmentation_reason": "Multi-ticker content split by entity",
+      "confidence": 0.85,
+      "ambiguity_flags": []
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "entity-based-split",
+  "created_at": "2026-05-01T12:00:00+00:00"
+}

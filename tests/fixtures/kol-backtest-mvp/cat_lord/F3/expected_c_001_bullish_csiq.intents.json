@@ -1,0 +1,24 @@
+[
+  {
+    "intent_id": "intent_c_001_bullish_csiq_0",
+    "schema_version": "1.0",
+    "envelope_id": "env_c_001_bullish_csiq",
+    "block_ids": ["block_c_001_bullish_csiq_0"],
+    "target_type": "stock",
+    "target_name": "CSIQ",
+    "target_symbol": "CSIQ",
+    "market": "US",
+    "direction": "bullish",
+    "actionability": "opinion",
+    "position_delta_hint": "none",
+    "conviction": 0.50,
+    "confidence": 0.70,
+    "evidence_span_ids": ["span_c_001_bullish_csiq_0_0", "span_c_001_bullish_csiq_0_1"],
+    "temporal_anchor_ids": ["time_c_001_bullish_csiq_0"],
+    "ambiguity_flags": [],
+    "risk_preference_hint": "balanced",
+    "time_horizon_hint": "unknown",
+    "created_at": "2026-05-10T12:00:00+00:00",
+    "metadata": {}
+  }
+]

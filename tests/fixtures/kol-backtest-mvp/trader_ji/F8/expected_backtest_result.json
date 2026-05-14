@@ -1,0 +1,44 @@
+{
+  "total_trades": 10,
+  "return_pct": 1.43,
+  "max_drawdown_pct": 0.0,
+  "sharpe_ratio": 0.0,
+  "win_rate": 1.0,
+  "backtest_period": "2026-03-01 to 2026-05-09",
+  "initial_capital": 100000,
+  "trading_days": 50,
+  "commission_pct": 0,
+  "slippage_pct": 0,
+  "max_holding_days": 30,
+  "trade_details": [
+    {
+      "trade_action_id": "action_t_001_buy_510300_0",
+      "ticker": "510300",
+      "direction": "long",
+      "entry_date": "2026-03-02",
+      "entry_price": 4.09,
+      "exit_date": "2026-03-13",
+      "exit_price": 4.31,
+      "exit_reason": "signal_reversal",
+      "return_pct": 5.38,
+      "holding_days": 11,
+      "max_drawdown_pct": 0.0,
+      "position_size_pct": 0.15,
+      "pnl_absolute": 806.85
+    },
+    {
+      "trade_action_id": "action_t_010_multi_intent_0",
+      "ticker": "510300",
+      "direction": "long",
+      "entry_date": "2026-03-16",
+      "exit_date": "2026-05-08",
+      "exit_price": 4.53,
+      "exit_reason": "end_of_period",
+      "return_pct": 4.14,
+      "holding_days": 53,
+      "max_drawdown_pct": 0.0,
+      "position_size_pct": 0.1,
+      "pnl_absolute": 625.7
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "assembly_id": "asm_c_004_hold_tme",
+  "envelope_id": "env_c_004_hold_tme",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_c_004_hold_tme_0",
+      "envelope_id": "env_c_004_hold_tme",
+      "source_block_ids": ["block_c_004_hold_tme_0"],
+      "topic_title": "腾讯音乐持有观点",
+      "topic_type": "single_stock",
+      "primary_entity_ids": ["TME"],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "腾讯音乐到了买不了吃亏的阶段，埋伏没问题",
+      "raw_text": "腾讯音乐基本到了买不了吃亏买不了上当的阶段。埋伏没问题。",
+      "segmentation_reason": "Single-topic content",
+      "confidence": 0.88,
+      "ambiguity_flags": []
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "single-block-wrap",
+  "created_at": "2026-05-01T12:00:00+00:00"
+}

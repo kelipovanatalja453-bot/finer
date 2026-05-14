@@ -1,0 +1,39 @@
+{
+  "envelope_id": "env_t_006_nonactionable",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_006_nonactionable_0_t1",
+      "block_id": "block_t_006_nonactionable_0",
+      "char_start": 0,
+      "char_end": 2,
+      "text": "今日",
+      "confidence": 0.85,
+      "span_type": "temporal"
+    }
+  ],
+  "entity_anchors": [],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_006_nonactionable_pub",
+      "anchor_type": "published_at",
+      "raw_text": "published_at",
+      "resolved_time": "2026-03-05T16:30:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    },
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_006_nonactionable_m1",
+      "anchor_type": "mentioned_at",
+      "raw_text": "今日",
+      "resolved_time": "2026-03-05T09:30:00+08:00",
+      "confidence": 0.85,
+      "resolution_strategy": "market_hours",
+      "evidence_span_id": "span_t_006_nonactionable_0_t1",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "envelope_id": "env_c_004_hold_tme",
+  "source_record_id": "c_004_hold_tme",
+  "schema_version": "v1.0",
+  "source_type": "feishu_chat",
+  "standardization_profile": "feishu_chat_v1",
+  "source_title": "腾讯音乐持有观点",
+  "creator_id": "kol_cat_lord_fire",
+  "creator_name": "猫大人FIRE",
+  "published_at": "2026-03-25T11:00:00+08:00",
+  "collected_at": "2026-05-01T12:00:00+00:00",
+  "ingested_at": "2026-05-01T12:00:00+00:00",
+  "blocks": [
+    {
+      "block_id": "block_c_004_hold_tme_0",
+      "envelope_id": "env_c_004_hold_tme",
+      "block_type": "paragraph",
+      "text": "腾讯音乐基本到了买不了吃亏买不了上当的阶段。埋伏没问题。",
+      "order_index": 0,
+      "quality": {
+        "readability": 0.84,
+        "extraction_confidence": 0.88,
+        "structural_confidence": 0.86,
+        "completeness": 0.88,
+        "noise_score": 0.05,
+        "quality_flags": []
+      },
+      "provenance": {
+        "raw_path": "data/raw/kol_cat_lord_fire/c_004_hold_tme.raw.md",
+        "extractor": "feishu_chat_standardizer",
+        "extractor_version": "1.0.0"
+      },
+      "evidence_spans": [],
+      "metadata": {}
+    }
+  ],
+  "quality_card": {
+    "schema_version": "v0.5",
+    "readability_score": 0.84,
+    "semantic_completeness_score": 0.88,
+    "financial_relevance_score": 0.85,
+    "entity_resolution_score": 0.80,
+    "temporal_resolution_score": 0.78,
+    "evidence_traceability_score": 0.82,
+    "overall_score": 0.83,
+    "gate_status": "pass",
+    "gate_reasons": []
+  },
+  "temporal_anchors": [],
+  "entity_anchors": [],
+  "metadata": {}
+}

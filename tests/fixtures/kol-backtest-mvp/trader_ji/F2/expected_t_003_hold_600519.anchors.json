@@ -1,0 +1,72 @@
+{
+  "envelope_id": "env_t_003_hold_600519",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_003_hold_600519_0_0",
+      "block_id": "block_t_003_hold_600519_0",
+      "char_start": 0,
+      "char_end": 23,
+      "text": "茅台本周继续持有，不加不减。等待周五消费数据。",
+      "confidence": 0.9,
+      "span_type": "entity"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_003_hold_600519_0_t1",
+      "block_id": "block_t_003_hold_600519_0",
+      "char_start": 2,
+      "char_end": 4,
+      "text": "本周",
+      "confidence": 0.85,
+      "span_type": "temporal"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_t_003_hold_600519_0",
+      "entity_type": "stock",
+      "raw_text": "茅台本周继续持有，不加不减。等待周五消费数据。",
+      "resolved_name": "贵州茅台",
+      "resolved_symbol": "600519",
+      "market": "CN",
+      "confidence": 0.9,
+      "evidence_span_id": "span_t_003_hold_600519_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_003_hold_600519_pub",
+      "anchor_type": "published_at",
+      "raw_text": "published_at",
+      "resolved_time": "2026-03-01T20:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    },
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_003_hold_600519_m1",
+      "anchor_type": "mentioned_at",
+      "raw_text": "本周",
+      "resolved_time": "2026-03-01T20:00:00+08:00",
+      "confidence": 0.85,
+      "resolution_strategy": "relative_date",
+      "evidence_span_id": "span_t_003_hold_600519_0_t1",
+      "timezone": "Asia/Shanghai"
+    },
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_003_hold_600519_eff",
+      "anchor_type": "effective_trade_at",
+      "raw_text": "茅台本周继续持有，不加不减。等待周五消费",
+      "resolved_time": "2026-03-02T09:30:00+08:00",
+      "confidence": 0.8,
+      "resolution_strategy": "market_hours",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

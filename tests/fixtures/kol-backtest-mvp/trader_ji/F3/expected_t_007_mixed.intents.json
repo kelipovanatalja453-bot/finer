@@ -1,0 +1,59 @@
+{
+  "envelope_id": "env_t_007_mixed",
+  "intents": [
+    {
+      "intent_id": "intent_t_007_mixed_0",
+      "schema_version": "1.0",
+      "envelope_id": "env_t_007_mixed",
+      "block_ids": [
+        "block_t_007_mixed_0"
+      ],
+      "target_type": "etf",
+      "target_name": "沪深300ETF",
+      "target_symbol": "510300",
+      "market": "CN",
+      "direction": "bullish",
+      "actionability": "explicit_action",
+      "position_delta_hint": "open",
+      "conviction": 0.75,
+      "confidence": 0.85,
+      "evidence_span_ids": [
+        "span_t_007_mixed_0_0"
+      ],
+      "temporal_anchor_ids": [],
+      "ambiguity_flags": [],
+      "time_horizon_hint": "short_term",
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    },
+    {
+      "intent_id": "intent_t_007_mixed_1",
+      "schema_version": "1.0",
+      "envelope_id": "env_t_007_mixed",
+      "block_ids": [
+        "block_t_007_mixed_0"
+      ],
+      "target_type": "etf",
+      "target_name": "创业板ETF",
+      "target_symbol": "159915",
+      "market": "CN",
+      "direction": "bearish",
+      "actionability": "explicit_action",
+      "position_delta_hint": "reduce",
+      "conviction": 0.7,
+      "confidence": 0.85,
+      "evidence_span_ids": [
+        "span_t_007_mixed_0_0"
+      ],
+      "temporal_anchor_ids": [],
+      "ambiguity_flags": [],
+      "time_horizon_hint": "short_term",
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    }
+  ],
+  "extraction_timestamp": "2026-05-10T12:00:00+00:00",
+  "model_version": "v1.0",
+  "total_intents": 2,
+  "actionable_count": 2
+}

@@ -1,0 +1,25 @@
+{
+  "assembly_id": "asm_c_008_close_li",
+  "envelope_id": "env_c_008_close_li",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_c_008_close_li_0",
+      "envelope_id": "env_c_008_close_li",
+      "source_block_ids": ["block_c_008_close_li_0"],
+      "topic_title": "理想汽车清仓",
+      "topic_type": "single_stock",
+      "primary_entity_ids": ["LI"],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "理想汽车套娃策略玩崩，已全部清仓",
+      "raw_text": "理想汽车套娃策略玩崩了，已全部清仓。等待新款车市场认可。",
+      "segmentation_reason": "Single-topic content",
+      "confidence": 0.92,
+      "ambiguity_flags": []
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "single-block-wrap",
+  "created_at": "2026-05-01T12:00:00+00:00"
+}

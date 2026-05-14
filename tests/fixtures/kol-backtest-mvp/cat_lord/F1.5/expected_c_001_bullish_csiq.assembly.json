@@ -1,0 +1,25 @@
+{
+  "assembly_id": "asm_c_001_bullish_csiq",
+  "envelope_id": "env_c_001_bullish_csiq",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_c_001_bullish_csiq_0",
+      "envelope_id": "env_c_001_bullish_csiq",
+      "source_block_ids": ["block_c_001_bullish_csiq_0"],
+      "topic_title": "阿特斯太阳能CSIQ分析",
+      "topic_type": "single_stock",
+      "primary_entity_ids": ["CSIQ"],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "阿特斯太阳能CSIQ更值得关注，在手订单充沛，动态远期PE只有8-12倍",
+      "raw_text": "阿特斯太阳能CSIQ更值得关注，在手订单充沛，动态远期PE只有8-12倍。2026大概率扭亏为盈。",
+      "segmentation_reason": "Single-topic content",
+      "confidence": 0.90,
+      "ambiguity_flags": []
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "single-block-wrap",
+  "created_at": "2026-05-01T12:00:00+00:00"
+}

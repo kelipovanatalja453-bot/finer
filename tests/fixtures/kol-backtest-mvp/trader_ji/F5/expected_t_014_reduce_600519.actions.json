@@ -1,0 +1,51 @@
+{
+  "actions": [
+    {
+      "trade_action_id": "action_t_014_reduce_600519_0",
+      "timestamp": "2026-05-10T12:00:00+00:00",
+      "source": {
+        "content_id": "env_t_014_reduce_600519",
+        "evidence_text": "茅台减仓一半，锁定部分利润。"
+      },
+      "target": {
+        "ticker": "贵州茅台",
+        "ticker_normalized": "600519",
+        "market": "CN",
+        "instrument_type": "stock",
+        "company_name": "贵州茅台"
+      },
+      "direction": "bearish",
+      "action_chain": [
+        {
+          "sequence": 1,
+          "action_type": "close_long",
+          "trigger_condition": null,
+          "trigger_type": "manual",
+          "position_size_pct": 0.15
+        }
+      ],
+      "intent_id": "intent_t_014_reduce_600519_0",
+      "policy_id": "policy_intent_t_014_reduce_600519_0",
+      "evidence_span_ids": [
+        "span_t_014_reduce_600519_0_0"
+      ],
+      "canonical_trace_status": "canonical",
+      "execution_timing": {
+        "intent_published_at": "2026-03-14T16:30:00+08:00",
+        "intent_effective_at": "2026-03-16T09:30:00+08:00",
+        "action_decision_at": "2026-05-10T12:00:00+00:00",
+        "action_executable_at": "2026-03-16T09:30:00+08:00",
+        "market": "CN",
+        "timezone": "Asia/Shanghai",
+        "market_session_at_publish": "after_close",
+        "execution_delay_reason": null,
+        "timing_policy_id": "market-calendar-next-open-v1"
+      },
+      "confidence": 0.9,
+      "requires_manual_review": false,
+      "time_horizon": "short_term",
+      "rationale": "GlobalBase: explicit_action+bearish+reduce -> reduce_position",
+      "metadata": {}
+    }
+  ]
+}

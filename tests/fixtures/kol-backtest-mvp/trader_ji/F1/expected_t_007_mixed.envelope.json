@@ -1,0 +1,52 @@
+{
+  "envelope_id": "env_t_007_mixed",
+  "schema_version": "v1.0",
+  "source_record_id": "t_007_mixed",
+  "source_type": "feishu_doc",
+  "standardization_profile": "weekly_strategy_v1",
+  "source_title": "trader_ji/t_007_mixed",
+  "raw_path": "data/raw/trader_ji/t_007_mixed.raw.md",
+  "creator_id": "trader_ji",
+  "creator_name": "9友",
+  "published_at": "2026-03-06T20:00:00+08:00",
+  "collected_at": "2026-03-15T00:00:00+08:00",
+  "ingested_at": "2026-03-15T00:00:00+08:00",
+  "blocks": [
+    {
+      "block_id": "block_t_007_mixed_0",
+      "envelope_id": "env_t_007_mixed",
+      "block_type": "paragraph",
+      "text": "沪深300看多，但创业板短期需减仓。",
+      "order_index": 0,
+      "quality": {
+        "readability": 0.9,
+        "extraction_confidence": 0.95,
+        "structural_confidence": 0.9,
+        "completeness": 0.95,
+        "noise_score": 0.05,
+        "quality_flags": []
+      },
+      "provenance": {
+        "raw_path": "data/raw/trader_ji/t_007_mixed.raw.md",
+        "extractor": "weekly_strategy_standardizer",
+        "extractor_version": "1.0.0"
+      },
+      "evidence_spans": []
+    }
+  ],
+  "quality_card": {
+    "schema_version": "v0.5",
+    "readability_score": 0.9,
+    "semantic_completeness_score": 0.9,
+    "financial_relevance_score": 0.85,
+    "entity_resolution_score": 0.8,
+    "temporal_resolution_score": 0.8,
+    "evidence_traceability_score": 0.85,
+    "overall_score": 0.85,
+    "gate_status": "pass",
+    "gate_reasons": []
+  },
+  "temporal_anchors": [],
+  "entity_anchors": [],
+  "metadata": {}
+}

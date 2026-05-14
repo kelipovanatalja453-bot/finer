@@ -1,0 +1,28 @@
+{
+  "envelope_id": "env_c_006_nonactionable",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_006_nonactionable_0_0",
+      "block_id": "block_c_006_nonactionable_0",
+      "char_start": 7,
+      "char_end": 13,
+      "text": "震荡调整阶段",
+      "confidence": 0.75,
+      "span_type": "action"
+    }
+  ],
+  "entity_anchors": [],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "time_c_006_nonactionable_0",
+      "anchor_type": "published_at",
+      "raw_text": "2026-04-05T09:00:00+08:00",
+      "resolved_time": "2026-04-05T09:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

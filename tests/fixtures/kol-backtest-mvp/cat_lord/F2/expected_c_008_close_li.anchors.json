@@ -1,0 +1,51 @@
+{
+  "envelope_id": "env_c_008_close_li",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_008_close_li_0_0",
+      "block_id": "block_c_008_close_li_0",
+      "char_start": 0,
+      "char_end": 4,
+      "text": "理想",
+      "confidence": 0.92,
+      "span_type": "entity"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_008_close_li_0_1",
+      "block_id": "block_c_008_close_li_0",
+      "char_start": 13,
+      "char_end": 18,
+      "text": "已全部清仓",
+      "confidence": 0.95,
+      "span_type": "action"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_c_008_close_li_0",
+      "entity_type": "stock",
+      "raw_text": "理想",
+      "resolved_name": "Li Auto Inc.",
+      "resolved_symbol": "LI",
+      "market": "US",
+      "confidence": 0.92,
+      "evidence_span_id": "span_c_008_close_li_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "time_c_008_close_li_0",
+      "anchor_type": "published_at",
+      "raw_text": "2026-04-15T16:00:00+08:00",
+      "resolved_time": "2026-04-15T16:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

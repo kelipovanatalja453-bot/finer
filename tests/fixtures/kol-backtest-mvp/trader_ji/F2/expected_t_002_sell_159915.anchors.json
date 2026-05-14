@@ -1,0 +1,93 @@
+{
+  "envelope_id": "env_t_002_sell_159915",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_002_sell_159915_0_0",
+      "block_id": "block_t_002_sell_159915_0",
+      "char_start": 0,
+      "char_end": 6,
+      "text": "创业板ETF",
+      "confidence": 0.9,
+      "span_type": "entity"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_002_sell_159915_0_t1",
+      "block_id": "block_t_002_sell_159915_0",
+      "char_start": 14,
+      "char_end": 16,
+      "text": "明天",
+      "confidence": 0.85,
+      "span_type": "temporal"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_002_sell_159915_0_t2",
+      "block_id": "block_t_002_sell_159915_0",
+      "char_start": 6,
+      "char_end": 8,
+      "text": "尾盘",
+      "confidence": 0.85,
+      "span_type": "temporal"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_t_002_sell_159915_0",
+      "entity_type": "etf",
+      "raw_text": "创业板ETF",
+      "resolved_name": "创业板ETF",
+      "resolved_symbol": "159915",
+      "market": "CN",
+      "confidence": 0.9,
+      "evidence_span_id": "span_t_002_sell_159915_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_002_sell_159915_pub",
+      "anchor_type": "published_at",
+      "raw_text": "published_at",
+      "resolved_time": "2026-03-03T16:30:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    },
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_002_sell_159915_m1",
+      "anchor_type": "mentioned_at",
+      "raw_text": "明天",
+      "resolved_time": "2026-03-04T09:30:00+08:00",
+      "confidence": 0.85,
+      "resolution_strategy": "relative_date",
+      "evidence_span_id": "span_t_002_sell_159915_0_t1",
+      "timezone": "Asia/Shanghai"
+    },
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_002_sell_159915_m2",
+      "anchor_type": "mentioned_at",
+      "raw_text": "尾盘",
+      "resolved_time": "2026-03-03T14:30:00+08:00",
+      "confidence": 0.85,
+      "resolution_strategy": "market_hours",
+      "evidence_span_id": "span_t_002_sell_159915_0_t2",
+      "timezone": "Asia/Shanghai"
+    },
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_002_sell_159915_eff",
+      "anchor_type": "effective_trade_at",
+      "raw_text": "创业板ETF尾盘已全部清仓，明天观望。",
+      "resolved_time": "2026-03-04T09:30:00+08:00",
+      "confidence": 0.8,
+      "resolution_strategy": "market_hours",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

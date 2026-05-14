@@ -1,0 +1,30 @@
+{
+  "assembly_id": "asm_t_015_ambiguous_multi",
+  "envelope_id": "env_t_015_ambiguous_multi",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_t_015_ambiguous_multi_0",
+      "envelope_id": "env_t_015_ambiguous_multi",
+      "source_block_ids": [
+        "block_t_015_ambiguous_multi_0"
+      ],
+      "topic_title": "trader_ji signal: t_015_ambiguous_multi",
+      "topic_type": "portfolio_update",
+      "primary_entity_ids": [
+        "000858",
+        "601318"
+      ],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "白酒和保险都不确定，再观察一周。",
+      "raw_text": "白酒和保险都不确定，再观察一周。",
+      "segmentation_reason": "single-block content, wrapping as single topic",
+      "confidence": 0.95,
+      "ambiguity_flags": []
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "single_block_wrap",
+  "created_at": "2026-03-15T00:00:00+08:00"
+}

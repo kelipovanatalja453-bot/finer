@@ -1,0 +1,33 @@
+[
+  {
+    "policy_id": "policy_intent_c_003_bearish_600989_0",
+    "intent_id": "intent_c_003_bearish_600989_0",
+    "kol_id": "kol_cat_lord_fire",
+    "policy_version": "global-base-v1",
+    "policy_layers_applied": ["GlobalBase"],
+    "action_hint": "watch_only",
+    "position_sizing_hint": "none",
+    "holding_period_hint": "review_required",
+    "risk_constraints": {
+      "max_position_hint": "none",
+      "requires_human_review": false,
+      "risk_notes": []
+    },
+    "mapping_rationale": "GlobalBase mapping: watch+bearish+none -> watch_only",
+    "layer_traces": [
+      {
+        "layer_name": "GlobalBase",
+        "layer_version": "global-base-v1",
+        "applied": true,
+        "reason": "Deterministic rule table mapping",
+        "modifications": [],
+        "order_index": 0
+      }
+    ],
+    "decisions": [],
+    "confidence": 0.75,
+    "original_intent_confidence": 0.75,
+    "created_at": "2026-05-10T12:00:00+00:00",
+    "metadata": {}
+  }
+]

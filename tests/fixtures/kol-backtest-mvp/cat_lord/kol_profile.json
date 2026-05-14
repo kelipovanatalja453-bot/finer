@@ -1,0 +1,23 @@
+{
+  "kol_id": "kol_cat_lord_fire",
+  "display_name": "猫大人FIRE",
+  "style_archetype": "value",
+  "risk_preference": "balanced",
+  "persona_summary": "Fundamentals-driven value investor covering A-share and US-listed Chinese equities plus US mega-cap tech. Known for detailed financial modeling (earnings forecasts, PE-based price targets). Tends to express bearish views with specific data points and bullish views with entry conditions. Uses watch/wait-for-dip strategy frequently. Historical win rate ~60%, average hold 2-8 weeks. Concentrated positions in new energy, tech, and consumer sectors.",
+  "platform_identities": [
+    {
+      "platform": "feishu",
+      "account_id": "fs_cat_lord_fire_001",
+      "account_name": "猫大人FIRE",
+      "follower_count": 8500
+    },
+    {
+      "platform": "wechat",
+      "account_id": "wx_cat_lord_fire_001",
+      "account_name": "猫大人",
+      "follower_count": 15000
+    }
+  ],
+  "tags": ["value", "fundamentals", "cn_equity", "us_chinese_adr", "new_energy"],
+  "rating": 4.2
+}

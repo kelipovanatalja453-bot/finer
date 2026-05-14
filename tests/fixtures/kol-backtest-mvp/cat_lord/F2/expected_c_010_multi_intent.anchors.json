@@ -1,0 +1,73 @@
+{
+  "envelope_id": "env_c_010_multi_intent",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_010_multi_intent_0_0",
+      "block_id": "block_c_010_multi_intent_0",
+      "char_start": 7,
+      "char_end": 11,
+      "text": "CSIQ",
+      "confidence": 0.95,
+      "span_type": "entity"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_010_multi_intent_0_1",
+      "block_id": "block_c_010_multi_intent_0",
+      "char_start": 12,
+      "char_end": 18,
+      "text": "15元以下建仓",
+      "confidence": 0.92,
+      "span_type": "action"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_010_multi_intent_0_2",
+      "block_id": "block_c_010_multi_intent_0",
+      "char_start": 19,
+      "char_end": 23,
+      "text": "TSLA",
+      "confidence": 0.95,
+      "span_type": "entity"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_c_010_multi_intent_0",
+      "entity_type": "stock",
+      "raw_text": "CSIQ",
+      "resolved_name": "Canadian Solar Inc.",
+      "resolved_symbol": "CSIQ",
+      "market": "US",
+      "confidence": 0.95,
+      "evidence_span_id": "span_c_010_multi_intent_0_0",
+      "aliases": []
+    },
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_c_010_multi_intent_1",
+      "entity_type": "stock",
+      "raw_text": "TSLA",
+      "resolved_name": "Tesla Inc.",
+      "resolved_symbol": "TSLA",
+      "market": "US",
+      "confidence": 0.95,
+      "evidence_span_id": "span_c_010_multi_intent_0_2",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "time_c_010_multi_intent_0",
+      "anchor_type": "published_at",
+      "raw_text": "2026-04-25T20:00:00+08:00",
+      "resolved_time": "2026-04-25T20:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "envelope_id": "env_c_010_multi_intent",
+  "source_record_id": "c_010_multi_intent",
+  "schema_version": "v1.0",
+  "source_type": "wechat_article",
+  "standardization_profile": "wechat_article_v1",
+  "source_title": "CSIQ与TSLA建仓机会",
+  "creator_id": "kol_cat_lord_fire",
+  "creator_name": "猫大人FIRE",
+  "published_at": "2026-04-25T20:00:00+08:00",
+  "collected_at": "2026-05-01T12:00:00+00:00",
+  "ingested_at": "2026-05-01T12:00:00+00:00",
+  "blocks": [
+    {
+      "block_id": "block_c_010_multi_intent_0",
+      "envelope_id": "env_c_010_multi_intent",
+      "block_type": "paragraph",
+      "text": "阿特斯太阳能CSIQ 15元以下建仓，TSLA回调到220也可以加仓。",
+      "order_index": 0,
+      "quality": {
+        "readability": 0.88,
+        "extraction_confidence": 0.92,
+        "structural_confidence": 0.88,
+        "completeness": 0.92,
+        "noise_score": 0.04,
+        "quality_flags": []
+      },
+      "provenance": {
+        "raw_path": "data/raw/kol_cat_lord_fire/c_010_multi_intent.raw.md",
+        "extractor": "wechat_article_standardizer",
+        "extractor_version": "1.0.0"
+      },
+      "evidence_spans": [],
+      "metadata": {}
+    }
+  ],
+  "quality_card": {
+    "schema_version": "v0.5",
+    "readability_score": 0.88,
+    "semantic_completeness_score": 0.92,
+    "financial_relevance_score": 0.92,
+    "entity_resolution_score": 0.90,
+    "temporal_resolution_score": 0.80,
+    "evidence_traceability_score": 0.88,
+    "overall_score": 0.88,
+    "gate_status": "pass",
+    "gate_reasons": []
+  },
+  "temporal_anchors": [],
+  "entity_anchors": [],
+  "metadata": {}
+}

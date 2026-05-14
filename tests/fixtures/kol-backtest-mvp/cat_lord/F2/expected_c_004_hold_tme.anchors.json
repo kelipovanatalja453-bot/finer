@@ -1,0 +1,51 @@
+{
+  "envelope_id": "env_c_004_hold_tme",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_004_hold_tme_0_0",
+      "block_id": "block_c_004_hold_tme_0",
+      "char_start": 0,
+      "char_end": 4,
+      "text": "腾讯音乐",
+      "confidence": 0.90,
+      "span_type": "entity"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_004_hold_tme_0_1",
+      "block_id": "block_c_004_hold_tme_0",
+      "char_start": 19,
+      "char_end": 23,
+      "text": "埋伏没问题",
+      "confidence": 0.88,
+      "span_type": "action"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_c_004_hold_tme_0",
+      "entity_type": "stock",
+      "raw_text": "腾讯音乐",
+      "resolved_name": "Tencent Music Entertainment",
+      "resolved_symbol": "TME",
+      "market": "US",
+      "confidence": 0.90,
+      "evidence_span_id": "span_c_004_hold_tme_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "time_c_004_hold_tme_0",
+      "anchor_type": "published_at",
+      "raw_text": "2026-03-25T11:00:00+08:00",
+      "resolved_time": "2026-03-25T11:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

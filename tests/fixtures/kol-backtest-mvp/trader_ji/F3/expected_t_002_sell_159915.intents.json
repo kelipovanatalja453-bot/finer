@@ -1,0 +1,36 @@
+{
+  "envelope_id": "env_t_002_sell_159915",
+  "intents": [
+    {
+      "intent_id": "intent_t_002_sell_159915_0",
+      "schema_version": "1.0",
+      "envelope_id": "env_t_002_sell_159915",
+      "block_ids": [
+        "block_t_002_sell_159915_0"
+      ],
+      "target_type": "etf",
+      "target_name": "创业板ETF",
+      "target_symbol": "159915",
+      "market": "CN",
+      "direction": "bearish",
+      "actionability": "explicit_action",
+      "position_delta_hint": "exit",
+      "conviction": 0.9,
+      "confidence": 0.95,
+      "evidence_span_ids": [
+        "span_t_002_sell_159915_0_0",
+        "span_t_002_sell_159915_0_t1",
+        "span_t_002_sell_159915_0_t2"
+      ],
+      "temporal_anchor_ids": [],
+      "ambiguity_flags": [],
+      "time_horizon_hint": "intraday",
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    }
+  ],
+  "extraction_timestamp": "2026-05-10T12:00:00+00:00",
+  "model_version": "v1.0",
+  "total_intents": 1,
+  "actionable_count": 1
+}

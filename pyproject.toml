@@ -29,6 +29,8 @@ dev = [
   "pytest-cov>=4.0.0",
   "numpy>=1.26.0",
   "pandas>=2.0.0",
+  "duckdb>=1.0",
+  "pyarrow>=15.0",
 ]
 market-data = [
   "tushare>=1.4",

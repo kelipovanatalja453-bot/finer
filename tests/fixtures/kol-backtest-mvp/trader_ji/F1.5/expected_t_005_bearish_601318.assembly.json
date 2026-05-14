@@ -1,0 +1,29 @@
+{
+  "assembly_id": "asm_t_005_bearish_601318",
+  "envelope_id": "env_t_005_bearish_601318",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_t_005_bearish_601318_0",
+      "envelope_id": "env_t_005_bearish_601318",
+      "source_block_ids": [
+        "block_t_005_bearish_601318_0"
+      ],
+      "topic_title": "trader_ji signal: t_005_bearish_601318",
+      "topic_type": "single_stock",
+      "primary_entity_ids": [
+        "601318"
+      ],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "中国平安短期承压，地产风险未出清。暂时回避。",
+      "raw_text": "中国平安短期承压，地产风险未出清。暂时回避。",
+      "segmentation_reason": "single-block content, wrapping as single topic",
+      "confidence": 0.95,
+      "ambiguity_flags": []
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "single_block_wrap",
+  "created_at": "2026-03-15T00:00:00+08:00"
+}

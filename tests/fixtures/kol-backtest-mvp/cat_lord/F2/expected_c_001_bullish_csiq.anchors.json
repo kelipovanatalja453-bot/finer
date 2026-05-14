@@ -1,0 +1,51 @@
+{
+  "envelope_id": "env_c_001_bullish_csiq",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_001_bullish_csiq_0_0",
+      "block_id": "block_c_001_bullish_csiq_0",
+      "char_start": 7,
+      "char_end": 11,
+      "text": "CSIQ",
+      "confidence": 0.95,
+      "span_type": "entity"
+    },
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_c_001_bullish_csiq_0_1",
+      "block_id": "block_c_001_bullish_csiq_0",
+      "char_start": 12,
+      "char_end": 17,
+      "text": "更值得关注",
+      "confidence": 0.90,
+      "span_type": "action"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_c_001_bullish_csiq_0",
+      "entity_type": "stock",
+      "raw_text": "CSIQ",
+      "resolved_name": "Canadian Solar Inc.",
+      "resolved_symbol": "CSIQ",
+      "market": "US",
+      "confidence": 0.95,
+      "evidence_span_id": "span_c_001_bullish_csiq_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "time_c_001_bullish_csiq_0",
+      "anchor_type": "published_at",
+      "raw_text": "2026-03-10T09:30:00+08:00",
+      "resolved_time": "2026-03-10T09:30:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

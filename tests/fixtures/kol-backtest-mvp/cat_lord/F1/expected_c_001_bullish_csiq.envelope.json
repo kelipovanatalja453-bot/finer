@@ -1,0 +1,52 @@
+{
+  "envelope_id": "env_c_001_bullish_csiq",
+  "source_record_id": "c_001_bullish_csiq",
+  "schema_version": "v1.0",
+  "source_type": "feishu_chat",
+  "standardization_profile": "feishu_chat_v1",
+  "source_title": "阿特斯太阳能CSIQ分析",
+  "creator_id": "kol_cat_lord_fire",
+  "creator_name": "猫大人FIRE",
+  "published_at": "2026-03-10T09:30:00+08:00",
+  "collected_at": "2026-05-01T12:00:00+00:00",
+  "ingested_at": "2026-05-01T12:00:00+00:00",
+  "blocks": [
+    {
+      "block_id": "block_c_001_bullish_csiq_0",
+      "envelope_id": "env_c_001_bullish_csiq",
+      "block_type": "paragraph",
+      "text": "阿特斯太阳能CSIQ更值得关注，在手订单充沛，动态远期PE只有8-12倍。2026大概率扭亏为盈。",
+      "order_index": 0,
+      "quality": {
+        "readability": 0.88,
+        "extraction_confidence": 0.90,
+        "structural_confidence": 0.85,
+        "completeness": 0.92,
+        "noise_score": 0.05,
+        "quality_flags": []
+      },
+      "provenance": {
+        "raw_path": "data/raw/kol_cat_lord_fire/c_001_bullish_csiq.raw.md",
+        "extractor": "feishu_chat_standardizer",
+        "extractor_version": "1.0.0"
+      },
+      "evidence_spans": [],
+      "metadata": {}
+    }
+  ],
+  "quality_card": {
+    "schema_version": "v0.5",
+    "readability_score": 0.88,
+    "semantic_completeness_score": 0.90,
+    "financial_relevance_score": 0.92,
+    "entity_resolution_score": 0.85,
+    "temporal_resolution_score": 0.80,
+    "evidence_traceability_score": 0.85,
+    "overall_score": 0.87,
+    "gate_status": "pass",
+    "gate_reasons": []
+  },
+  "temporal_anchors": [],
+  "entity_anchors": [],
+  "metadata": {}
+}

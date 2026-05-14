@@ -1,0 +1,24 @@
+[
+  {
+    "intent_id": "intent_c_003_bearish_600989_0",
+    "schema_version": "1.0",
+    "envelope_id": "env_c_003_bearish_600989",
+    "block_ids": ["block_c_003_bearish_600989_0"],
+    "target_type": "stock",
+    "target_name": "600989",
+    "target_symbol": "600989",
+    "market": "CN",
+    "direction": "bearish",
+    "actionability": "watch",
+    "position_delta_hint": "none",
+    "conviction": 0.50,
+    "confidence": 0.75,
+    "evidence_span_ids": ["span_c_003_bearish_600989_0_0", "span_c_003_bearish_600989_0_1"],
+    "temporal_anchor_ids": ["time_c_003_bearish_600989_0"],
+    "ambiguity_flags": [],
+    "risk_preference_hint": "balanced",
+    "time_horizon_hint": "unknown",
+    "created_at": "2026-05-10T12:00:00+00:00",
+    "metadata": {}
+  }
+]

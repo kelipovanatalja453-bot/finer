@@ -1,0 +1,54 @@
+{
+  "envelope_id": "env_t_015_ambiguous_multi",
+  "mappings": [
+    {
+      "policy_id": "policy_intent_t_015_ambiguous_multi_0",
+      "intent_id": "intent_t_015_ambiguous_multi_0",
+      "policy_version": "global-base-v1",
+      "policy_layers_applied": [
+        "GlobalBase"
+      ],
+      "action_hint": "review_required",
+      "position_sizing_hint": "none",
+      "holding_period_hint": "review_required",
+      "risk_constraints": {
+        "max_position_hint": "none",
+        "requires_human_review": true,
+        "risk_notes": []
+      },
+      "mapping_rationale": "GlobalBase: review_required+unknown+unknown -> review_required",
+      "layer_traces": [
+        {
+          "layer_name": "GlobalBase",
+          "layer_version": "global-base-v1",
+          "applied": true,
+          "reason": "GlobalBase: review_required+unknown+unknown -> review_required",
+          "modifications": [],
+          "order_index": 0
+        }
+      ],
+      "decisions": [],
+      "confidence": 0.45,
+      "original_intent_confidence": 0.45,
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    }
+  ],
+  "mapped_intents": [
+    {
+      "mapped_id": "mapped_intent_t_015_ambiguous_multi_0",
+      "intent_id": "intent_t_015_ambiguous_multi_0",
+      "policy_id": "policy_intent_t_015_ambiguous_multi_0",
+      "original_intent_summary": "unknown 五粮液 (unknown)",
+      "action_hint": "review_required",
+      "position_sizing_hint": "none",
+      "holding_period_hint": "review_required",
+      "risk_notes": [],
+      "mapping_confidence": 0.45,
+      "requires_human_review": true,
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    }
+  ],
+  "created_at": "2026-05-10T12:00:00+00:00"
+}

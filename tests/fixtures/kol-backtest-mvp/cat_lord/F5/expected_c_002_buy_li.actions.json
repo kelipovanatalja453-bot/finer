@@ -1,0 +1,46 @@
+[
+  {
+    "trade_action_id": "action_c_002_buy_li_0",
+    "timestamp": "2026-05-10T12:00:00+00:00",
+    "source": {
+      "creator_id": "kol_cat_lord_fire",
+      "content_id": "env_c_002_buy_li",
+      "evidence_text": "理想 | 减仓"
+    },
+    "target": {
+      "ticker": "LI",
+      "ticker_normalized": "LI",
+      "market": "US",
+      "instrument_type": "stock",
+      "company_name": "Li Auto Inc."
+    },
+    "direction": "bearish",
+    "action_chain": [
+      {
+        "sequence": 1,
+        "action_type": "close_long",
+        "trigger_type": "manual",
+        "position_size_pct": 0.05
+      }
+    ],
+    "intent_id": "intent_c_002_buy_li_0",
+    "policy_id": "policy_intent_c_002_buy_li_0",
+    "evidence_span_ids": ["span_c_002_buy_li_0_0", "span_c_002_buy_li_0_1"],
+    "canonical_trace_status": "canonical",
+    "execution_timing": {
+      "intent_published_at": "2026-03-15T10:00:00+08:00",
+      "intent_effective_at": null,
+      "action_decision_at": "2026-05-10T12:00:00+00:00",
+      "action_executable_at": "2026-03-16T09:30:00-04:00",
+      "market": "US",
+      "timezone": "America/New_York",
+      "market_session_at_publish": "after_close",
+      "timing_policy_id": "market-calendar-next-open-v1"
+    },
+    "confidence": 0.85,
+    "requires_manual_review": false,
+    "time_horizon": "short_term",
+    "rationale": "GlobalBase mapping: explicit_action+bearish+reduce -> reduce_position",
+    "metadata": {}
+  }
+]

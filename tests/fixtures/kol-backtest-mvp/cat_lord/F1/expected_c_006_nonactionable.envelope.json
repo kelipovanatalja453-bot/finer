@@ -1,0 +1,52 @@
+{
+  "envelope_id": "env_c_006_nonactionable",
+  "source_record_id": "c_006_nonactionable",
+  "schema_version": "v1.0",
+  "source_type": "feishu_chat",
+  "standardization_profile": "feishu_chat_v1",
+  "source_title": "市场环境评论",
+  "creator_id": "kol_cat_lord_fire",
+  "creator_name": "猫大人FIRE",
+  "published_at": "2026-04-05T09:00:00+08:00",
+  "collected_at": "2026-05-01T12:00:00+00:00",
+  "ingested_at": "2026-05-01T12:00:00+00:00",
+  "blocks": [
+    {
+      "block_id": "block_c_006_nonactionable_0",
+      "envelope_id": "env_c_006_nonactionable",
+      "block_type": "paragraph",
+      "text": "市场环境处于震荡调整阶段，主要指数表现分化。",
+      "order_index": 0,
+      "quality": {
+        "readability": 0.80,
+        "extraction_confidence": 0.82,
+        "structural_confidence": 0.85,
+        "completeness": 0.85,
+        "noise_score": 0.08,
+        "quality_flags": []
+      },
+      "provenance": {
+        "raw_path": "data/raw/kol_cat_lord_fire/c_006_nonactionable.raw.md",
+        "extractor": "feishu_chat_standardizer",
+        "extractor_version": "1.0.0"
+      },
+      "evidence_spans": [],
+      "metadata": {}
+    }
+  ],
+  "quality_card": {
+    "schema_version": "v0.5",
+    "readability_score": 0.80,
+    "semantic_completeness_score": 0.82,
+    "financial_relevance_score": 0.70,
+    "entity_resolution_score": 0.50,
+    "temporal_resolution_score": 0.75,
+    "evidence_traceability_score": 0.65,
+    "overall_score": 0.70,
+    "gate_status": "review",
+    "gate_reasons": ["entity_resolution_score below 0.5 threshold"]
+  },
+  "temporal_anchors": [],
+  "entity_anchors": [],
+  "metadata": {}
+}

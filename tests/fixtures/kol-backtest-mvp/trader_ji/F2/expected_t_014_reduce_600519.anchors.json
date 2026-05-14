@@ -1,0 +1,51 @@
+{
+  "envelope_id": "env_t_014_reduce_600519",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_014_reduce_600519_0_0",
+      "block_id": "block_t_014_reduce_600519_0",
+      "char_start": 0,
+      "char_end": 14,
+      "text": "茅台减仓一半，锁定部分利润。",
+      "confidence": 0.9,
+      "span_type": "entity"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_t_014_reduce_600519_0",
+      "entity_type": "stock",
+      "raw_text": "茅台减仓一半，锁定部分利润。",
+      "resolved_name": "贵州茅台",
+      "resolved_symbol": "600519",
+      "market": "CN",
+      "confidence": 0.9,
+      "evidence_span_id": "span_t_014_reduce_600519_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_014_reduce_600519_pub",
+      "anchor_type": "published_at",
+      "raw_text": "published_at",
+      "resolved_time": "2026-03-14T16:30:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    },
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_014_reduce_600519_eff",
+      "anchor_type": "effective_trade_at",
+      "raw_text": "茅台减仓一半，锁定部分利润。",
+      "resolved_time": "2026-03-15T09:30:00+08:00",
+      "confidence": 0.8,
+      "resolution_strategy": "market_hours",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

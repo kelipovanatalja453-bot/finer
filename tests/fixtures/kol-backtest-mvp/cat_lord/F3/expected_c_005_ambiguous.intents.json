@@ -1,0 +1,24 @@
+[
+  {
+    "intent_id": "intent_c_005_ambiguous_0",
+    "schema_version": "1.0",
+    "envelope_id": "env_c_005_ambiguous",
+    "block_ids": ["block_c_005_ambiguous_0"],
+    "target_type": "stock",
+    "target_name": "NVDA",
+    "target_symbol": "NVDA",
+    "market": "US",
+    "direction": "mixed",
+    "actionability": "review_required",
+    "position_delta_hint": "none",
+    "conviction": 0.30,
+    "confidence": 0.40,
+    "evidence_span_ids": ["span_c_005_ambiguous_0_0", "span_c_005_ambiguous_0_1"],
+    "temporal_anchor_ids": ["time_c_005_ambiguous_0"],
+    "ambiguity_flags": ["contradictory_signals"],
+    "risk_preference_hint": "balanced",
+    "time_horizon_hint": "unknown",
+    "created_at": "2026-05-10T12:00:00+00:00",
+    "metadata": {}
+  }
+]

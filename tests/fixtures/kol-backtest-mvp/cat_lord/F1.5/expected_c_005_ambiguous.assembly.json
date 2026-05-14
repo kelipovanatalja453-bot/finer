@@ -1,0 +1,25 @@
+{
+  "assembly_id": "asm_c_005_ambiguous",
+  "envelope_id": "env_c_005_ambiguous",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_c_005_ambiguous_0",
+      "envelope_id": "env_c_005_ambiguous",
+      "source_block_ids": ["block_c_005_ambiguous_0"],
+      "topic_title": "NVDA估值分析",
+      "topic_type": "single_stock",
+      "primary_entity_ids": ["NVDA"],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "NVDA估值偏高，AI capex周期刚起步，短期回调风险与长期机会并存",
+      "raw_text": "NVDA估值偏高，但AI capex周期刚起步。短期回调风险与长期机会并存。",
+      "segmentation_reason": "Single-topic content",
+      "confidence": 0.82,
+      "ambiguity_flags": ["contradictory_signals"]
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "single-block-wrap",
+  "created_at": "2026-05-01T12:00:00+00:00"
+}

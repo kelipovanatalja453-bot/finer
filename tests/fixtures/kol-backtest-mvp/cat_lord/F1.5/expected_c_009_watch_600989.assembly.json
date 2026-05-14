@@ -1,0 +1,25 @@
+{
+  "assembly_id": "asm_c_009_watch_600989",
+  "envelope_id": "env_c_009_watch_600989",
+  "topic_blocks": [
+    {
+      "topic_block_id": "tb_c_009_watch_600989_0",
+      "envelope_id": "env_c_009_watch_600989",
+      "source_block_ids": ["block_c_009_watch_600989_0"],
+      "topic_title": "宝丰能源目标价分析",
+      "topic_type": "single_stock",
+      "primary_entity_ids": ["600989"],
+      "secondary_entity_ids": [],
+      "start_block_index": 0,
+      "end_block_index": 0,
+      "summary": "宝丰能源目标价27.5-27.8元，目前定价高估",
+      "raw_text": "宝丰能源目标价27.5-27.8元，目前定价高估。等跌到27元以下再关注。",
+      "segmentation_reason": "Single-topic content",
+      "confidence": 0.90,
+      "ambiguity_flags": []
+    }
+  ],
+  "unassigned_block_ids": [],
+  "assembly_strategy": "single-block-wrap",
+  "created_at": "2026-05-01T12:00:00+00:00"
+}

@@ -1,0 +1,41 @@
+{
+  "envelope_id": "env_t_004_bullish_000858",
+  "evidence_spans": [
+    {
+      "schema_version": "v0.5",
+      "evidence_span_id": "span_t_004_bullish_000858_0_0",
+      "block_id": "block_t_004_bullish_000858_0",
+      "char_start": 0,
+      "char_end": 3,
+      "text": "五粮液",
+      "confidence": 0.9,
+      "span_type": "entity"
+    }
+  ],
+  "entity_anchors": [
+    {
+      "schema_version": "v0.5",
+      "entity_anchor_id": "entity_t_004_bullish_000858_0",
+      "entity_type": "stock",
+      "raw_text": "五粮液",
+      "resolved_name": "五粮液",
+      "resolved_symbol": "000858",
+      "market": "CN",
+      "confidence": 0.9,
+      "evidence_span_id": "span_t_004_bullish_000858_0_0",
+      "aliases": []
+    }
+  ],
+  "temporal_anchors": [
+    {
+      "schema_version": "v0.5",
+      "anchor_id": "temp_t_004_bullish_000858_pub",
+      "anchor_type": "published_at",
+      "raw_text": "published_at",
+      "resolved_time": "2026-03-04T08:00:00+08:00",
+      "confidence": 1.0,
+      "resolution_strategy": "explicit_date",
+      "timezone": "Asia/Shanghai"
+    }
+  ]
+}

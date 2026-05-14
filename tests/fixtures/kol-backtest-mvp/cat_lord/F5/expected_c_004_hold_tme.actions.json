@@ -1,0 +1,46 @@
+[
+  {
+    "trade_action_id": "action_c_004_hold_tme_0",
+    "timestamp": "2026-05-10T12:00:00+00:00",
+    "source": {
+      "creator_id": "kol_cat_lord_fire",
+      "content_id": "env_c_004_hold_tme",
+      "evidence_text": "腾讯音乐 | 埋伏没问题"
+    },
+    "target": {
+      "ticker": "TME",
+      "ticker_normalized": "TME",
+      "market": "US",
+      "instrument_type": "stock",
+      "company_name": "Tencent Music Entertainment"
+    },
+    "direction": "bullish",
+    "action_chain": [
+      {
+        "sequence": 1,
+        "action_type": "hold",
+        "trigger_type": "manual",
+        "position_size_pct": 0.0
+      }
+    ],
+    "intent_id": "intent_c_004_hold_tme_0",
+    "policy_id": "policy_intent_c_004_hold_tme_0",
+    "evidence_span_ids": ["span_c_004_hold_tme_0_0", "span_c_004_hold_tme_0_1"],
+    "canonical_trace_status": "canonical",
+    "execution_timing": {
+      "intent_published_at": "2026-03-25T11:00:00+08:00",
+      "intent_effective_at": null,
+      "action_decision_at": "2026-05-10T12:00:00+00:00",
+      "action_executable_at": "2026-03-26T09:30:00-04:00",
+      "market": "US",
+      "timezone": "America/New_York",
+      "market_session_at_publish": "after_close",
+      "timing_policy_id": "market-calendar-next-open-v1"
+    },
+    "confidence": 0.85,
+    "requires_manual_review": false,
+    "time_horizon": "medium_term",
+    "rationale": "GlobalBase mapping: explicit_action+bullish+hold -> hold_position",
+    "metadata": {}
+  }
+]

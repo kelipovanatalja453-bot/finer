@@ -1,0 +1,23 @@
+{
+  "kol_id": "trader_ji",
+  "display_name": "9友",
+  "style_archetype": "signal_flow",
+  "risk_preference": "aggressive",
+  "persona_summary": "Short-term signal flow trader. Publishes daily pre-market previews, post-market reviews, and weekly strategy notes via Feishu and Bilibili. Content is structured around specific trade signals with explicit entry/exit levels. Focuses on A-share index plays and sector rotation. Known for time-sensitive calls ('today open', 'before close'). Higher frequency of explicit_action intents, shorter holding periods (days to 1-2 weeks).",
+  "platform_identities": [
+    {
+      "platform": "feishu",
+      "account_id": "ou_ba157042c2a9726fb00a9a1018b360af",
+      "account_name": "9友",
+      "follower_count": 6200
+    },
+    {
+      "platform": "bilibili",
+      "account_id": "bili_9you_001",
+      "account_name": "trader韭",
+      "follower_count": 28000
+    }
+  ],
+  "tags": ["signal_flow", "short_term", "a_share", "index_play", "sector_rotation"],
+  "rating": 3.5
+}

@@ -1,0 +1,100 @@
+{
+  "envelope_id": "env_t_007_mixed",
+  "mappings": [
+    {
+      "policy_id": "policy_intent_t_007_mixed_0",
+      "intent_id": "intent_t_007_mixed_0",
+      "policy_version": "global-base-v1",
+      "policy_layers_applied": [
+        "GlobalBase"
+      ],
+      "action_hint": "open_position",
+      "position_sizing_hint": "medium",
+      "holding_period_hint": "medium_term",
+      "risk_constraints": {
+        "max_position_hint": "medium",
+        "requires_human_review": false,
+        "risk_notes": []
+      },
+      "mapping_rationale": "GlobalBase: explicit_action+bullish+open -> open_position",
+      "layer_traces": [
+        {
+          "layer_name": "GlobalBase",
+          "layer_version": "global-base-v1",
+          "applied": true,
+          "reason": "GlobalBase: explicit_action+bullish+open -> open_position",
+          "modifications": [],
+          "order_index": 0
+        }
+      ],
+      "decisions": [],
+      "confidence": 0.85,
+      "original_intent_confidence": 0.85,
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    },
+    {
+      "policy_id": "policy_intent_t_007_mixed_1",
+      "intent_id": "intent_t_007_mixed_1",
+      "policy_version": "global-base-v1",
+      "policy_layers_applied": [
+        "GlobalBase"
+      ],
+      "action_hint": "reduce_position",
+      "position_sizing_hint": "small",
+      "holding_period_hint": "short_term",
+      "risk_constraints": {
+        "max_position_hint": "medium",
+        "requires_human_review": false,
+        "risk_notes": []
+      },
+      "mapping_rationale": "GlobalBase: explicit_action+bearish+reduce -> reduce_position",
+      "layer_traces": [
+        {
+          "layer_name": "GlobalBase",
+          "layer_version": "global-base-v1",
+          "applied": true,
+          "reason": "GlobalBase: explicit_action+bearish+reduce -> reduce_position",
+          "modifications": [],
+          "order_index": 0
+        }
+      ],
+      "decisions": [],
+      "confidence": 0.85,
+      "original_intent_confidence": 0.85,
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    }
+  ],
+  "mapped_intents": [
+    {
+      "mapped_id": "mapped_intent_t_007_mixed_0",
+      "intent_id": "intent_t_007_mixed_0",
+      "policy_id": "policy_intent_t_007_mixed_0",
+      "original_intent_summary": "bullish 沪深300ETF (open)",
+      "action_hint": "open_position",
+      "position_sizing_hint": "medium",
+      "holding_period_hint": "medium_term",
+      "risk_notes": [],
+      "mapping_confidence": 0.85,
+      "requires_human_review": false,
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    },
+    {
+      "mapped_id": "mapped_intent_t_007_mixed_1",
+      "intent_id": "intent_t_007_mixed_1",
+      "policy_id": "policy_intent_t_007_mixed_1",
+      "original_intent_summary": "bearish 创业板ETF (reduce)",
+      "action_hint": "reduce_position",
+      "position_sizing_hint": "small",
+      "holding_period_hint": "short_term",
+      "risk_notes": [],
+      "mapping_confidence": 0.85,
+      "requires_human_review": false,
+      "created_at": "2026-05-10T12:00:00+00:00",
+      "metadata": {}
+    }
+  ],
+  "created_at": "2026-05-10T12:00:00+00:00"
+}

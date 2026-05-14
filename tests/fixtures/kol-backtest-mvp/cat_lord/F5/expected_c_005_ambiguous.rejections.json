@@ -1,0 +1,9 @@
+[
+  {
+    "intent_id": "intent_c_005_ambiguous_0",
+    "policy_id": "policy_intent_c_005_ambiguous_0",
+    "rejection_stage": "F4",
+    "rejection_reason": "non_executable_action_hint",
+    "description": "review_required intent -> review_required, excluded at executable gate"
+  }
+]

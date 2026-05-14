@@ -1,0 +1,98 @@
+{
+  "actions": [
+    {
+      "trade_action_id": "action_t_007_mixed_0",
+      "timestamp": "2026-05-10T12:00:00+00:00",
+      "source": {
+        "content_id": "env_t_007_mixed",
+        "evidence_text": "沪深300看多，但创业板短期需减仓。"
+      },
+      "target": {
+        "ticker": "沪深300ETF",
+        "ticker_normalized": "510300",
+        "market": "CN",
+        "instrument_type": "etf",
+        "company_name": "沪深300ETF"
+      },
+      "direction": "bullish",
+      "action_chain": [
+        {
+          "sequence": 1,
+          "action_type": "long",
+          "trigger_condition": null,
+          "trigger_type": "manual",
+          "position_size_pct": 0.15
+        }
+      ],
+      "intent_id": "intent_t_007_mixed_0",
+      "policy_id": "policy_intent_t_007_mixed_0",
+      "evidence_span_ids": [
+        "span_t_007_mixed_0_0"
+      ],
+      "canonical_trace_status": "canonical",
+      "execution_timing": {
+        "intent_published_at": "2026-03-06T20:00:00+08:00",
+        "intent_effective_at": "2026-03-09T09:30:00+08:00",
+        "action_decision_at": "2026-05-10T12:00:00+00:00",
+        "action_executable_at": "2026-03-09T09:30:00+08:00",
+        "market": "CN",
+        "timezone": "Asia/Shanghai",
+        "market_session_at_publish": "after_close",
+        "execution_delay_reason": null,
+        "timing_policy_id": "market-calendar-next-open-v1"
+      },
+      "confidence": 0.85,
+      "requires_manual_review": false,
+      "time_horizon": "medium_term",
+      "rationale": "GlobalBase: explicit_action+bullish+open -> open_position",
+      "metadata": {}
+    },
+    {
+      "trade_action_id": "action_t_007_mixed_1",
+      "timestamp": "2026-05-10T12:00:00+00:00",
+      "source": {
+        "content_id": "env_t_007_mixed",
+        "evidence_text": "沪深300看多，但创业板短期需减仓。"
+      },
+      "target": {
+        "ticker": "创业板ETF",
+        "ticker_normalized": "159915",
+        "market": "CN",
+        "instrument_type": "etf",
+        "company_name": "创业板ETF"
+      },
+      "direction": "bearish",
+      "action_chain": [
+        {
+          "sequence": 1,
+          "action_type": "close_long",
+          "trigger_condition": null,
+          "trigger_type": "manual",
+          "position_size_pct": 0.05
+        }
+      ],
+      "intent_id": "intent_t_007_mixed_1",
+      "policy_id": "policy_intent_t_007_mixed_1",
+      "evidence_span_ids": [
+        "span_t_007_mixed_0_0"
+      ],
+      "canonical_trace_status": "canonical",
+      "execution_timing": {
+        "intent_published_at": "2026-03-06T20:00:00+08:00",
+        "intent_effective_at": "2026-03-09T09:30:00+08:00",
+        "action_decision_at": "2026-05-10T12:00:00+00:00",
+        "action_executable_at": "2026-03-09T09:30:00+08:00",
+        "market": "CN",
+        "timezone": "Asia/Shanghai",
+        "market_session_at_publish": "after_close",
+        "execution_delay_reason": null,
+        "timing_policy_id": "market-calendar-next-open-v1"
+      },
+      "confidence": 0.85,
+      "requires_manual_review": false,
+      "time_horizon": "short_term",
+      "rationale": "GlobalBase: explicit_action+bearish+reduce -> reduce_position",
+      "metadata": {}
+    }
+  ]
+}

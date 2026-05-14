@@ -1,0 +1,11 @@
+{
+  "rejections": [
+    {
+      "intent_id": "intent_t_004_bullish_000858_0",
+      "policy_id": "policy_intent_t_004_bullish_000858_0",
+      "rejection_stage": "F4",
+      "rejection_reason": "non_executable_action_hint",
+      "description": "watch intent -> watch_only, excluded at executable gate"
+    }
+  ]
+}
