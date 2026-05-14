@@ -775,7 +775,7 @@ export type BacktestResult = {
 export type SourceGroup = {
   id: string;
   name: string;
-  type: "feishu" | "notebooklm" | "wechat" | "bilibili";
+  type: "feishu" | "notebooklm" | "wechat" | "bilibili" | "local";
   fileCount: number;
   lastSync?: string;
 };

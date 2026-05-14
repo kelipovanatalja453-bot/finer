@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { F0IndexHealth } from "@/lib/contracts";
-import { apiPost } from "@/lib/api-client";
+import { apiPost, ApiError } from "@/lib/api-client";
+import { ErrorPanel } from "@/components/error-panel/ErrorPanel";
 
 interface IndexHealthCardProps {
   health: F0IndexHealth | null;
@@ -69,7 +70,7 @@ function formatTime(iso: string | null): string {
 
 export function IndexHealthCard({ health, loading }: IndexHealthCardProps) {
   const [rebuilding, setRebuilding] = React.useState(false);
-  const [rebuildError, setRebuildError] = React.useState<string | null>(null);
+  const [rebuildError, setRebuildError] = React.useState<ApiError | null>(null);
 
   const handleRebuild = async () => {
     setRebuilding(true);
@@ -77,9 +78,13 @@ export function IndexHealthCard({ health, loading }: IndexHealthCardProps) {
     try {
       await apiPost("/api/f0-index/rebuild", {});
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "重建请求失败";
-      setRebuildError(message);
+      if (err instanceof ApiError) {
+        setRebuildError(err);
+      } else {
+        setRebuildError(
+          new ApiError("SYS_INT_001", "重建请求失败", 0)
+        );
+      }
     } finally {
       setRebuilding(false);
     }
@@ -174,8 +179,13 @@ export function IndexHealthCard({ health, loading }: IndexHealthCardProps) {
       </div>
 
       {rebuildError && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-          {rebuildError}
+        <div className="mb-4">
+          <ErrorPanel
+            error={rebuildError}
+            onRetry={handleRebuild}
+            onDismiss={() => setRebuildError(null)}
+            compact
+          />
         </div>
       )}
 

@@ -7,22 +7,31 @@ import type { F0IndexHealth, ImportRun } from "@/lib/contracts";
 import { IndexHealthCard } from "./IndexHealthCard";
 import { ImportHistoryTable } from "./ImportHistoryTable";
 import { SourceChannelStatus } from "./SourceChannelStatus";
+import { ErrorPanel } from "@/components/error-panel/ErrorPanel";
 
 export function ImportConsole() {
   const [health, setHealth] = useState<F0IndexHealth | null>(null);
   const [records, setRecords] = useState<ImportRun[]>([]);
   const [healthLoading, setHealthLoading] = useState(true);
   const [recordsLoading, setRecordsLoading] = useState(true);
+  const [healthError, setHealthError] = useState<ApiError | null>(null);
+  const [recordsError, setRecordsError] = useState<ApiError | null>(null);
 
   const fetchHealth = useCallback(async () => {
     setHealthLoading(true);
+    setHealthError(null);
     try {
       const data = await apiGet<F0IndexHealth>("/api/f0-index/health");
       setHealth(data);
     } catch (err) {
-      // 501 (contract-only) or 500 — degrade gracefully
-      if (err instanceof ApiError && (err.status === 501 || err.status >= 500)) {
-        setHealth(null);
+      if (err instanceof ApiError) {
+        // 501 = contract-only, degrade silently
+        if (err.status === 501) {
+          setHealth(null);
+        } else {
+          setHealthError(err);
+          setHealth(null);
+        }
       } else {
         setHealth(null);
       }
@@ -33,12 +42,18 @@ export function ImportConsole() {
 
   const fetchRecords = useCallback(async () => {
     setRecordsLoading(true);
+    setRecordsError(null);
     try {
       const data = await apiGet<ImportRun[]>("/api/f0-index/import-runs");
       setRecords(data ?? []);
     } catch (err) {
-      if (err instanceof ApiError && (err.status === 501 || err.status >= 500)) {
-        setRecords([]);
+      if (err instanceof ApiError) {
+        if (err.status === 501) {
+          setRecords([]);
+        } else {
+          setRecordsError(err);
+          setRecords([]);
+        }
       } else {
         setRecords([]);
       }
@@ -54,6 +69,22 @@ export function ImportConsole() {
 
   return (
     <div className="space-y-6">
+      {/* Top-level errors */}
+      {healthError && (
+        <ErrorPanel
+          error={healthError}
+          onRetry={fetchHealth}
+          onDismiss={() => setHealthError(null)}
+        />
+      )}
+      {recordsError && (
+        <ErrorPanel
+          error={recordsError}
+          onRetry={fetchRecords}
+          onDismiss={() => setRecordsError(null)}
+        />
+      )}
+
       {/* Index Health */}
       <IndexHealthCard health={health} loading={healthLoading} />
 
