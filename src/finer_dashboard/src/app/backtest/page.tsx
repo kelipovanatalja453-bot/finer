@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import type { BacktestTask } from "@/lib/contracts";
 import { useAsyncData } from "@/lib/hooks/useAsyncData";
-import { listBacktestResults, deleteBacktestResult } from "@/lib/api-client";
+import { listBacktestResults, deleteBacktestResult, ApiError } from "@/lib/api-client";
 import { backtestSummaryToTask } from "@/lib/adapters";
 
 function getStatusIcon(status: BacktestTask["status"]) {
@@ -106,15 +106,24 @@ export default function BacktestManagePage() {
 
       {/* Error Banner */}
       {error && (
-        <div className="mb-6 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>加载回测列表失败：{error.message}</span>
-          <button
-            onClick={reload}
-            className="ml-auto shrink-0 underline hover:text-red-900"
-          >
-            重试
-          </button>
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>加载回测列表失败：{error.message}</span>
+            <button
+              onClick={reload}
+              className="ml-auto shrink-0 underline hover:text-red-900"
+            >
+              重试
+            </button>
+          </div>
+          {error instanceof ApiError && (
+            <div className="mt-2 space-y-1 text-xs text-red-600">
+              {error.code && <div>错误码：{error.code}</div>}
+              {error.requestId && <div>请求 ID：{error.requestId}</div>}
+              {error.fixHint && <div>修复建议：{error.fixHint}</div>}
+            </div>
+          )}
         </div>
       )}
 

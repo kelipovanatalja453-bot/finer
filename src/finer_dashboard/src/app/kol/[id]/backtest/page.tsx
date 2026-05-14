@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, LineChart } from "lucide-react";
+import { ArrowLeft, Loader2, LineChart, AlertTriangle } from "lucide-react";
 import { useAsyncData } from "@/lib/hooks/useAsyncData";
-import { listBacktestResults } from "@/lib/api-client";
+import { listBacktestResults, ApiError } from "@/lib/api-client";
 
 /**
  * Redirect page: fetches backtest results for this KOL and
@@ -15,7 +15,7 @@ export default function KOLBacktestIndexPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
 
-  const { data: results, loading } = useAsyncData(
+  const { data: results, loading, error } = useAsyncData(
     () => listBacktestResults({ kol_id: params.id, limit: 1 }),
     [params.id],
   );
@@ -40,6 +40,20 @@ export default function KOLBacktestIndexPage() {
         {loading ? (
           <div className="h-64 flex items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-foreground/30" />
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>加载回测结果失败：{error.message}</span>
+            </div>
+            {error instanceof ApiError && (
+              <div className="mt-2 space-y-1 text-xs text-red-600">
+                {error.code && <div>错误码：{error.code}</div>}
+                {error.requestId && <div>请求 ID：{error.requestId}</div>}
+                {error.fixHint && <div>修复建议：{error.fixHint}</div>}
+              </div>
+            )}
           </div>
         ) : !results || results.length === 0 ? (
           <div className="h-64 flex items-center justify-center text-foreground/40">

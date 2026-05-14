@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Download, SlidersHorizontal, Loader2, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Download, SlidersHorizontal, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { ApiError } from "@/lib/api-client";
 import {
   CumulativeReturnResearch,
   KOLOverviewPanel,
@@ -22,6 +23,7 @@ export default function KOLBacktestDetailPage() {
     data: model,
     loading,
     error,
+    reload,
   } = useAsyncData(
     () =>
       getBacktestResult(params.backtestId).then((r) =>
@@ -41,6 +43,7 @@ export default function KOLBacktestDetailPage() {
   }
 
   if (error || !model) {
+    const isApiErr = error instanceof ApiError;
     return (
       <main className="min-h-screen bg-[#f3efe7]">
         <div className="container py-8">
@@ -51,9 +54,27 @@ export default function KOLBacktestDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             返回 KOL 详情
           </Link>
-          <div className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span>加载回测结果失败：{error?.message ?? "未找到数据"}</span>
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>加载回测结果失败：{error?.message ?? "未找到数据"}</span>
+            </div>
+            {isApiErr && (
+              <div className="mt-2 space-y-1 text-xs text-red-600">
+                {error.code && <div>错误码：{error.code}</div>}
+                {error.requestId && <div>请求 ID：{error.requestId}</div>}
+                {error.fixHint && <div>修复建议：{error.fixHint}</div>}
+                {error.retryable && (
+                  <button
+                    onClick={reload}
+                    className="mt-1 inline-flex items-center gap-1 underline hover:text-red-800"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    重试
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </main>

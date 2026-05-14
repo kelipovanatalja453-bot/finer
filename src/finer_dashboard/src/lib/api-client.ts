@@ -350,13 +350,18 @@ export function apiDelete<T>(
 
 /** Run a new backtest. */
 export async function runBacktest(params: {
-  trade_actions: Array<Record<string, unknown>>;
+  actions: Array<Record<string, unknown>>;
+  price_data?: Array<Record<string, unknown>>;
   start_date?: string;
   end_date?: string;
   initial_capital?: number;
+  commission_pct?: number;
+  slippage_pct?: number;
+  default_position_pct?: number;
+  max_position_pct?: number;
   kol_id?: string;
   backtest_name?: string;
-}): Promise<{ backtest_id: string; result: BacktestResult }> {
+}): Promise<BacktestResult> {
   return apiFetch("/api/backtest/run", {
     method: "POST",
     body: params,
