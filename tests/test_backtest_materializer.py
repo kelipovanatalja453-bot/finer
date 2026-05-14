@@ -27,6 +27,8 @@ from finer.schemas.trade_action import (
     SourceInfo,
     TargetInfo,
     ActionStep,
+    ExecutionTiming,
+    MarketSession,
 )
 
 
@@ -163,6 +165,23 @@ class TestTradeActionConverter:
         record = trade_action_to_record(action)
         assert record is not None
         assert record["timestamp"] == effective.isoformat()
+
+    def test_execution_timing_action_executable_at_used(self):
+        """execution_timing.action_executable_at takes highest precedence."""
+        action = _make_trade_action(timestamp=datetime(2024, 6, 15, 9, 30))
+        action.effective_trade_at = datetime(2024, 7, 1, 10, 0)
+        action.execution_timing = ExecutionTiming(
+            intent_published_at=datetime(2024, 6, 15, 9, 0),
+            action_decision_at=datetime(2024, 6, 15, 9, 30),
+            action_executable_at=datetime(2024, 7, 2, 9, 30),
+            market="US",
+            timezone="America/New_York",
+            timing_policy_id="market-calendar-next-open-v1",
+        )
+
+        record = trade_action_to_record(action)
+        assert record is not None
+        assert record["timestamp"] == datetime(2024, 7, 2, 9, 30).isoformat()
 
     def test_batch_conversion(self):
         """Batch conversion filters and converts correctly."""

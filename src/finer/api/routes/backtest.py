@@ -6,7 +6,7 @@ Provides endpoints for:
 - Comparing multiple KOL strategies
 - Managing backtest result storage
 
-Storage location: data/L8_metrics/
+Storage location: data/F8_metrics/
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from fastapi import APIRouter, Body, Query
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field
 
 from finer.paths import DATA_ROOT
 from finer.backtest.engine import BacktestConfig, BacktestEngine
@@ -32,8 +32,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Storage directory for backtest results
-L8_METRICS_DIR = DATA_ROOT / "L8_metrics"
-L8_METRICS_DIR.mkdir(parents=True, exist_ok=True)
+F8_METRICS_DIR = DATA_ROOT / "F8_metrics"
+F8_METRICS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # =============================================================================
@@ -42,10 +42,12 @@ L8_METRICS_DIR.mkdir(parents=True, exist_ok=True)
 
 class BacktestRequest(BaseModel):
     """Request to run a backtest."""
-    # Trade actions to backtest
+    # Trade actions to backtest (accepts 'actions' or 'trade_actions')
     actions: List[Dict[str, Any]] = Field(
         ...,
-        description="List of trade actions (each with timestamp, ticker, direction, etc.)"
+        validation_alias=AliasChoices("actions", "trade_actions"),
+        description="List of trade actions (each with timestamp, ticker, direction, etc.). "
+                    "Also accepts 'trade_actions' as field name.",
     )
 
     # Price data (optional, will use provider if not provided)
@@ -103,7 +105,7 @@ def _save_backtest_result(result, kol_id: Optional[str] = None) -> Path:
     if kol_id:
         filename = f"backtest_{kol_id}_{result.backtest_id}_{timestamp}.json"
 
-    filepath = L8_METRICS_DIR / filename
+    filepath = F8_METRICS_DIR / filename
 
     # Convert to dict for JSON serialization
     data = result.model_dump(mode='json')
@@ -120,7 +122,7 @@ def _load_backtest_result(backtest_id: str):
     from finer.backtest.engine import BacktestResult
 
     # Find file with matching backtest_id
-    for filepath in L8_METRICS_DIR.glob(f"backtest_*{backtest_id}*.json"):
+    for filepath in F8_METRICS_DIR.glob(f"backtest_*{backtest_id}*.json"):
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
                 data = json.load(f)
@@ -133,7 +135,7 @@ def _load_backtest_result(backtest_id: str):
 
 def _list_backtest_files() -> List[Path]:
     """List all backtest result files."""
-    return list(L8_METRICS_DIR.glob("backtest_*.json"))
+    return list(F8_METRICS_DIR.glob("backtest_*.json"))
 
 
 def _prepare_price_data(
@@ -142,7 +144,11 @@ def _prepare_price_data(
     start_date: Optional[str],
     end_date: Optional[str],
 ) -> pd.DataFrame:
-    """Prepare price DataFrame for backtest."""
+    """Prepare price DataFrame for backtest.
+
+    Raises FinerError if no price_data is provided — mock data is never
+    silently generated in production paths.
+    """
     if price_data:
         # Use provided price data
         df = pd.DataFrame(price_data)
@@ -150,61 +156,14 @@ def _prepare_price_data(
             df['date'] = pd.to_datetime(df['date'])
         return df
 
-    # Generate mock price data
-    provider = MockPriceProvider()
-
-    # Determine tickers from actions
-    tickers = set()
-    for action in actions:
-        ticker = action.get('ticker')
-        if ticker:
-            tickers.add(ticker)
-
-    # Determine date range
-    if not start_date or not end_date:
-        # Extract from actions
-        timestamps = []
-        for action in actions:
-            ts = action.get('timestamp')
-            if ts:
-                try:
-                    timestamps.append(pd.to_datetime(ts))
-                except:
-                    pass
-
-        if timestamps:
-            min_ts = min(timestamps)
-            max_ts = max(timestamps)
-            start_date = start_date or min_ts.strftime('%Y-%m-%d')
-            end_date = end_date or (max_ts + pd.Timedelta(days=30)).strftime('%Y-%m-%d')
-        else:
-            # Default to last 6 months
-            end_date = end_date or datetime.now().strftime('%Y-%m-%d')
-            start_date = start_date or (datetime.now() - pd.Timedelta(days=180)).strftime('%Y-%m-%d')
-
-    # Generate price data
-    rows = []
-    start_dt = pd.to_datetime(start_date)
-    end_dt = pd.to_datetime(end_date)
-
-    current = start_dt
-    while current <= end_dt:
-        date_str = current.strftime('%Y-%m-%d')
-        for ticker in tickers:
-            price = provider.get_price(ticker, date_str)
-            if price:
-                rows.append({
-                    'date': current,
-                    'ticker': ticker,
-                    'open': price * 0.99,
-                    'high': price * 1.01,
-                    'low': price * 0.98,
-                    'close': price,
-                    'volume': 1000000,
-                })
-        current += pd.Timedelta(days=1)
-
-    return pd.DataFrame(rows)
+    raise FinerError(
+        ErrorCode.F8_IN_001,
+        "No price_data provided. Supply OHLCV data or use the /prices endpoint "
+        "with use_mock=true for testing.",
+        stage="F8",
+        operation="price_prepare",
+        retryable=False,
+    )
 
 
 # =============================================================================
@@ -375,7 +334,7 @@ async def delete_backtest_result(backtest_id: str) -> Dict[str, Any]:
     """
     deleted = False
 
-    for filepath in L8_METRICS_DIR.glob(f"backtest_*{backtest_id}*.json"):
+    for filepath in F8_METRICS_DIR.glob(f"backtest_*{backtest_id}*.json"):
         try:
             filepath.unlink()
             deleted = True
@@ -398,6 +357,7 @@ async def delete_backtest_result(backtest_id: str) -> Dict[str, Any]:
 @router.post("/compare")
 async def compare_strategies(
     kol_actions: Dict[str, List[Dict[str, Any]]] = Body(...),
+    price_data: Optional[List[Dict[str, Any]]] = Body(None),
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     initial_capital: float = 100000.0,
@@ -430,7 +390,7 @@ async def compare_strategies(
 
     # Prepare price data for all tickers
     price_df = _prepare_price_data(
-        price_data=None,
+        price_data=price_data,
         actions=all_actions,
         start_date=start_date,
         end_date=end_date,
@@ -500,7 +460,7 @@ async def get_price_data(request: PriceDataRequest) -> Dict[str, Any]:
         if request.use_mock:
             provider = MockPriceProvider()
         else:
-            provider = CachedPriceProvider(fallback_to_mock=True)
+            provider = CachedPriceProvider(fallback_to_mock=False)
 
         prices = provider.get_prices(
             ticker=request.ticker,
@@ -526,7 +486,7 @@ async def get_price_data(request: PriceDataRequest) -> Dict[str, Any]:
 async def backtest_health() -> Dict[str, Any]:
     """Check backtest module health."""
     # Check storage
-    storage_ok = L8_METRICS_DIR.exists()
+    storage_ok = F8_METRICS_DIR.exists()
 
     # Count existing results
     result_count = len(_list_backtest_files())
@@ -535,7 +495,7 @@ async def backtest_health() -> Dict[str, Any]:
         "ok": True,
         "data": {
             "status": "healthy" if storage_ok else "degraded",
-            "storage_dir": str(L8_METRICS_DIR),
+            "storage_dir": str(F8_METRICS_DIR),
             "storage_ok": storage_ok,
             "result_count": result_count,
         },

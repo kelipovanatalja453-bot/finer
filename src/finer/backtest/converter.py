@@ -43,6 +43,11 @@ def trade_action_to_record(action: TradeAction) -> Optional[Dict[str, Any]]:
     """Convert a single TradeAction to backtest engine input format.
 
     Returns None if the action is not backtestable (neutral, watch, hold, etc.).
+
+    Timing priority for canonical TradeActions:
+    1. execution_timing.action_executable_at (canonical path)
+    2. effective_trade_at (legacy/partial)
+    3. timestamp (fallback)
     """
     # Skip non-actionable directions
     if action.direction not in _DIRECTION_MAP:
@@ -59,8 +64,13 @@ def trade_action_to_record(action: TradeAction) -> Optional[Dict[str, Any]]:
         logger.debug("Skipping non-backtestable action_type: %s", primary.action_type)
         return None
 
-    # Use effective_trade_at if available, otherwise timestamp
-    ts = action.effective_trade_at or action.timestamp
+    # Timing: prefer execution_timing.action_executable_at for canonical actions
+    if action.execution_timing and action.execution_timing.action_executable_at:
+        ts = action.execution_timing.action_executable_at
+    elif action.effective_trade_at:
+        ts = action.effective_trade_at
+    else:
+        ts = action.timestamp
 
     return {
         "timestamp": ts.isoformat(),
