@@ -25,6 +25,7 @@ reports/
 trader韭菜*/
 *.json
 !pyproject.toml
+!src/finer_dashboard/package-lock.json
 
 # Local throwaway scripts
 run_intent_tests.sh
