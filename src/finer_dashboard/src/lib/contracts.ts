@@ -626,6 +626,8 @@ export type KOLTimelineEvent = {
   summary: string;
   return?: number;
   evidenceText?: string;
+  contentVersionId?: string;
+  nameLineage?: NameLineage;
 };
 
 export type BacktestTask = {

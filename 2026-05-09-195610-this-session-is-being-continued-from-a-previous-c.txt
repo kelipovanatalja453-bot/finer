@@ -1,0 +1,67 @@
+▗ ▗   ▖ ▖  Claude Code v2.1.132
+           mimo-v2.5-pro · API Usage Billing
+  ▘▘ ▝▝    ~/Desktop/finer
+
+✻ Conversation compacted (ctrl+o for history)
+
+  ⎿  Read src/finer/api/routes/wechat.py (442 lines)
+  ⎿  Read src/finer/errors/handler.py (192 lines)
+  ⎿  Read src/finer/api/server.py (68 lines)
+  ⎿  Referenced file src/finer/errors/codes.py
+  ⎿  Read src/finer/errors/exceptions.py (112 lines)
+  ⎿  Skills restored (claude-api)
+
+⏺ Let me check the screenshot and investigate the frontend login state flow.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Explore(Find frontend login state code)
+  ⎿  Done (25 tool uses · 51.6k tokens · 58s)
+  (ctrl+o to expand)
+
+⏺ There's an issue with the selected model (mimo-v2.5-pro). It may not exist or
+  you may not have access to it. Run /model to pick a different model.
+
+✻ Sautéed for 2m 11s
+
+❯ /model                                                                        
+  ⎿  Set model to mimo-v2.5-pro[1m] (default)
+
+❯ 继续刚才的任务                                                                
+
+⏺ There's an issue with the selected model (mimo-v2.5-pro[1m]). It may not exist
+   or you may not have access to it. Run /model to pick a different model.
+
+✻ Cooked for 0s
+
+❯ /model                                                                        
+  ⎿  Set model to mimo-v2.5-pro
+
+❯ 继续                                                                          
+
+⏺ There's an issue with the selected model (mimo-v2.5-pro). It may not exist or
+  you may not have access to it. Run /model to pick a different model.
+
+✻ Cogitated for 0s
+
+※ recap: We integrated a structured error code system (104 codes in `src/finer/errors/`) and fixed the WeChat exporter health check by bypassing system proxy. Next step: refresh the Dashboard to verify the exporter shows as available.
+
+❯ 你连接的是什么模型                                                            
+
+⏺ There's an issue with the selected model (mimo-v2.5-pro). It may not exist or
+  you may not have access to it. Run /model to pick a different model.
+
+✻ Baked for 0s
+
+❯ /status 
+  ⎿  Status dialog dismissed
+
+❯ /model                                                                        
+  ⎿  Set model to mimo-v2.5-pro with high effort
+
+❯ 你现在链接什么模型                                                            
+
+⏺ There's an issue with the selected model (mimo-v2.5-pro). It may not exist or
+  you may not have access to it. Run /model to pick a different model.
+
+✻ Baked for 0s

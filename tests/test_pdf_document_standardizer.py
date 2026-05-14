@@ -420,6 +420,7 @@ class TestFixtureIntegration:
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
             raw_path=str(raw_path),
+            file_type="pdf",
             metadata=manifest.get("metadata", {}),
         )
 
@@ -446,6 +447,7 @@ class TestFixtureIntegration:
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
             raw_path=str(raw_path),
+            file_type="pdf",
             metadata=manifest.get("metadata", {}),
         )
 
@@ -475,6 +477,7 @@ class TestFixtureIntegration:
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
             raw_path=str(raw_path),
+            file_type="pdf",
             metadata=manifest.get("metadata", {}),
         )
 
@@ -500,6 +503,7 @@ class TestFixtureIntegration:
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
             raw_path=str(raw_path),
+            file_type="pdf",
             metadata=manifest.get("metadata", {}),
         )
 
@@ -524,6 +528,7 @@ class TestFixtureIntegration:
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
             raw_path=str(raw_path),
+            file_type="pdf",
             metadata=manifest.get("metadata", {}),
         )
 
@@ -549,6 +554,7 @@ class TestFixtureIntegration:
             published_at=datetime.fromisoformat(manifest["published_at"]),
             title=Path(manifest["raw_path"]).name,
             raw_path=str(raw_path),
+            file_type="pdf",
             metadata=manifest.get("metadata", {}),
         )
 

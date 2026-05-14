@@ -11,7 +11,6 @@ import {
   Loader2,
   AlertTriangle,
 } from "lucide-react";
-import type { KOL } from "@/lib/contracts";
 import { useAsyncData } from "@/lib/hooks/useAsyncData";
 import { listKOLs } from "@/lib/api-client";
 import { kolListItemToKOL } from "@/lib/adapters";
@@ -35,7 +34,7 @@ function getPlatformLabel(platform: string): string {
 export default function KOLListPage() {
   const [sortBy, setSortBy] = useState<"score" | "accuracy" | "return">("score");
   // Project Memory source: "catalog" | "degraded_scan" — set when connected to real API
-  const [dataSource, setDataSource] = useState<"catalog" | "degraded_scan">("catalog");
+  const [dataSource] = useState<"catalog" | "degraded_scan">("catalog");
 
   const {
     data: kols,

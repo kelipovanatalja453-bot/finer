@@ -14,8 +14,9 @@ import {
   PieChart,
   Loader2,
   AlertTriangle,
+  Tag,
 } from "lucide-react";
-import type { KOLDetail } from "@/lib/contracts";
+import type { NameLineage } from "@/lib/contracts";
 import { useAsyncData } from "@/lib/hooks/useAsyncData";
 import { getKOLRating } from "@/lib/api-client";
 import { kolRatingToDetail } from "@/lib/adapters";

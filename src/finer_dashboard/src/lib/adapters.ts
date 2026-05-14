@@ -37,17 +37,6 @@ function formatSignedDrawdown(value: number): string {
   return `-${(Math.abs(value) * 100).toFixed(1)}%`;
 }
 
-function percentileRank(
-  values: number[],
-  subject: number,
-  direction: MetricDirection,
-): number {
-  const better = values.filter((v) =>
-    direction === "higher_is_better" ? subject >= v : subject <= v,
-  ).length;
-  return Math.round((better / Math.max(values.length, 1)) * 100);
-}
-
 function makeMetricRow(params: {
   metric: string;
   direction: MetricDirection;

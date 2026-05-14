@@ -6,6 +6,12 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# JavaScript / Next.js
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
 .mypy_cache/
 
 # Environment / Secret
@@ -40,6 +46,9 @@ Thumbs.db
 logs/
 *.log
 configs/feishu.yaml
+
+# Local browser automation traces
+.playwright-cli/
 
 # Local/source screenshots not for public release
 src/*.png
