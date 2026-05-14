@@ -59,6 +59,11 @@ def build_content_record(
 
     content_id = _derive_content_id(account_id, article_id)
 
+    # Compute dedupe fingerprint from stable content identifiers
+    dedupe_fingerprint = hashlib.sha256(
+        f"wechat:{account_id}:{article_id}".encode("utf-8")
+    ).hexdigest()[:16]
+
     # Handle published_at — may be None for some articles
     published_at_missing = False
     create_time = getattr(article, "publish_time", None) or getattr(article, "create_time", None)
@@ -91,12 +96,15 @@ def build_content_record(
 
     return ContentRecord(
         content_id=content_id,
+        creator_id=account_id,
         creator_name=account_name,
         source_platform="wechat",
         source_type="wechat_article",
         published_at=published_at,
         title=getattr(article, "title", None),
         source_url=article_url or None,
+        external_source_id=article_id,
+        dedupe_fingerprint=dedupe_fingerprint,
         raw_path=str(artifacts.raw_md_path),
         file_type="text",
         metadata=metadata,

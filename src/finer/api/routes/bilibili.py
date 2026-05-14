@@ -12,7 +12,8 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
+import hashlib
 import logging
 
 from finer.ingestion.bilibili_adapter import (
@@ -25,6 +26,7 @@ from finer.ingestion.bilibili_adapter import (
 from finer.errors import FinerError, ErrorCode, error_response
 from finer.paths import REPO_ROOT, DATA_ROOT
 from finer.manifests import ContentManifest, _infer_file_type, write_manifest, build_content_id
+from finer.schemas.content import ContentRecord
 
 logger = logging.getLogger(__name__)
 
@@ -381,7 +383,16 @@ async def sync_to_f0_intake(
         import json
         import shutil
         metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
-        content_id = f"bilibili_{parsed_bvid}"
+
+        # Derive stable content_id from platform identifiers
+        content_id = hashlib.sha256(
+            f"bilibili:{metadata['uploader_id']}:{parsed_bvid}".encode("utf-8")
+        ).hexdigest()[:32]
+
+        # Compute dedupe fingerprint
+        dedupe_fingerprint = hashlib.sha256(
+            f"bilibili:{metadata['uploader_id']}:{parsed_bvid}".encode("utf-8")
+        ).hexdigest()[:16]
 
         # Create F0 directory structure
         f0_dir = DATA_ROOT / "F0_intake" / "bilibili" / str(metadata["uploader_id"])
@@ -392,34 +403,47 @@ async def sync_to_f0_intake(
         # Copy transcript
         shutil.copy(transcript_file, f0_transcript)
 
-        # Build and persist manifest via canonical ContentManifest
-        manifest = ContentManifest(
+        # Build ContentRecord (canonical F0 output)
+        published_at = None
+        try:
+            published_at = datetime.fromisoformat(metadata["publish_time"])
+        except (ValueError, KeyError):
+            published_at = datetime.now(timezone.utc)
+
+        record = ContentRecord(
             content_id=content_id,
             source_type="bilibili_video",
             source_platform="bilibili",
             creator_id=str(metadata["uploader_id"]),
-            creator_name=metadata["uploader"],
-            published_at=metadata["publish_time"],
-            collected_at=datetime.utcnow().replace(microsecond=0).isoformat(),
-            title=metadata["title"],
+            creator_name=metadata.get("uploader"),
+            published_at=published_at,
+            title=metadata.get("title"),
             raw_path=str(f0_transcript),
             file_type=_infer_file_type(f0_transcript.suffix),
             metadata={
                 "bvid": parsed_bvid,
                 "aid": metadata.get("aid", 0),
                 "uploader_id": metadata["uploader_id"],
-                "duration": metadata["duration"],
+                "duration": metadata.get("duration", 0),
                 "tags": (req.tags if req else []) or metadata.get("tags", []),
                 "category": req.category if req else None,
                 "ingest_time": datetime.now().isoformat(),
             },
             source_url=f"https://www.bilibili.com/video/{parsed_bvid}",
             external_source_id=parsed_bvid,
-            dedupe_fingerprint=None,
+            dedupe_fingerprint=dedupe_fingerprint,
             language="zh",
             market_scope=["US", "HK", "A"],
         )
 
+        # Persist ContentRecord as JSON
+        record_dir = DATA_ROOT / "F0_intake" / "bilibili" / str(metadata["uploader_id"])
+        record_dir.mkdir(parents=True, exist_ok=True)
+        record_path = record_dir / f"{record.content_id}.json"
+        record_path.write_text(record.model_dump_json(indent=2), encoding="utf-8")
+
+        # Also persist manifest for backward compatibility
+        manifest = ContentManifest.from_record(record)
         manifest_path = write_manifest(REPO_ROOT, manifest)
 
         return SyncResponse(
