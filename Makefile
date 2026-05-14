@@ -1,4 +1,4 @@
-.PHONY: dev-backend dev-frontend dev-all test test-frontend lint build clean install typecheck init-storage feishu-sync
+.PHONY: dev-backend dev-frontend dev-all test test-frontend lint build clean install typecheck init-storage feishu-sync publish-dry-run publish
 
 # Development
 dev-backend:
@@ -43,6 +43,15 @@ init-storage:
 
 feishu-sync:
 	python -m finer.cli feishu-sync
+
+# GitHub publishing
+publish-dry-run:
+	@test -n "$(MSG)" || (echo "Usage: make publish-dry-run MSG='commit message'" && exit 1)
+	scripts/publish_to_github.sh --message "$(MSG)" --dry-run $(ARGS)
+
+publish:
+	@test -n "$(MSG)" || (echo "Usage: make publish MSG='commit message'" && exit 1)
+	scripts/publish_to_github.sh --message "$(MSG)" $(ARGS)
 
 # Clean
 clean:
