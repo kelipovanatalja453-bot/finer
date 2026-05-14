@@ -59,8 +59,8 @@ def ensure_storage(root: Path) -> list[str]:
     return created
 
 
-# F0 Project Memory SQLite index path
-F0_INDEX_DB_PATH = DATA_ROOT / "f0_index.db"
+# F0 Project Memory SQLite index path — backed by Project Memory v1 DB
+F0_INDEX_DB_PATH = DATA_ROOT / "project_memory" / "finer.project.sqlite3"
 
 # Project Memory Storage v1
 PROJECT_MEMORY_ROOT = DATA_ROOT / "project_memory"

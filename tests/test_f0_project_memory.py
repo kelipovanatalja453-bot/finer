@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import sqlite3
+import tempfile
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -104,19 +108,27 @@ class TestF0IndexQuery:
 
 
 # ---------------------------------------------------------------------------
-# 4. Startup contract tests
+# 4. Startup tests (real behavior, no NotImplementedError)
 # ---------------------------------------------------------------------------
 
 class TestF0Startup:
-    """Validate startup behavior contract."""
+    """Validate startup behavior with real schema inspection."""
 
-    def test_startup_returns_not_implemented(self):
-        with pytest.raises(NotImplementedError, match="A1 first round"):
-            check_f0_index_on_startup()
+    def test_startup_missing_db_returns_missing(self, tmp_path: Path):
+        db = tmp_path / "nonexistent.db"
+        result = check_f0_index_on_startup(db)
+        assert result.state == F0IndexStartupState.MISSING
+        assert result.health is None
+        assert result.action_taken == "none"
 
-    def test_rebuild_returns_not_implemented(self):
-        with pytest.raises(NotImplementedError, match="A1 first round"):
-            rebuild_f0_index()
+    def test_startup_empty_db_returns_missing(self, tmp_path: Path):
+        db = tmp_path / "empty.db"
+        # Create empty DB (no Project Memory tables)
+        conn = sqlite3.connect(str(db))
+        conn.close()
+        result = check_f0_index_on_startup(db)
+        assert result.state == F0IndexStartupState.MISSING
+        assert result.health is None
 
     def test_startup_state_enum_values(self):
         assert F0IndexStartupState.READY == "ready"
@@ -134,30 +146,84 @@ class TestF0Startup:
         assert r.state == F0IndexStartupState.MISSING
         assert r.health is None
 
+    def test_rebuild_sync_returns_string(self, tmp_path: Path):
+        db = tmp_path / "test.db"
+        # Create minimal schema so rebuild doesn't crash
+        conn = sqlite3.connect(str(db))
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.executescript("""
+            CREATE TABLE project_memory_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL);
+            CREATE TABLE source_groups (source_group_id TEXT PRIMARY KEY, source_type TEXT NOT NULL, source_name TEXT NOT NULL, imported_at TEXT NOT NULL);
+            CREATE TABLE source_records (source_record_id TEXT PRIMARY KEY, source_group_id TEXT NOT NULL, imported_at TEXT NOT NULL, status TEXT NOT NULL);
+            CREATE TABLE content_identities (content_id TEXT PRIMARY KEY, identity_scheme TEXT NOT NULL, stable_key TEXT NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE content_versions (content_version_id TEXT PRIMARY KEY, content_id TEXT NOT NULL, version_no INTEGER NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE source_content_links (source_record_id TEXT NOT NULL, content_id TEXT NOT NULL, link_reason TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (source_record_id, content_id));
+            CREATE TABLE contents (content_id TEXT PRIMARY KEY, content_type TEXT, current_stage TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, status TEXT NOT NULL);
+            CREATE TABLE storage_objects (object_id TEXT PRIMARY KEY, sha256 TEXT NOT NULL UNIQUE, storage_uri TEXT NOT NULL, byte_size INTEGER NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE manifests (manifest_id TEXT PRIMARY KEY, subject_type TEXT NOT NULL, subject_id TEXT NOT NULL, schema_name TEXT NOT NULL, schema_version TEXT NOT NULL, object_id TEXT NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE artifacts (artifact_id TEXT PRIMARY KEY, content_id TEXT NOT NULL, stage TEXT NOT NULL, artifact_type TEXT NOT NULL, role TEXT NOT NULL, object_id TEXT NOT NULL, artifact_version INTEGER NOT NULL, is_canonical INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL);
+            CREATE TABLE name_bindings (name_binding_id TEXT PRIMARY KEY, subject_type TEXT NOT NULL, subject_id TEXT NOT NULL, namespace TEXT NOT NULL, name_kind TEXT NOT NULL, display_value TEXT NOT NULL, is_primary INTEGER NOT NULL DEFAULT 0, valid_from TEXT NOT NULL);
+            CREATE TABLE stage_status (content_id TEXT NOT NULL, stage TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL, PRIMARY KEY (content_id, stage));
+            CREATE TABLE asset_index (asset_id TEXT PRIMARY KEY, content_id TEXT NOT NULL, stage TEXT NOT NULL, display_name TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL, search_text TEXT);
+            CREATE TABLE content_blocks (block_id TEXT PRIMARY KEY, content_id TEXT NOT NULL, block_type TEXT NOT NULL, block_index INTEGER NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE topic_blocks (topic_block_id TEXT PRIMARY KEY, content_id TEXT NOT NULL, topic_index INTEGER NOT NULL, created_at TEXT NOT NULL);
+            CREATE TABLE topic_block_members (topic_block_id TEXT NOT NULL, block_id TEXT NOT NULL, PRIMARY KEY (topic_block_id, block_id));
+            CREATE TABLE artifact_edges (from_artifact_id TEXT NOT NULL, to_artifact_id TEXT NOT NULL, edge_type TEXT NOT NULL, created_at TEXT NOT NULL, PRIMARY KEY (from_artifact_id, to_artifact_id));
+            CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL, checksum TEXT NOT NULL, applied_at TEXT NOT NULL, applied_by TEXT, execution_ms INTEGER NOT NULL);
+            CREATE TABLE project_memory_meta2 (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL);
+        """)
+        conn.close()
+        result = rebuild_f0_index(db, background=False)
+        assert result == "sync_complete"
+
+    def test_rebuild_background_returns_task_id(self, tmp_path: Path):
+        db = tmp_path / "test.db"
+        conn = sqlite3.connect(str(db))
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.executescript("""
+            CREATE TABLE project_memory_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL);
+            CREATE TABLE asset_index (asset_id TEXT PRIMARY KEY, content_id TEXT NOT NULL, stage TEXT NOT NULL, display_name TEXT NOT NULL, status TEXT NOT NULL, updated_at TEXT NOT NULL, search_text TEXT);
+        """)
+        conn.close()
+        result = rebuild_f0_index(db, background=True)
+        assert result.startswith("f0-rebuild-")
+
 
 # ---------------------------------------------------------------------------
-# 5. API contract tests
+# 5. API tests (real endpoints)
 # ---------------------------------------------------------------------------
 
 class TestF0IndexAPI:
-    """Validate API endpoint contract."""
+    """Validate API endpoint behavior."""
 
     @pytest.fixture()
     def client(self):
         from finer.api.server import app
         return TestClient(app, raise_server_exceptions=False)
 
-    def test_records_endpoint_returns_501(self, client):
-        resp = client.get("/api/f0-index/records")
-        assert resp.status_code == 500  # NotImplementedError becomes 500
-
-    def test_health_endpoint_returns_501(self, client):
+    def test_health_endpoint_returns_200(self, client):
         resp = client.get("/api/f0-index/health")
-        assert resp.status_code == 500
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert "data" in data
+        assert "status" in data["data"]
 
-    def test_rebuild_endpoint_returns_501(self, client):
+    def test_records_endpoint_returns_200_or_error(self, client):
+        resp = client.get("/api/f0-index/records")
+        # Either 200 (if DB exists) or 503/500 (if index missing/failed)
+        assert resp.status_code in (200, 503, 500)
+        data = resp.json()
+        assert "ok" in data
+
+    def test_rebuild_endpoint_returns_200(self, client):
         resp = client.post("/api/f0-index/rebuild")
-        assert resp.status_code == 500
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert "data" in data
 
 
 # ---------------------------------------------------------------------------
