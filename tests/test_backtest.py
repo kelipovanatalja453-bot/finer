@@ -295,3 +295,191 @@ class TestRunSimpleBacktest:
 
         result = run_simple_backtest(actions, price_data)
         assert result is not None
+
+
+# =============================================================================
+# E2E Integration Tests — API Route
+# =============================================================================
+
+
+def _make_canonical_action(
+    ticker: str = "AAPL",
+    direction: str = "bullish",
+    action_type: str = "long",
+    ts: str = "2024-01-05T09:30:00",
+) -> dict:
+    """Build a canonical TradeAction dict with all required fields."""
+    return {
+        "trade_action_id": f"ta_{ticker}_{ts[:10]}",
+        "timestamp": ts,
+        "source": {
+            "creator_id": "kol_e2e",
+            "content_id": "content_e2e_001",
+            "evidence_text": f"bullish on {ticker}",
+        },
+        "target": {"ticker": ticker},
+        "direction": direction,
+        "action_chain": [{"sequence": 1, "action_type": action_type}],
+        "intent_id": f"intent_{ticker}_001",
+        "policy_id": f"policy_{ticker}_001",
+        "evidence_span_ids": [f"span_{ticker}_001"],
+        "execution_timing": {
+            "intent_published_at": ts,
+            "action_decision_at": ts,
+            "action_executable_at": ts,
+            "market": "US",
+            "timezone": "America/New_York",
+            "timing_policy_id": "market-calendar-next-open-v1",
+        },
+        "canonical_trace_status": "canonical",
+    }
+
+
+def _make_price_rows(tickers: list[str], days: int = 30) -> list[dict]:
+    """Build OHLCV price rows for tickers over N days."""
+    rows = []
+    base = datetime(2024, 1, 1)
+    for d in range(days):
+        date = base + timedelta(days=d)
+        for ticker in tickers:
+            price = 150.0 + d * 0.5
+            rows.append({
+                "date": date.strftime("%Y-%m-%d"),
+                "ticker": ticker,
+                "open": price * 0.99,
+                "high": price * 1.02,
+                "low": price * 0.98,
+                "close": price,
+                "volume": 1_000_000,
+            })
+    return rows
+
+
+class TestBacktestE2E:
+    """E2E integration tests for the backtest API route."""
+
+    @pytest.fixture(autouse=True)
+    def _setup_app(self, tmp_path):
+        """Create a test app with isolated storage."""
+        from unittest.mock import patch
+        from fastapi.testclient import TestClient
+        from finer.api.server import create_app
+
+        app = create_app()
+        self.client = TestClient(app)
+        self.tmp_path = tmp_path
+
+        # Patch F8_METRICS_DIR to use temp directory
+        with patch("finer.api.routes.backtest.F8_METRICS_DIR", tmp_path):
+            yield
+
+    def test_run_canonical_backtest_returns_result_with_snapshots(self):
+        """POST /run with canonical TradeActions + price_data → BacktestResult."""
+        actions = [
+            _make_canonical_action("AAPL", "bullish", "long", "2024-01-05T09:30:00"),
+            _make_canonical_action("MSFT", "bullish", "long", "2024-01-10T09:30:00"),
+        ]
+        price_data = _make_price_rows(["AAPL", "MSFT"], days=30)
+
+        resp = self.client.post("/api/backtest/run", json={
+            "actions": actions,
+            "price_data": price_data,
+            "initial_capital": 100000.0,
+        })
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["ok"] is True
+
+        data = body["data"]
+        assert data["backtest_id"] is not None
+        assert data["total_trades"] >= 0
+        assert "portfolio_snapshots" in data
+        assert "trades" in data
+        assert "saved_to" in body
+
+    def test_run_rejects_non_canonical_action_missing_intent_id(self):
+        """POST /run rejects actions missing intent_id."""
+        bad_action = _make_canonical_action()
+        del bad_action["intent_id"]
+
+        resp = self.client.post("/api/backtest/run", json={
+            "actions": [bad_action],
+            "price_data": _make_price_rows(["AAPL"], 10),
+        })
+
+        assert resp.status_code == 400
+        body = resp.json()
+        assert body["ok"] is False
+        assert body["error"]["code"] == "F8_IN_001"
+        assert "intent_id" in body["error"]["message"]
+
+    def test_run_rejects_non_canonical_action_missing_policy_id(self):
+        """POST /run rejects actions missing policy_id."""
+        bad_action = _make_canonical_action()
+        del bad_action["policy_id"]
+
+        resp = self.client.post("/api/backtest/run", json={
+            "actions": [bad_action],
+            "price_data": _make_price_rows(["AAPL"], 10),
+        })
+
+        assert resp.status_code == 400
+        body = resp.json()
+        assert body["ok"] is False
+        assert "policy_id" in body["error"]["message"]
+
+    def test_run_rejects_non_canonical_action_missing_evidence_span_ids(self):
+        """POST /run rejects actions with empty evidence_span_ids."""
+        bad_action = _make_canonical_action()
+        bad_action["evidence_span_ids"] = []
+
+        resp = self.client.post("/api/backtest/run", json={
+            "actions": [bad_action],
+            "price_data": _make_price_rows(["AAPL"], 10),
+        })
+
+        assert resp.status_code == 400
+        body = resp.json()
+        assert "evidence_span_ids" in body["error"]["message"]
+
+    def test_run_rejects_non_canonical_action_missing_execution_timing(self):
+        """POST /run/actions missing execution_timing.action_executable_at."""
+        bad_action = _make_canonical_action()
+        del bad_action["execution_timing"]
+
+        resp = self.client.post("/api/backtest/run", json={
+            "actions": [bad_action],
+            "price_data": _make_price_rows(["AAPL"], 10),
+        })
+
+        assert resp.status_code == 400
+        body = resp.json()
+        assert "execution_timing" in body["error"]["message"]
+
+    def test_run_rejects_missing_price_data(self):
+        """POST /run without price_data raises F8_IN_001."""
+        actions = [_make_canonical_action()]
+
+        resp = self.client.post("/api/backtest/run", json={
+            "actions": actions,
+        })
+
+        assert resp.status_code == 400
+        body = resp.json()
+        assert body["ok"] is False
+        assert body["error"]["code"] == "F8_IN_001"
+        assert "price_data" in body["error"]["message"]
+
+    def test_trade_actions_alias_accepted(self):
+        """POST /run accepts 'trade_actions' as alias for 'actions'."""
+        actions = [_make_canonical_action()]
+        price_data = _make_price_rows(["AAPL"], 10)
+
+        resp = self.client.post("/api/backtest/run", json={
+            "trade_actions": actions,
+            "price_data": price_data,
+        })
+
+        assert resp.status_code == 200
+        assert resp.json()["ok"] is True

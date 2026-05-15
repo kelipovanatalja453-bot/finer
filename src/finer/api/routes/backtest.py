@@ -23,7 +23,7 @@ from pydantic import AliasChoices, BaseModel, Field
 
 from finer.paths import DATA_ROOT
 from finer.backtest.engine import BacktestConfig, BacktestEngine
-from finer.backtest.prices import CachedPriceProvider, MockPriceProvider
+from finer.backtest.prices import CachedPriceProvider
 from finer.errors.codes import ErrorCode
 from finer.errors.exceptions import FinerError
 
@@ -77,7 +77,6 @@ class PriceDataRequest(BaseModel):
     ticker: str = Field(..., description="Ticker symbol")
     start_date: str = Field(..., description="Start date (ISO format)")
     end_date: str = Field(..., description="End date (ISO format)")
-    use_mock: bool = Field(False, description="Use mock data instead of API")
 
 
 class BacktestSummary(BaseModel):
@@ -97,6 +96,50 @@ class BacktestSummary(BaseModel):
 # =============================================================================
 # Helper Functions
 # =============================================================================
+
+def _validate_canonical_action(action: Dict[str, Any], index: int) -> None:
+    """Validate that a TradeAction dict satisfies canonical requirements.
+
+    Canonical TradeActions must have:
+    - intent_id (non-empty string)
+    - policy_id (non-empty string)
+    - evidence_span_ids (list with len >= 1)
+    - execution_timing.action_executable_at (non-null)
+
+    Raises FinerError(F8_IN_001) on validation failure.
+    """
+    errors: List[str] = []
+
+    intent_id = action.get("intent_id")
+    if not intent_id:
+        errors.append("missing intent_id")
+
+    policy_id = action.get("policy_id")
+    if not policy_id:
+        errors.append("missing policy_id")
+
+    evidence_span_ids = action.get("evidence_span_ids")
+    if not evidence_span_ids or not isinstance(evidence_span_ids, list) or len(evidence_span_ids) < 1:
+        errors.append("missing or empty evidence_span_ids")
+
+    execution_timing = action.get("execution_timing")
+    if not execution_timing or not isinstance(execution_timing, dict):
+        errors.append("missing execution_timing")
+    elif not execution_timing.get("action_executable_at"):
+        errors.append("missing execution_timing.action_executable_at")
+
+    if errors:
+        raise FinerError(
+            ErrorCode.F8_IN_001,
+            f"TradeAction[{index}] is not canonical: {'; '.join(errors)}. "
+            "Canonical TradeActions must have intent_id, policy_id, "
+            "evidence_span_ids (len>=1), and execution_timing.action_executable_at.",
+            stage="F8",
+            operation="validate_canonical_action",
+            retryable=False,
+            details={"action_index": index, "trade_action_id": action.get("trade_action_id")},
+        )
+
 
 def _save_backtest_result(result, kol_id: Optional[str] = None) -> Path:
     """Save backtest result to file."""
@@ -158,8 +201,7 @@ def _prepare_price_data(
 
     raise FinerError(
         ErrorCode.F8_IN_001,
-        "No price_data provided. Supply OHLCV data or use the /prices endpoint "
-        "with use_mock=true for testing.",
+        "No price_data provided. Supply OHLCV price data in the request body.",
         stage="F8",
         operation="price_prepare",
         retryable=False,
@@ -184,6 +226,10 @@ async def run_backtest(request: BacktestRequest) -> Dict[str, Any]:
     """
     if not request.actions:
         raise FinerError(ErrorCode.F8_IN_001, "No actions provided", stage="F8", operation="backtest_run", retryable=False)
+
+    # Validate each action satisfies canonical TradeAction requirements
+    for idx, action in enumerate(request.actions):
+        _validate_canonical_action(action, idx)
 
     try:
         # Create config
@@ -457,10 +503,7 @@ async def get_price_data(request: PriceDataRequest) -> Dict[str, Any]:
         Price series
     """
     try:
-        if request.use_mock:
-            provider = MockPriceProvider()
-        else:
-            provider = CachedPriceProvider(fallback_to_mock=False)
+        provider = CachedPriceProvider(fallback_to_mock=False)
 
         prices = provider.get_prices(
             ticker=request.ticker,
