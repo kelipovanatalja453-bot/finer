@@ -56,3 +56,4 @@ configs/feishu.yaml
 src/*.png
 src/finer_dashboard/*.png
 src/finer_dashboard/*.txt
+.mcp.json
