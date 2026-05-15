@@ -398,6 +398,18 @@ async def sync_to_f0_intake(
         f0_dir = DATA_ROOT / "F0_intake" / "bilibili" / str(metadata["uploader_id"])
         f0_dir.mkdir(parents=True, exist_ok=True)
 
+        # Dedupe check: skip if ContentRecord already exists
+        existing_record = f0_dir / f"{content_id}.json"
+        if existing_record.exists():
+            return SyncResponse(
+                bvid=parsed_bvid,
+                content_id=content_id,
+                f0_path=str(f0_dir),
+                transcript_path=str(f0_dir / f"{parsed_bvid}.md"),
+                metadata_path=str(existing_record),
+                status="already_synced",
+            )
+
         f0_transcript = f0_dir / f"{parsed_bvid}.md"
 
         # Copy transcript
@@ -437,9 +449,7 @@ async def sync_to_f0_intake(
         )
 
         # Persist ContentRecord as JSON
-        record_dir = DATA_ROOT / "F0_intake" / "bilibili" / str(metadata["uploader_id"])
-        record_dir.mkdir(parents=True, exist_ok=True)
-        record_path = record_dir / f"{record.content_id}.json"
+        record_path = f0_dir / f"{record.content_id}.json"
         record_path.write_text(record.model_dump_json(indent=2), encoding="utf-8")
 
         # Also persist manifest for backward compatibility

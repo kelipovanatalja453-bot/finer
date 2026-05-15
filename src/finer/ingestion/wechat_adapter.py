@@ -565,27 +565,9 @@ class WeChatArticleClient:
 
             except Exception as e:
                 logger.error(f"Failed to list articles: {e}")
-                # For testing: return mock articles
-                if os.getenv("WECHAT_TEST_MODE"):
-                    articles = self._get_mock_articles(account_id)
+                raise
 
         return articles
-
-    def _get_mock_articles(self, account_id: str) -> list[WeChatArticle]:
-        """Generate mock articles for testing."""
-        return [
-            WeChatArticle(
-                article_id=f"{account_id}_article_{i}",
-                title=f"测试文章 {i+1}",
-                author="作者",
-                digest=f"这是第 {i+1} 篇测试文章的摘要...",
-                content_url=f"https://mp.weixin.qq.com/s/test_{i}",
-                publish_time=datetime.now(),
-                read_count=100 * (i + 1),
-                like_count=10 * (i + 1),
-            )
-            for i in range(5)
-        ]
 
     async def fetch_article_content(
         self,
@@ -627,39 +609,7 @@ class WeChatArticleClient:
 
             except Exception as e:
                 logger.error(f"Failed to fetch article content: {e}")
-                # For testing: return mock content
-                if os.getenv("WECHAT_TEST_MODE"):
-                    return self._get_mock_content(article)
                 raise
-
-    def _get_mock_content(self, article: WeChatArticle) -> str:
-        """Generate mock Markdown content for testing."""
-        return f"""# {article.title}
-
-**作者**: {article.author}
-**发布时间**: {article.publish_time.strftime('%Y-%m-%d %H:%M') if article.publish_time else '未知'}
-**阅读数**: {article.read_count}
-**点赞数**: {article.like_count}
-
----
-
-{article.digest}
-
-这是一篇来自微信公众号的测试文章。实际运行时将从微信服务器获取真实内容。
-
-## 正文内容
-
-这里是文章的正文内容。实际运行时会包含：
-
-- 完整的文章段落
-- 图片（保留原始链接或下载到本地）
-- 代码块（如果有）
-- 表格（如果有）
-
----
-
-> 文章来源：微信公众号 {article.article_id}
-"""
 
     def _html_to_markdown(self, html: str, article: WeChatArticle) -> str:
         """Convert WeChat article HTML to Markdown.
