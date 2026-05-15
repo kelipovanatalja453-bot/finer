@@ -6,6 +6,7 @@ schema inspection for health).
 from __future__ import annotations
 
 import logging
+import sqlite3
 
 from fastapi import APIRouter, Query
 
@@ -23,6 +24,22 @@ def _get_connection():
     """Get a Project Memory connection, raising on failure."""
     from finer.services.project_memory.connection import get_connection
     return get_connection(F0_INDEX_DB_PATH)
+
+
+def _table_exists(conn, table_name: str) -> bool:
+    """Return whether a table exists in the active SQLite database."""
+    row = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,),
+    ).fetchone()
+    return row is not None
+
+
+def _health_to_dict(health: F0IndexHealth) -> dict:
+    """Serialize F0IndexHealth including computed frontend fields."""
+    data = health.__dict__.copy()
+    data["needs_rebuild"] = health.needs_rebuild
+    return data
 
 
 @router.get("/records")
@@ -91,6 +108,75 @@ async def list_f0_records(
         )
 
 
+@router.get("/import-runs")
+async def list_import_runs(
+    source_channel: str | None = None,
+    status: str | None = None,
+    limit: int = Query(50, le=200),
+    offset: int = 0,
+) -> dict:
+    """Return recent F0 import run records for Import Console.
+
+    The import_runs table is optional during the Project Memory transition.
+    Missing table/database degrades to an empty list so the console can still
+    render health and channel status.
+    """
+    try:
+        conn = _get_connection()
+        if not _table_exists(conn, "import_runs"):
+            return {"ok": True, "data": []}
+
+        where: list[str] = []
+        params: list[object] = []
+        if source_channel:
+            where.append("source_channel = ?")
+            params.append(source_channel)
+        if status:
+            where.append("status = ?")
+            params.append(status)
+
+        where_sql = f"WHERE {' AND '.join(where)}" if where else ""
+        rows = conn.execute(
+            f"SELECT run_id, source_channel, started_at, finished_at, status, "
+            f"records_created, records_skipped, error_code, error_message, "
+            f"request_id, retryable, fix_hint "
+            f"FROM import_runs {where_sql} "
+            f"ORDER BY started_at DESC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        ).fetchall()
+
+        data = []
+        for row in rows:
+            record = dict(row)
+            record["retryable"] = bool(record.get("retryable"))
+            data.append(record)
+
+        return {"ok": True, "data": data}
+
+    except sqlite3.OperationalError as exc:
+        if "no such table" in str(exc).lower():
+            return {"ok": True, "data": []}
+        logger.exception("F0 import runs query failed")
+        raise FinerError(
+            ErrorCode.F0_INDEX_002,
+            f"Import runs query failed: {exc}",
+            stage="F0",
+            operation="list_import_runs",
+            retryable=True,
+        )
+    except FinerError:
+        raise
+    except Exception as exc:
+        logger.exception("F0 import runs query failed")
+        raise FinerError(
+            ErrorCode.F0_INDEX_002,
+            f"Import runs query failed: {exc}",
+            stage="F0",
+            operation="list_import_runs",
+            retryable=True,
+        )
+
+
 @router.get("/health")
 async def get_f0_index_health() -> dict:
     """Return F0 index health status for Import Console."""
@@ -111,7 +197,7 @@ async def get_f0_index_health() -> dict:
 
             return {
                 "ok": True,
-                "data": F0IndexHealth(
+                "data": _health_to_dict(F0IndexHealth(
                     status=status,
                     record_count=0,
                     last_rebuild_at=None,
@@ -120,12 +206,12 @@ async def get_f0_index_health() -> dict:
                     drift=0,
                     db_path=str(F0_INDEX_DB_PATH),
                     db_size_bytes=0,
-                ).__dict__,
+                )),
             }
 
         return {
             "ok": True,
-            "data": startup.health.__dict__,
+            "data": _health_to_dict(startup.health),
         }
 
     except Exception as exc:

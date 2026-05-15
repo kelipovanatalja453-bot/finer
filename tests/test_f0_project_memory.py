@@ -210,6 +210,7 @@ class TestF0IndexAPI:
         assert data["ok"] is True
         assert "data" in data
         assert "status" in data["data"]
+        assert "needs_rebuild" in data["data"]
 
     def test_records_endpoint_returns_200_or_error(self, client):
         resp = client.get("/api/f0-index/records")
@@ -217,6 +218,81 @@ class TestF0IndexAPI:
         assert resp.status_code in (200, 503, 500)
         data = resp.json()
         assert "ok" in data
+
+    def test_import_runs_endpoint_degrades_to_empty_list(
+        self, client, tmp_path: Path, monkeypatch
+    ):
+        from finer.api.routes import f0_index as f0_index_route
+
+        monkeypatch.setattr(
+            f0_index_route, "F0_INDEX_DB_PATH", tmp_path / "empty.sqlite3"
+        )
+
+        resp = client.get("/api/f0-index/import-runs")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["data"] == []
+
+    def test_import_runs_endpoint_returns_rows(self, client, tmp_path: Path, monkeypatch):
+        from finer.api.routes import f0_index as f0_index_route
+
+        db = tmp_path / "runs.sqlite3"
+        conn = sqlite3.connect(str(db))
+        conn.execute(
+            """
+            CREATE TABLE import_runs (
+                run_id TEXT PRIMARY KEY,
+                source_channel TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                finished_at TEXT,
+                status TEXT NOT NULL,
+                records_created INTEGER DEFAULT 0,
+                records_skipped INTEGER DEFAULT 0,
+                error_code TEXT,
+                error_message TEXT,
+                request_id TEXT,
+                retryable INTEGER DEFAULT 0,
+                fix_hint TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO import_runs (
+                run_id, source_channel, started_at, finished_at, status,
+                records_created, records_skipped, error_code, error_message,
+                request_id, retryable, fix_hint
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "run_1",
+                "wechat",
+                "2026-05-15T10:00:00Z",
+                "2026-05-15T10:01:00Z",
+                "completed",
+                3,
+                1,
+                None,
+                None,
+                "req_1",
+                0,
+                None,
+            ),
+        )
+        conn.commit()
+        conn.close()
+        monkeypatch.setattr(f0_index_route, "F0_INDEX_DB_PATH", db)
+
+        resp = client.get("/api/f0-index/import-runs?source_channel=wechat")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["ok"] is True
+        assert data["data"][0]["run_id"] == "run_1"
+        assert data["data"][0]["source_channel"] == "wechat"
+        assert data["data"][0]["retryable"] is False
 
     def test_rebuild_endpoint_returns_200(self, client):
         resp = client.post("/api/f0-index/rebuild")
