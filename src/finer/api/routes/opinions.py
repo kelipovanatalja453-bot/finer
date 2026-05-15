@@ -1,7 +1,7 @@
 """Opinion Timeline API — 观点时间线数据查询.
 
-Reads real TradeAction data from F5/F6 layers via TradeActionRepository,
-with mock data fallback when no real data is available.
+Reads real TradeAction data from F5/F6 layers via TradeActionRepository.
+Returns FinerError canonical envelope when data is unavailable.
 """
 
 import json
@@ -224,16 +224,6 @@ def _load_actions_from_dir(action_dir: Path) -> List[TradeAction]:
     return actions
 
 
-def _has_real_data() -> bool:
-    """Check if any TradeAction data exists in the file system."""
-    l5_dir = DATA_ROOT / "L5_candidate"    # legacy dir
-    l6_dir = DATA_ROOT / "L6_annotated"    # legacy dir
-    for d in (l5_dir, l6_dir):
-        if d.exists() and any(d.glob("**/*.action.json")):
-            return True
-    return False
-
-
 def _query_real_timeline(
     ticker_list: List[str],
     direction_list: List[str],
@@ -245,8 +235,8 @@ def _query_real_timeline(
 ) -> tuple[List[TimelineOpinion], int]:
     """Query real TradeAction data and convert to TimelineOpinion list.
 
-    Reads from both L5_candidate/F5 (via repository index) and L6_annotated/F6
-    (direct file scan). Deduplicates by trade_action_id.
+    Reads from F5 (via repository index) and F6 (direct file scan).
+    Deduplicates by trade_action_id.
 
     Returns:
         Tuple of (opinions, total_count).
@@ -289,8 +279,8 @@ def _query_real_timeline(
         except Exception as e:
             logger.warning("Failed to load TradeAction from %s: %s", file_path, e)
 
-    # --- F6 data: direct file scan (annotated/reviewed actions, legacy L6_annotated dir) ---
-    l6_dir = DATA_ROOT / "L6_annotated"
+    # --- F6 data: direct file scan (reviewed actions) ---
+    l6_dir = DATA_ROOT / "F6_reviewed"
     for action in _load_actions_from_dir(l6_dir):
         if action.trade_action_id not in seen_ids:
             seen_ids.add(action.trade_action_id)
@@ -323,7 +313,7 @@ def _query_real_timeline(
 
 
 def _load_all_actions() -> List[TradeAction]:
-    """Load all TradeAction data from F5 (via repository) and F6 (file scan, legacy L6_annotated dir).
+    """Load all TradeAction data from F5 (via repository) and F6 (file scan).
 
     Deduplicates by trade_action_id.
     """
@@ -345,8 +335,8 @@ def _load_all_actions() -> List[TradeAction]:
         except Exception as e:
             logger.warning("Failed to load TradeAction from %s: %s", file_path, e)
 
-    # F6 data via direct file scan (legacy L6_annotated dir)
-    l6_dir = DATA_ROOT / "L6_annotated"
+    # F6 data via direct file scan
+    l6_dir = DATA_ROOT / "F6_reviewed"
     for action in _load_actions_from_dir(l6_dir):
         if action.trade_action_id not in seen_ids:
             seen_ids.add(action.trade_action_id)
@@ -495,131 +485,6 @@ def _get_real_stats(time_range: str, ticker: Optional[str]) -> Dict[str, Any]:
     }
 
 
-# ============================================
-# Mock 数据生成（fallback）
-# ============================================
-
-def _generate_mock_opinion(index: int, base_time: datetime) -> TimelineOpinion:
-    """生成单个模拟观点."""
-    import math
-    import random
-
-    tickers = [
-        ("NVDA", "英伟达"),
-        ("AAPL", "苹果"),
-        ("TSLA", "特斯拉"),
-        ("AMD", "超微半导体"),
-        ("MSFT", "微软"),
-        ("GOOGL", "谷歌"),
-        ("AMZN", "亚马逊"),
-        ("META", "Meta"),
-        ("BRK.B", "伯克希尔B"),
-        ("JPM", "摩根大通"),
-    ]
-
-    authors = ["分析师张三", "李四", "王五", "财通证券", "中信证券", "高盛研究", "摩根士丹利", "内部研究"]
-    platforms = ["财通证券", "中信证券", "高盛研究", "摩根士丹利", "内部研究", "外部研报"]
-
-    directions = ["bullish", "bearish", "neutral"]
-    verification_statuses = ["success", "failed", "pending"]
-
-    ticker, ticker_name = random.choice(tickers)
-    direction = random.choice(directions)
-    status = random.choice(verification_statuses)
-
-    # 根据方向调整成功/失败概率
-    if direction == "bullish":
-        status_weights = [0.5, 0.3, 0.2]  # success, failed, pending
-    elif direction == "bearish":
-        status_weights = [0.4, 0.4, 0.2]
-    else:
-        status_weights = [0.6, 0.2, 0.2]
-
-    status = random.choices(verification_statuses, weights=status_weights)[0]
-
-    # 生成时间戳
-    time_offset = timedelta(
-        days=random.randint(0, 90),
-        hours=random.randint(0, 23),
-        minutes=random.randint(0, 59)
-    )
-    timestamp = (base_time - time_offset).isoformat()
-
-    # 生成置信度 (根据验证状态调整)
-    if status == "success":
-        confidence = random.uniform(0.6, 0.95)
-    elif status == "failed":
-        confidence = random.uniform(0.4, 0.8)
-    else:
-        confidence = random.uniform(0.5, 0.9)
-
-    # 生成验证结果
-    price_change = None
-    holding_days = None
-    if status != "pending":
-        if direction == "bullish":
-            price_change = random.uniform(-15, 35)
-        elif direction == "bearish":
-            price_change = random.uniform(-35, 15)
-        else:
-            price_change = random.uniform(-10, 10)
-        holding_days = random.randint(3, 60)
-
-    # 生成原文
-    direction_texts = {
-        "bullish": {"performance": "强劲", "trend": "上涨", "valuation": "合理", "view": "多", "suggestion": "积极关注", "earnings": "超预期", "reaction": "积极"},
-        "bearish": {"performance": "疲软", "trend": "下跌", "valuation": "偏高", "view": "空", "suggestion": "谨慎对待", "earnings": "低于预期", "reaction": "负面"},
-        "neutral": {"performance": "平稳", "trend": "震荡", "valuation": "合理", "view": "中性", "suggestion": "观望为主", "earnings": "符合预期", "reaction": "平稳"},
-    }
-    texts = direction_texts[direction]
-
-    source_templates = [
-        f"分析师认为{ticker}在当前市场环境下具有较好的投资价值，建议关注后续走势。从技术面来看，支撑位明确，可考虑逢低布局。",
-        f"{ticker}近期表现{texts['performance']}，技术面显示有进一步{texts['trend']}空间。",
-        f"从基本面分析来看，{ticker}估值处于{texts['valuation']}区间，短期看{texts['view']}。建议投资者{texts['suggestion']}。",
-        f"{ticker}发布了{texts['earnings']}的财报，市场反应{texts['reaction']}。后续需关注催化剂。",
-    ]
-    source_text = random.choice(source_templates)
-
-    # 生成 Action Chain
-    action_chain = None
-    if random.random() > 0.3:
-        num_steps = random.randint(1, 3)
-        action_chain = []
-        action_types = ["watch", "long", "short", "close_long", "close_short"]
-
-        for i in range(num_steps):
-            step = ActionStep(
-                id=f"step-{i}",
-                actionType=random.choice(action_types[:3] if i == 0 else action_types),
-                triggerCondition="突破前高" if i == 0 and random.random() > 0.5 else None,
-                targetPriceLow=str(random.randint(100, 300)),
-                targetPriceHigh=str(random.randint(300, 600)),
-            )
-            action_chain.append(step)
-
-    # RLHF 状态
-    rlhf_status = random.choice(["pending", "reviewed", "skipped", None])
-    rlhf_rating = random.randint(1, 5) if rlhf_status == "reviewed" else None
-
-    return TimelineOpinion(
-        id=f"opinion-{index}",
-        timestamp=timestamp,
-        ticker=ticker,
-        tickerName=ticker_name,
-        direction=direction,
-        confidence=round(confidence, 2),
-        verificationStatus=status,
-        priceChange=round(price_change, 2) if price_change else None,
-        holdingDays=holding_days,
-        sourceText=source_text,
-        author=random.choice(authors),
-        platform=random.choice(platforms),
-        actionChain=action_chain,
-        rlhfStatus=rlhf_status,
-        rlhfRating=rlhf_rating,
-    )
-
 
 # ============================================
 # API 端点
@@ -635,12 +500,10 @@ async def get_timeline(
     limit: int = Query(20, ge=1, le=100, description="每页数量"),
 ):
     """获取观点时间线数据."""
-    # 解析筛选条件
     ticker_list = tickers.split(",") if tickers else []
     direction_list = directions.split(",") if directions else []
     kol_list = kols.split(",") if kols else []
 
-    # 计算时间范围
     now = datetime.now()
     time_range_map = {
         "1W": timedelta(weeks=1),
@@ -650,68 +513,35 @@ async def get_timeline(
         "ALL": timedelta(days=365 * 2),
     }
     start_time = now - time_range_map.get(timeRange, timedelta(days=30))
-
-    # 解析游标
     offset = int(cursor) if cursor else 0
 
-    # 尝试读取真实数据
-    use_real_data = _has_real_data()
+    try:
+        opinions, total = _query_real_timeline(
+            ticker_list=ticker_list,
+            direction_list=direction_list,
+            kol_list=kol_list,
+            start_time=start_time,
+            end_time=now,
+            offset=offset,
+            limit=limit,
+        )
+    except Exception as e:
+        logger.error("Failed to query timeline data: %s", e, exc_info=True)
+        raise FinerError(
+            ErrorCode.F7_INT_001,
+            f"时间线数据查询失败: {e}",
+            stage="F7",
+            operation="get_timeline",
+            retryable=True,
+            fix_hint="检查 F5/F6 数据目录是否存在有效的 TradeAction 文件",
+        )
 
-    if use_real_data:
-        try:
-            opinions, total = _query_real_timeline(
-                ticker_list=ticker_list,
-                direction_list=direction_list,
-                kol_list=kol_list,
-                start_time=start_time,
-                end_time=now,
-                offset=offset,
-                limit=limit,
-            )
-            has_more = offset + limit < total
-            next_cursor = str(offset + limit) if has_more else None
-
-            return TimelineData(
-                opinions=opinions,
-                total=total,
-                hasMore=has_more,
-                nextCursor=next_cursor,
-            )
-        except Exception as e:
-            logger.warning("Failed to query real data, falling back to mock: %s", e)
-
-    # Fallback: mock 数据
-    import random
-
-    total_count = random.randint(100, 500)
-    opinions = []
-
-    for i in range(offset, offset + limit):
-        if i >= total_count:
-            break
-        opinion = _generate_mock_opinion(i, now)
-
-        # 应用筛选
-        if ticker_list and opinion.ticker not in ticker_list:
-            continue
-        if direction_list and opinion.direction not in direction_list:
-            continue
-        if kol_list and opinion.author not in kol_list:
-            continue
-
-        # 时间范围筛选
-        opinion_time = datetime.fromisoformat(opinion.timestamp)
-        if opinion_time < start_time:
-            continue
-
-        opinions.append(opinion)
-
-    has_more = offset + limit < total_count
+    has_more = offset + limit < total
     next_cursor = str(offset + limit) if has_more else None
 
     return TimelineData(
         opinions=opinions,
-        total=total_count,
+        total=total,
         hasMore=has_more,
         nextCursor=next_cursor,
     )
@@ -720,24 +550,18 @@ async def get_timeline(
 @router.get("/meta", response_model=TimelineMeta)
 async def get_timeline_meta():
     """获取时间线元数据（可选的标的、KOL等）."""
-    if _has_real_data():
-        try:
-            return _get_real_meta()
-        except Exception as e:
-            logger.warning("Failed to query real meta, falling back to mock: %s", e)
-
-    # Fallback: mock 数据
-    import random
-
-    return TimelineMeta(
-        tickers=["NVDA", "AAPL", "TSLA", "AMD", "MSFT", "GOOGL", "AMZN", "META", "BRK.B", "JPM"],
-        kols=["分析师张三", "李四", "王五", "财通证券", "中信证券", "高盛研究", "摩根士丹利", "内部研究"],
-        totalOpinions=random.randint(1000, 5000),
-        timeRange={
-            "min": (datetime.now() - timedelta(days=365)).isoformat(),
-            "max": datetime.now().isoformat(),
-        }
-    )
+    try:
+        return _get_real_meta()
+    except Exception as e:
+        logger.error("Failed to query timeline meta: %s", e, exc_info=True)
+        raise FinerError(
+            ErrorCode.F7_INT_001,
+            f"时间线元数据查询失败: {e}",
+            stage="F7",
+            operation="get_timeline_meta",
+            retryable=True,
+            fix_hint="检查 F5/F6 数据目录是否存在有效的 TradeAction 文件",
+        )
 
 
 @router.get("/stats/summary")
@@ -746,75 +570,59 @@ async def get_stats_summary(
     ticker: Optional[str] = Query(None, description="标的筛选"),
 ):
     """获取统计摘要."""
-    if _has_real_data():
-        try:
-            return {"ok": True, "data": _get_real_stats(timeRange, ticker)}
-        except Exception as e:
-            logger.warning("Failed to query real stats, falling back to mock: %s", e)
-
-    # Fallback: mock 统计数据
-    import random
-
-    total = random.randint(500, 2000)
-
-    data = {
-        "total": total,
-        "byDirection": {
-            "bullish": random.randint(int(total * 0.4), int(total * 0.6)),
-            "bearish": random.randint(int(total * 0.2), int(total * 0.35)),
-            "neutral": random.randint(int(total * 0.1), int(total * 0.25)),
-        },
-        "byStatus": {
-            "success": random.randint(int(total * 0.3), int(total * 0.5)),
-            "failed": random.randint(int(total * 0.2), int(total * 0.35)),
-            "pending": random.randint(int(total * 0.15), int(total * 0.3)),
-        },
-        "avgConfidence": round(random.uniform(0.6, 0.8), 2),
-        "avgPriceChange": round(random.uniform(-5, 10), 2),
-        "topTickers": [
-            {"ticker": "NVDA", "count": random.randint(50, 150), "successRate": round(random.uniform(0.5, 0.8), 2)},
-            {"ticker": "AAPL", "count": random.randint(40, 120), "successRate": round(random.uniform(0.5, 0.8), 2)},
-            {"ticker": "TSLA", "count": random.randint(30, 100), "successRate": round(random.uniform(0.4, 0.7), 2)},
-        ],
-        "topKols": [
-            {"author": "分析师张三", "count": random.randint(50, 150), "avgRating": round(random.uniform(3.5, 4.5), 1)},
-            {"author": "财通证券", "count": random.randint(40, 120), "avgRating": round(random.uniform(3.5, 4.5), 1)},
-        ],
-    }
-    return {"ok": True, "data": data}
+    try:
+        return {"ok": True, "data": _get_real_stats(timeRange, ticker)}
+    except Exception as e:
+        logger.error("Failed to query stats summary: %s", e, exc_info=True)
+        raise FinerError(
+            ErrorCode.F7_INT_001,
+            f"统计摘要查询失败: {e}",
+            stage="F7",
+            operation="get_stats_summary",
+            retryable=True,
+            fix_hint="检查 F5/F6 数据目录是否存在有效的 TradeAction 文件",
+        )
 
 
 @router.get("/{opinion_id}", response_model=TimelineOpinion)
 async def get_opinion_detail(opinion_id: str):
     """获取单个观点详情."""
-    # 尝试从真实数据加载 (F5 via repository, then F6 via file scan)
-    if _has_real_data():
-        try:
-            # Try F5 via repository first
-            repo = _get_repository()
-            action = repo.load(opinion_id)
-            if action:
-                return trade_action_to_opinion(action)
+    try:
+        # F5 via repository
+        repo = _get_repository()
+        action = repo.load(opinion_id)
+        if action:
+            return trade_action_to_opinion(action)
 
-            # Try F6 via direct file scan
-            l6_dir = DATA_ROOT / "L6_annotated"
-            for file_path in l6_dir.glob("**/*.action.json"):
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                    candidate = TradeAction.from_dict(data)
-                    if candidate.trade_action_id == opinion_id:
-                        return trade_action_to_opinion(candidate)
-                except Exception:
-                    continue
-        except Exception as e:
-            logger.warning("Failed to load real opinion %s, falling back to mock: %s", opinion_id, e)
+        # F6 via direct file scan
+        l6_dir = DATA_ROOT / "F6_reviewed"
+        for file_path in l6_dir.glob("**/*.action.json"):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                candidate = TradeAction.from_dict(data)
+                if candidate.trade_action_id == opinion_id:
+                    return trade_action_to_opinion(candidate)
+            except Exception:
+                continue
+    except FinerError:
+        raise
+    except Exception as e:
+        logger.error("Failed to load opinion %s: %s", opinion_id, e, exc_info=True)
+        raise FinerError(
+            ErrorCode.F7_INT_001,
+            f"观点详情查询失败: {e}",
+            stage="F7",
+            operation="get_opinion_detail",
+            retryable=True,
+            fix_hint="检查 F5/F6 数据目录是否存在有效的 TradeAction 文件",
+        )
 
-    # Fallback: mock 数据
-    now = datetime.now()
-    opinion = _generate_mock_opinion(int(opinion_id.split("-")[-1]) if "-" in opinion_id else 0, now)
-
-    if not opinion:
-        raise FinerError(ErrorCode.F6_NTF_001, "Opinion not found", stage="F6", operation="get_opinion", retryable=False)
-
-    return opinion
+    raise FinerError(
+        ErrorCode.F7_NTF_001,
+        f"观点 {opinion_id} 未找到",
+        stage="F7",
+        operation="get_opinion_detail",
+        retryable=False,
+        fix_hint="检查 opinion_id 是否正确，或确认 F5/F6 数据已导入",
+    )
