@@ -10,18 +10,18 @@ import type {
 import { BaseEChart, type F8EChartOption } from "./base-echart";
 
 const chartColors = {
-  ink: "#1e1e1e",
-  muted: "#5e5e5e",
-  faint: "#ababab",
-  grid: "#cccccc",
-  gridSoft: "#e5e5e5",
-  band: "#f3f3f3",
-  subject: "#1f55af",
-  benchmark: "#a50032",
-  peer: "#f5c400",
-  good: "#ff0000",
-  bad: "#00af41",
-  neutral: "#333333",
+  ink: "#181512",
+  muted: "#64748b",
+  faint: "#cbd5e1",
+  grid: "rgba(54, 38, 24, 0.1)",
+  gridSoft: "rgba(54, 38, 24, 0.05)",
+  band: "rgba(159, 29, 34, 0.05)",
+  subject: "#9f1d22",
+  benchmark: "#1e293b",
+  peer: "#94a3b8",
+  good: "#e11b22",
+  bad: "#10b981",
+  neutral: "#64748b",
 };
 
 function formatReturn(value: number) {
@@ -29,9 +29,9 @@ function formatReturn(value: number) {
 }
 
 function returnTone(value: number) {
-  if (value > 0) return "text-[#ff0000]";
-  if (value < 0) return "text-[#00af41]";
-  return "text-foreground";
+  if (value > 0) return "text-[var(--chart-up)]";
+  if (value < 0) return "text-[var(--chart-down)]";
+  return "text-[var(--foreground)]";
 }
 
 type ResearchBlockProps = {
@@ -50,16 +50,16 @@ export function ResearchBlock({
   className,
 }: ResearchBlockProps) {
   return (
-    <section className={cn("min-w-0 border-t-2 border-[#333333] bg-white", className)}>
-      <div className="flex flex-col gap-2 border-b border-[#e5e5e5] px-5 py-4 md:flex-row md:items-center md:justify-between">
-        <h2 className="text-[17px] font-semibold tracking-normal text-[#1e1e1e]">
+    <section className={cn("research-panel flex flex-col min-w-0 mb-6", className)}>
+      <div className="research-panel-header flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <h2 className="text-[17px] tracking-normal font-semibold text-[var(--foreground)]">
           {title}
         </h2>
         <div className="text-xs font-medium text-[#5e5e5e]">{meta}</div>
       </div>
-      <div className="p-5">{children}</div>
+      <div className="research-panel-body">{children}</div>
       {note && (
-        <div className="border-t border-[#e5e5e5] px-5 py-3 text-[11px] leading-relaxed text-[#5e5e5e]">
+        <div className="border-t border-[var(--table-border)] px-5 py-3 text-[11px] leading-relaxed text-[#5e5e5e]">
           {note}
         </div>
       )}
@@ -111,16 +111,16 @@ export function KOLOverviewPanel({ model }: { model: KOLBacktestViewModel }) {
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {model.keyStats.map((stat) => (
-            <div key={stat.label} className="border-b border-[#e5e5e5] pb-3">
+            <div key={stat.label} className="border-b border-[var(--table-border)] pb-3">
               <div className="text-[11px] font-medium text-[#5e5e5e]">
                 {stat.label}
               </div>
               <div
                 className={cn(
                   "mt-1 text-2xl font-semibold tabular-nums",
-                  stat.tone === "positive" && "text-[#ff0000]",
-                  stat.tone === "negative" && "text-[#00af41]",
-                  stat.tone === "neutral" && "text-[#1e1e1e]",
+                  stat.tone === "positive" && "text-[var(--chart-up)]",
+                  stat.tone === "negative" && "text-[var(--chart-down)]",
+                  stat.tone === "neutral" && "text-[var(--foreground)]",
                 )}
               >
                 {stat.value}
@@ -302,30 +302,30 @@ export function CumulativeReturnResearch({
 
 function AnnualReturnTable({ model }: { model: KOLBacktestViewModel }) {
   return (
-    <div className="overflow-hidden border border-[#e5e5e5]">
-      <div className="border-b border-[#e5e5e5] px-3 py-2 text-xs font-semibold text-[#1e1e1e]">
+    <div className="overflow-hidden">
+      <div className="mb-2 text-xs font-semibold text-[#1e1e1e]">
         年度审计表
       </div>
-      <table className="w-full text-xs">
+      <table className="top-rule-table">
         <thead>
-          <tr className="border-b border-[#e5e5e5] text-[#5e5e5e]">
-            <th className="px-3 py-2 text-left font-medium">年度</th>
-            <th className="px-3 py-2 text-right font-medium">本主体</th>
-            <th className="px-3 py-2 text-right font-medium">基准</th>
-            <th className="px-3 py-2 text-right font-medium">命中率</th>
+          <tr>
+            <th>年度</th>
+            <th className="text-right">本主体</th>
+            <th className="text-right">基准</th>
+            <th className="text-right">命中率</th>
           </tr>
         </thead>
         <tbody>
           {model.annualRows.map((row) => (
-            <tr key={row.year} className="border-b border-[#e5e5e5] last:border-0">
-              <td className="px-3 py-2 font-medium text-[#1e1e1e]">{row.year}</td>
-              <td className={cn("px-3 py-2 text-right tabular-nums", returnTone(row.subject))}>
+            <tr key={row.year}>
+              <td className="font-medium text-[var(--foreground)]">{row.year}</td>
+              <td className={cn("tabular-nums", returnTone(row.subject))}>
                 {formatReturn(row.subject)}
               </td>
-              <td className={cn("px-3 py-2 text-right tabular-nums", returnTone(row.benchmark))}>
+              <td className={cn("tabular-nums", returnTone(row.benchmark))}>
                 {formatReturn(row.benchmark)}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums text-[#1e1e1e]">
+              <td className="tabular-nums text-[var(--foreground)]">
                 {row.hitRate.toFixed(0)}%
               </td>
             </tr>
@@ -446,21 +446,21 @@ export function MetricPercentileTable({
       note="分位值基于同类 KOL 样本计算。收益类指标越高越好，回撤、波动、兑现速度越低越好。"
     >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] text-sm">
+        <table className="top-rule-table min-w-[760px]">
           <thead>
-            <tr className="border-b border-[#cccccc] text-[#5e5e5e]">
-              <th className="px-3 py-2 text-left font-medium">指标</th>
-              <th className="px-3 py-2 text-left font-medium">同类表现</th>
-              <th className="px-3 py-2 text-right font-medium">本主体</th>
-              <th className="px-3 py-2 text-right font-medium">同类平均</th>
-              <th className="px-3 py-2 text-left font-medium">口径</th>
+            <tr>
+              <th>指标</th>
+              <th>同类表现</th>
+              <th className="text-right">本主体</th>
+              <th className="text-right">同类平均</th>
+              <th>口径</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.metric} className="border-b border-[#e5e5e5] last:border-0">
-                <td className="px-3 py-3 font-medium text-[#1e1e1e]">
-                  <div className="flex items-center gap-1.5">
+              <tr key={row.metric}>
+                <td>
+                  <div className="flex items-center gap-1.5 font-medium text-[var(--foreground)]">
                     {row.metric}
                     <Info className="h-3.5 w-3.5 text-[#ababab]" />
                   </div>
@@ -468,20 +468,20 @@ export function MetricPercentileTable({
                     {row.direction === "higher_is_better" ? "越高越好" : "越低越好"}
                   </div>
                 </td>
-                <td className="px-3 py-3 text-[#1e1e1e]">
+                <td className="text-[var(--foreground)]">
                   优于
-                  <span className="px-1 font-semibold text-[#00af41]">
+                  <span className="px-1 font-semibold text-[var(--chart-down)]">
                     {row.percentile}%
                   </span>
                   同类
                 </td>
-                <td className="px-3 py-3 text-right font-semibold tabular-nums text-[#1e1e1e]">
+                <td className="text-right font-semibold tabular-nums text-[var(--foreground)]">
                   {row.subjectDisplay}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-[#5e5e5e]">
+                <td className="text-right tabular-nums text-[#5e5e5e]">
                   {row.cohortDisplay}
                 </td>
-                <td className="max-w-[280px] px-3 py-3 text-xs leading-5 text-[#5e5e5e]">
+                <td className="max-w-[280px] text-xs leading-5 text-[#5e5e5e]">
                   {row.note}
                 </td>
               </tr>
@@ -501,27 +501,27 @@ export function TopCallsTable({ model }: { model: KOLBacktestViewModel }) {
       note="只展示对总收益解释度较高的观点，结果按已实现回测收益口径计算。"
     >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[720px] text-sm">
+        <table className="top-rule-table min-w-[720px]">
           <thead>
-            <tr className="border-b border-[#cccccc] text-[#5e5e5e]">
-              <th className="px-3 py-2 text-left font-medium">股票代码</th>
-              <th className="px-3 py-2 text-left font-medium">股票名称</th>
-              <th className="px-3 py-2 text-left font-medium">主题</th>
-              <th className="px-3 py-2 text-left font-medium">方向</th>
-              <th className="px-3 py-2 text-right font-medium">证据强度</th>
-              <th className="px-3 py-2 text-right font-medium">观点权重</th>
-              <th className="px-3 py-2 text-right font-medium">结果</th>
-              <th className="px-3 py-2 text-right font-medium">更新日期</th>
+            <tr>
+              <th>股票代码</th>
+              <th>股票名称</th>
+              <th>主题</th>
+              <th>方向</th>
+              <th className="text-right">证据强度</th>
+              <th className="text-right">观点权重</th>
+              <th className="text-right">结果</th>
+              <th className="text-right">更新日期</th>
             </tr>
           </thead>
           <tbody>
             {model.topCalls.map((call) => (
-              <tr key={call.id} className="border-b border-[#e5e5e5] last:border-0">
-                <td className="px-3 py-3 font-semibold text-[#1e1e1e]">{call.ticker}</td>
-                <td className="px-3 py-3 text-[#1e1e1e]">{call.name}</td>
-                <td className="px-3 py-3 text-[#5e5e5e]">{call.topic}</td>
-                <td className="px-3 py-3">
-                  <span className="inline-flex items-center gap-1 border border-[#cccccc] px-2 py-0.5 text-xs text-[#1e1e1e]">
+              <tr key={call.id}>
+                <td className="font-semibold text-[var(--foreground)]">{call.ticker}</td>
+                <td className="text-[var(--foreground)]">{call.name}</td>
+                <td className="text-[#5e5e5e]">{call.topic}</td>
+                <td>
+                  <span className="inline-flex items-center gap-1 border border-[var(--table-border)] px-2 py-0.5 text-xs text-[var(--foreground)]">
                     {call.direction === "long" ? (
                       <TrendingUp className="h-3 w-3" />
                     ) : (
@@ -530,16 +530,16 @@ export function TopCallsTable({ model }: { model: KOLBacktestViewModel }) {
                     {call.direction === "long" ? "做多" : "做空"}
                   </span>
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums">
+                <td className="tabular-nums">
                   {call.evidenceStrength}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums">
+                <td className="tabular-nums">
                   {call.weight.toFixed(1)}%
                 </td>
-                <td className={cn("px-3 py-3 text-right font-semibold tabular-nums", returnTone(call.result))}>
+                <td className={cn("font-semibold tabular-nums", returnTone(call.result))}>
                   {formatReturn(call.result)}
                 </td>
-                <td className="px-3 py-3 text-right tabular-nums text-[#5e5e5e]">
+                <td className="tabular-nums text-[#5e5e5e]">
                   {call.updatedAt}
                 </td>
               </tr>

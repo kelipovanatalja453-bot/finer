@@ -111,12 +111,9 @@ export function KOLRatingCard({
 
   if (loading) {
     return (
-      <div className={cn(
-        "rounded-2xl border border-[rgba(95,67,40,0.12)] bg-white/80 p-8 shadow-sm",
-        className
-      )}>
+      <div className={cn("research-panel p-8", className)}>
         <div className="flex items-center justify-center h-48">
-          <Loader2 className="w-6 h-6 animate-spin text-morningstar-red" />
+          <Loader2 className="w-6 h-6 animate-spin text-[var(--chart-up)]" />
         </div>
       </div>
     );
@@ -124,10 +121,7 @@ export function KOLRatingCard({
 
   if (error || !data) {
     return (
-      <div className={cn(
-        "rounded-2xl border border-[rgba(95,67,40,0.12)] bg-white/80 p-8 shadow-sm",
-        className
-      )}>
+      <div className={cn("research-panel p-8", className)}>
         <div className="flex items-center justify-center h-48 text-foreground/50">
           <AlertCircle className="w-5 h-5 mr-2" />
           <span className="text-sm">加载失败</span>
@@ -142,12 +136,9 @@ export function KOLRatingCard({
     : <TrendingDown className="w-4 h-4" />;
 
   return (
-    <div className={cn(
-      "rounded-2xl border border-[rgba(95,67,40,0.12)] bg-[rgba(255,252,247,0.86)] shadow-lg backdrop-blur-xl overflow-hidden",
-      className
-    )}>
+    <div className={cn("research-panel", className)}>
       {/* Header: Core Rating + Key Metrics */}
-      <div className="p-6 border-b border-[rgba(95,67,40,0.12)] bg-gradient-to-b from-white/60 to-transparent">
+      <div className="research-panel-header p-6">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-4">
             {/* Avatar */}
@@ -260,8 +251,8 @@ function MetricBlock({
   icon?: React.ReactNode;
 }) {
   const trendColors = {
-    up: "text-emerald-600",
-    down: "text-red-500",
+    up: "text-[var(--chart-up)]",
+    down: "text-[var(--chart-down)]",
     neutral: "text-foreground/70",
   };
 

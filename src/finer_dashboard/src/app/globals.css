@@ -24,14 +24,19 @@
   --accent-teal: #1f6a67;
   --shadow-soft: 0 12px 30px rgba(64, 44, 27, 0.08);
   --shadow-panel: 0 18px 48px rgba(56, 39, 24, 0.1);
+  /* Morningstar Chart & Data Tokens */
+  --chart-benchmark: #1e293b;
+  --chart-peer: #94a3b8;
+  --chart-drawdown: rgba(159, 29, 34, 0.15);
+  --chart-up: #e11b22;
+  --chart-down: #10b981;
+  --table-border: #cbd5e1;
+  --table-header-bg: #f8fafc;
 }
 
 /* Base Body Styles */
 html {
-  background:
-    radial-gradient(circle at top left, rgba(159, 29, 34, 0.08), transparent 28%),
-    radial-gradient(circle at right 20%, rgba(31, 106, 103, 0.06), transparent 24%),
-    linear-gradient(180deg, #f7f2e8 0%, #f0eadf 100%);
+  background-color: #f4f6f8;
 }
 
 body {
@@ -54,19 +59,8 @@ body::before {
     linear-gradient(to right, transparent 0, transparent calc(100% - 1px), var(--grid-line) calc(100% - 1px)),
     linear-gradient(to bottom, transparent 0, transparent calc(100% - 1px), var(--grid-line) calc(100% - 1px));
   background-size: 48px 48px;
-  opacity: 0.25;
+  opacity: 0.15;
   mix-blend-mode: multiply;
-}
-
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
-  opacity: 0.35;
 }
 
 /* Financial Typography */
@@ -84,30 +78,20 @@ h1, h2, h3, h4 {
 
 /* Morningstar Styled Panels */
 .editorial-panel {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 251, 245, 0.76));
-  border: 1px solid rgba(94, 66, 39, 0.12);
-  box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(18px);
+  background: var(--surface-strong);
+  border: 1px solid var(--table-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .editorial-card {
   background: var(--surface-strong);
-  border-bottom: 3px solid transparent;
-  transition:
-    transform 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease,
-    background-color 0.22s ease;
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(10px);
+  border: 1px solid var(--table-border);
+  border-top: 3px solid transparent;
+  transition: border-color 0.22s ease;
 }
 
 .editorial-card:hover {
-  border-bottom-color: var(--morningstar-red);
-  transform: translateY(-2px);
-  box-shadow: 0 18px 40px rgba(62, 42, 25, 0.12);
-  background: rgba(255, 253, 248, 0.96);
+  border-top-color: var(--morningstar-red);
 }
 
 ::selection {
@@ -144,4 +128,78 @@ select {
   margin-right: auto;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
+}
+
+/* Data Table & Top Rule Styles */
+.top-rule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.top-rule-table th,
+.top-rule-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--grid-line);
+}
+
+.top-rule-table thead {
+  border-top: 2px solid var(--foreground);
+  border-bottom: 1px solid var(--foreground);
+  background-color: var(--table-header-bg);
+}
+
+.top-rule-table th {
+  font-weight: 600;
+  color: var(--foreground);
+  text-align: left;
+}
+
+.top-rule-table .text-right {
+  text-align: right;
+}
+
+.top-rule-table td.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Segmented Controls */
+.segmented-control {
+  display: inline-flex;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.segmented-control button {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #64748b;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.segmented-control button[aria-selected="true"] {
+  background-color: #ffffff;
+  color: var(--foreground);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Research Panel */
+.research-panel {
+  background: #ffffff;
+  border: 1px solid var(--table-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.research-panel-header {
+  border-bottom: 1px solid var(--table-border);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  background-color: var(--table-header-bg);
+}
+.research-panel-body {
+  padding: 1rem;
 }
