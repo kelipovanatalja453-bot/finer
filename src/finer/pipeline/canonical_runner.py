@@ -37,11 +37,10 @@ from finer.schemas.policy import (
     PolicyMappingBatch,
     PolicyMappingResult,
 )
+from finer.extraction.timing_builder import build_execution_timing
 from finer.schemas.trade_action import (
     ActionStep,
     ActionType,
-    ExecutionTiming,
-    MarketSession,
     SourceInfo,
     TargetInfo,
     TradeAction,
@@ -421,7 +420,7 @@ def _build_actions_programmatic(
         direction = _resolve_direction(intent, mapped)
         position_pct = POSITION_SIZING_TO_PCT.get(mapped.position_sizing_hint)
 
-        timing = _build_execution_timing(
+        timing = build_execution_timing(
             envelope=envelope,
             market=intent.market or "CN",
             temporal_anchors=temporal_anchors,
@@ -584,7 +583,7 @@ Only include actions for the executable policy mappings listed above. Return [] 
 
         atype = ActionType(raw.get("action_type", "long")) if raw.get("action_type") in ActionType.__members__.values() else ActionType.LONG
 
-        timing = _build_execution_timing(
+        timing = build_execution_timing(
             envelope=envelope,
             market=matched_intent.market or "CN",
             temporal_anchors=temporal_anchors,
@@ -667,66 +666,6 @@ def _target_type_to_instrument(target_type: str) -> str:
         "company": "stock",
     }
     return mapping.get(target_type, "unspecified")
-
-
-def _build_execution_timing(
-    envelope: ContentEnvelope,
-    market: str = "CN",
-    temporal_anchors: Optional[List[Any]] = None,
-    intent_id: Optional[str] = None,
-) -> ExecutionTiming:
-    """Build ExecutionTiming using MarketCalendarTimingPolicy.
-
-    Uses the deterministic market calendar timing policy to compute
-    action_executable_at, instead of ad-hoc datetime arithmetic.
-    """
-    from finer.execution.timing_policy import MarketCalendarTimingPolicy
-
-    published_at = envelope.published_at or datetime.now()
-
-    # Determine intent_effective_at from temporal anchors
-    intent_effective_at = None
-    if temporal_anchors:
-        # Prefer effective_trade_at, then mentioned_at
-        for anchor in temporal_anchors:
-            if hasattr(anchor, 'anchor_type') and anchor.anchor_type == "effective_trade_at":
-                if hasattr(anchor, 'resolved_time') and anchor.resolved_time:
-                    intent_effective_at = anchor.resolved_time
-                    break
-        if intent_effective_at is None:
-            for anchor in temporal_anchors:
-                if hasattr(anchor, 'anchor_type') and anchor.anchor_type == "mentioned_at":
-                    if hasattr(anchor, 'resolved_time') and anchor.resolved_time:
-                        intent_effective_at = anchor.resolved_time
-                        break
-
-    # Determine timezone from market
-    timezone_map = {
-        "CN": "Asia/Shanghai",
-        "HK": "Asia/Hong_Kong",
-        "US": "America/New_York",
-    }
-    tz = timezone_map.get(market, "Asia/Shanghai")
-
-    # Use MarketCalendarTimingPolicy for deterministic timing
-    policy = MarketCalendarTimingPolicy()
-    result = policy.compute_timing(
-        published_at=published_at,
-        market=market,
-        timezone=tz,
-        intent_effective_at=intent_effective_at,
-    )
-
-    return ExecutionTiming(
-        intent_published_at=result.intent_published_at,
-        intent_effective_at=intent_effective_at,
-        action_decision_at=datetime.now(),
-        action_executable_at=result.action_executable_at,
-        market=result.market,
-        timezone=result.timezone,
-        market_session_at_publish=MarketSession(result.market_session_at_publish),
-        timing_policy_id=result.timing_policy_id,
-    )
 
 
 def _build_evidence_text(
