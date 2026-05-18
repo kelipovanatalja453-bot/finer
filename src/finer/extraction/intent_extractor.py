@@ -32,6 +32,8 @@ from finer.schemas.content_envelope import ContentEnvelope, ContentBlock
 from finer.schemas.investment_intent import NormalizedInvestmentIntent
 from finer.schemas.evidence import EvidenceSpan
 from finer.entity_registry import ENTITY_REGISTRY, EntityEntry
+from finer.llm.router import ModelRouter
+from finer.prompts.registry import PromptRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -524,15 +526,11 @@ def _rule_based_extract_impl(
 # LLMIntentExtractor
 # =============================================================================
 
-# Type alias for the LLM callable: takes a prompt string, returns JSON string
-LLMCallable = Callable[[str], Optional[str]]
-
-
 class LLMIntentExtractor:
-    """LLM-based intent extractor using a pluggable LLM callable.
+    """LLM-based intent extractor using ModelRouter + PromptRegistry.
 
-    Takes any function matching the LLMCallable signature (prompt -> JSON string)
-    and uses it to extract NormalizedInvestmentIntent with semantic understanding.
+    Uses dependency-injected ModelRouter for LLM calls and PromptRegistry
+    for Jinja2-based prompt rendering.
 
     The LLM is prompted to output:
     - direction: bullish/bearish/neutral/mixed/unknown
@@ -545,10 +543,8 @@ class LLMIntentExtractor:
     - TradeAction (F5 territory)
 
     Args:
-        llm_fn: A callable that takes a prompt string and returns a JSON string
-                (or None on failure). This is deliberately generic to support
-                any backend: LLMClient.chat_prompt, OpenAI SDK, mock, etc.
-        use_concise: If True, use the shorter/cheaper prompt variant.
+        router: ModelRouter instance for LLM calls with automatic fallback.
+        prompt_registry: PromptRegistry for Jinja2 template rendering.
         extractor_version: Version string for traceability.
     """
 
@@ -556,12 +552,12 @@ class LLMIntentExtractor:
 
     def __init__(
         self,
-        llm_fn: LLMCallable,
-        use_concise: bool = False,
+        router: ModelRouter,
+        prompt_registry: PromptRegistry,
         extractor_version: str = "llm_v1",
     ):
-        self._llm_fn = llm_fn
-        self._use_concise = use_concise
+        self._router = router
+        self._prompt_registry = prompt_registry
         self._version = extractor_version
 
     def extract(self, envelope: ContentEnvelope) -> IntentExtractionResult:
@@ -590,24 +586,27 @@ class LLMIntentExtractor:
         # Find known entities for context
         known_entities = [name for name, _ in _find_entities_in_text(combined_text)]
 
-        # Build prompt
-        from finer.extraction.intent_prompt import build_user_prompt, build_concise_prompt
+        # Build prompt via PromptRegistry (Jinja2 templates)
+        known_entities_str = "\n".join(f"  - {e}" for e in known_entities) or "  (none detected)"
 
-        if self._use_concise:
-            prompt = build_concise_prompt(combined_text)
-        else:
-            prompt = build_user_prompt(
-                content_text=combined_text,
-                creator_name=envelope.creator_name,
-                creator_id=envelope.creator_id,
-                source_type=envelope.source_type or "unknown",
-                published_at=envelope.published_at.isoformat() if envelope.published_at else None,
-                known_entities=known_entities,
-            )
+        system_prompt = self._prompt_registry.render("f3_intent_extraction/system")
+        user_prompt = self._prompt_registry.render(
+            "f3_intent_extraction/user",
+            content_text=combined_text,
+            creator_name=envelope.creator_name or "unknown",
+            creator_id=envelope.creator_id or "unknown",
+            source_type=envelope.source_type or "unknown",
+            published_at=envelope.published_at.isoformat() if envelope.published_at else "unknown",
+            known_entities=known_entities_str,
+        )
 
-        # Call LLM
+        # Call LLM via ModelRouter
         try:
-            raw_response = self._llm_fn(prompt)
+            llm_output = self._router.call_json(
+                user_prompt,
+                system_prompt=system_prompt,
+                task_type="text",
+            )
         except Exception as e:
             logger.error(f"LLM call failed: {e}")
             return IntentExtractionResult(
@@ -616,7 +615,7 @@ class LLMIntentExtractor:
                 processing_notes=[f"LLM call exception: {e}"],
             )
 
-        if raw_response is None:
+        if llm_output is None:
             return IntentExtractionResult(
                 envelope_id=envelope.envelope_id,
                 extractor_version=self._version,
@@ -625,58 +624,26 @@ class LLMIntentExtractor:
 
         # Parse LLM output
         return self._parse_llm_output(
-            raw_response, envelope, combined_text, content_blocks
+            llm_output, envelope, combined_text, content_blocks
         )
 
     def _parse_llm_output(
         self,
-        raw_response: str,
+        llm_output: dict,
         envelope: ContentEnvelope,
         combined_text: str,
         content_blocks: List[ContentBlock],
     ) -> IntentExtractionResult:
-        """Parse LLM JSON output into IntentExtractionResult.
+        """Parse LLM dict output into IntentExtractionResult.
 
-        Robust against malformed JSON. Validates each intent against the
-        Pydantic schema. Rejects intents that contain forbidden fields
-        (position_size, stop_loss, take_profit, target_price).
+        Validates each intent against the Pydantic schema. Rejects intents
+        that contain forbidden fields (position_size, stop_loss, take_profit,
+        target_price). JSON parsing and code fence stripping are handled by
+        ModelRouter.call_json() upstream.
         """
         processing_notes: List[str] = []
         intents: List[NormalizedInvestmentIntent] = []
         evidence_spans: List[EvidenceSpan] = []
-
-        # Strip markdown code fences if present
-        cleaned = raw_response.strip()
-        if cleaned.startswith("```"):
-            # Remove opening fence (```json or ```)
-            cleaned = re.sub(r'^```(?:json)?\s*\n?', '', cleaned)
-            # Remove closing fence
-            cleaned = re.sub(r'\n?```\s*$', '', cleaned)
-
-        try:
-            llm_output = json.loads(cleaned)
-        except json.JSONDecodeError as e:
-            processing_notes.append(f"Failed to parse LLM JSON output: {e}")
-            # Try to salvage partial JSON
-            try:
-                # Find first { and last }
-                start = cleaned.find('{')
-                end = cleaned.rfind('}')
-                if start >= 0 and end > start:
-                    llm_output = json.loads(cleaned[start:end + 1])
-                    processing_notes.append("Salvaged partial JSON from LLM output")
-                else:
-                    return IntentExtractionResult(
-                        envelope_id=envelope.envelope_id,
-                        extractor_version=self._version,
-                        processing_notes=processing_notes,
-                    )
-            except json.JSONDecodeError:
-                return IntentExtractionResult(
-                    envelope_id=envelope.envelope_id,
-                    extractor_version=self._version,
-                    processing_notes=processing_notes,
-                )
 
         # Collect overall notes
         if isinstance(llm_output.get("overall_notes"), list):

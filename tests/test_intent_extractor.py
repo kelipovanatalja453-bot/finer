@@ -8,6 +8,7 @@ import json
 import pytest
 from datetime import datetime
 from typing import Optional
+from unittest.mock import MagicMock
 
 from finer.schemas.content_envelope import ContentEnvelope, ContentBlock
 from finer.schemas.quality import QualityCard
@@ -18,6 +19,8 @@ from finer.extraction.intent_extractor import (
     LLMIntentExtractor,
     extract_intents_from_envelope,
 )
+from finer.llm.router import ModelRouter
+from finer.prompts.registry import PromptRegistry
 
 
 def make_quality_card() -> QualityCard:
@@ -305,11 +308,16 @@ class TestMultipleIntents:
 # Mock LLM helpers
 # =============================================================================
 
-def _make_mock_llm_fn(response_json: dict) -> callable:
-    """Create a mock LLM callable that returns a fixed JSON response."""
-    def mock_fn(prompt: str) -> str:
-        return json.dumps(response_json, ensure_ascii=False)
-    return mock_fn
+def _make_mock_router(response_json: dict) -> ModelRouter:
+    """Mock ModelRouter that returns a fixed JSON dict from call_json."""
+    router = MagicMock(spec=ModelRouter)
+    router.call_json.return_value = response_json
+    return router
+
+
+def _make_test_prompt_registry() -> PromptRegistry:
+    """Create a real PromptRegistry for tests."""
+    return PromptRegistry()
 
 
 # =============================================================================
@@ -321,11 +329,11 @@ class TestLLMExtractorBasics:
 
     def test_llm_empty_result(self):
         """LLM returns no intents."""
-        mock_llm = _make_mock_llm_fn({
+        router = _make_mock_router({
             "intents": [],
             "overall_notes": ["No investment content detected"],
         })
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["今天天气不错。"])
 
         result = extractor.extract(envelope)
@@ -335,8 +343,9 @@ class TestLLMExtractorBasics:
 
     def test_llm_null_response(self):
         """LLM returns None (API failure)."""
-        mock_llm = lambda prompt: None
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        router = MagicMock(spec=ModelRouter)
+        router.call_json.return_value = None
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["我看好宁德时代。"])
 
         result = extractor.extract(envelope)
@@ -344,19 +353,20 @@ class TestLLMExtractorBasics:
         assert len(result.intents) == 0
 
     def test_llm_invalid_json(self):
-        """LLM returns invalid JSON."""
-        mock_llm = lambda prompt: "not valid json at all"
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        """Router returns None on invalid JSON."""
+        router = MagicMock(spec=ModelRouter)
+        router.call_json.return_value = None
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["我看好宁德时代。"])
 
         result = extractor.extract(envelope)
 
         assert len(result.intents) == 0
-        assert any("Failed to parse" in n for n in result.processing_notes)
+        assert any("LLM returned None" in n for n in result.processing_notes)
 
     def test_llm_basic_opinion(self):
         """LLM correctly extracts opinion vs action."""
-        mock_llm = _make_mock_llm_fn({
+        router = _make_mock_router({
             "intents": [{
                 "target_name": "宁德时代",
                 "target_symbol": "300750.SZ",
@@ -372,7 +382,7 @@ class TestLLMExtractorBasics:
                 "processing_notes": [],
             }],
         })
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["我看好宁德时代。"])
 
         result = extractor.extract(envelope)
@@ -385,7 +395,7 @@ class TestLLMExtractorBasics:
 
     def test_llm_explicit_action(self):
         """LLM correctly identifies explicit action."""
-        mock_llm = _make_mock_llm_fn({
+        router = _make_mock_router({
             "intents": [{
                 "target_name": "宁德时代",
                 "target_symbol": "300750.SZ",
@@ -401,7 +411,7 @@ class TestLLMExtractorBasics:
                 "processing_notes": [],
             }],
         })
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["我加仓宁德时代。"])
 
         result = extractor.extract(envelope)
@@ -413,7 +423,7 @@ class TestLLMExtractorBasics:
 
     def test_llm_rejects_forbidden_fields(self):
         """LLM output containing position_size is rejected."""
-        mock_llm = _make_mock_llm_fn({
+        router = _make_mock_router({
             "intents": [{
                 "target_name": "宁德时代",
                 "direction": "bullish",
@@ -425,7 +435,7 @@ class TestLLMExtractorBasics:
                 "target_price": 500.0,
             }],
         })
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["加仓宁德时代。"])
 
         result = extractor.extract(envelope)
@@ -435,7 +445,7 @@ class TestLLMExtractorBasics:
 
     def test_llm_sentiment_auxiliary(self):
         """LLM includes sentiment_score as auxiliary, not primary."""
-        mock_llm = _make_mock_llm_fn({
+        router = _make_mock_router({
             "intents": [{
                 "target_name": "宁德时代",
                 "target_type": "stock",
@@ -450,7 +460,7 @@ class TestLLMExtractorBasics:
                 "processing_notes": [],
             }],
         })
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["加仓宁德时代。"])
 
         result = extractor.extract(envelope)
@@ -467,7 +477,7 @@ class TestLLMExtractorAmbiguity:
 
     def test_hold_and_add_compound(self):
         """Hold + add compound signal."""
-        mock_llm = _make_mock_llm_fn({
+        router = _make_mock_router({
             "intents": [{
                 "target_name": "腾讯",
                 "target_symbol": "0700.HK",
@@ -483,7 +493,7 @@ class TestLLMExtractorAmbiguity:
                 "processing_notes": [],
             }],
         })
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope([
             "今天腾讯跟随恒生科技大跌3个点，到达480的点位，"
             "目前我依然持有，今天稍微加仓一点，"
@@ -502,7 +512,7 @@ class TestLLMExtractorAmbiguity:
 
     def test_relative_time_unresolved(self):
         """Relative time is flagged, not fabricated."""
-        mock_llm = _make_mock_llm_fn({
+        router = _make_mock_router({
             "intents": [{
                 "target_name": "光模块",
                 "target_type": "sector",
@@ -517,7 +527,7 @@ class TestLLMExtractorAmbiguity:
                 "processing_notes": [],
             }],
         })
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope([
             "上周的时候，我们坚定抄底光模块，这周市场资金重新回归光模块",
         ])
@@ -534,8 +544,8 @@ class TestLLMExtractorEdgeCases:
     """Edge case tests for LLM extractor."""
 
     def test_llm_with_code_fences(self):
-        """LLM wraps JSON in markdown code fences."""
-        raw_json = json.dumps({
+        """Router handles code fence stripping — extractor receives parsed dict."""
+        parsed = {
             "intents": [{
                 "target_name": "宁德时代",
                 "target_type": "stock",
@@ -547,10 +557,9 @@ class TestLLMExtractorEdgeCases:
                 "ambiguity_notes": [],
                 "processing_notes": [],
             }],
-        }, ensure_ascii=False)
-        mock_llm = lambda prompt: f"```json\n{raw_json}\n```"
-
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        }
+        router = _make_mock_router(parsed)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["我看好宁德时代。"])
 
         result = extractor.extract(envelope)
@@ -560,7 +569,7 @@ class TestLLMExtractorEdgeCases:
 
     def test_llm_multiple_intents(self):
         """LLM extracts multiple intents from one envelope."""
-        mock_llm = _make_mock_llm_fn({
+        router = _make_mock_router({
             "intents": [
                 {
                     "target_name": "宁德时代",
@@ -586,7 +595,7 @@ class TestLLMExtractorEdgeCases:
                 },
             ],
         })
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         envelope = make_test_envelope(["看好宁德时代，继续持有腾讯。"])
 
         result = extractor.extract(envelope)

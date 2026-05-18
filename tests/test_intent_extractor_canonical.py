@@ -15,6 +15,7 @@ Each canonical sample is tested against BOTH:
 import json
 import pytest
 from typing import Optional
+from unittest.mock import MagicMock
 
 from finer.schemas.content_envelope import ContentEnvelope, ContentBlock
 from finer.schemas.quality import QualityCard
@@ -25,6 +26,8 @@ from finer.extraction.intent_extractor import (
     extract_intents_from_envelope,
     NormalizedInvestmentIntent,
 )
+from finer.llm.router import ModelRouter
+from finer.prompts.registry import PromptRegistry
 
 
 # =============================================================================
@@ -61,11 +64,16 @@ def make_test_envelope(blocks_text: list[str], envelope_id: str = "canonical_env
     )
 
 
-def _make_mock_llm_fn(response_json: dict) -> callable:
-    """Mock LLM that returns a fixed JSON dict as a string."""
-    def mock_fn(prompt: str) -> str:
-        return json.dumps(response_json, ensure_ascii=False)
-    return mock_fn
+def _make_mock_router(response_json: dict) -> ModelRouter:
+    """Mock ModelRouter that returns a fixed JSON dict from call_json."""
+    router = MagicMock(spec=ModelRouter)
+    router.call_json.return_value = response_json
+    return router
+
+
+def _make_test_prompt_registry() -> PromptRegistry:
+    """Create a real PromptRegistry for tests."""
+    return PromptRegistry()
 
 
 # =============================================================================
@@ -115,8 +123,8 @@ class TestCanonicalSample1:
     def test_llm_based_opinion_not_action(self):
         """LLM-based: '看好' should be opinion, not explicit_action."""
         envelope = make_test_envelope(SAMPLE_1_TEXT)
-        mock_llm = _make_mock_llm_fn(SAMPLE_1_LLM_OUTPUT)
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        router = _make_mock_router(SAMPLE_1_LLM_OUTPUT)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         result = extractor.extract(envelope)
 
         assert len(result.intents) >= 1
@@ -185,8 +193,8 @@ class TestCanonicalSample2:
     def test_llm_based_add_is_explicit_action(self):
         """LLM-based: '加仓' should be explicit_action + add."""
         envelope = make_test_envelope(SAMPLE_2_TEXT)
-        mock_llm = _make_mock_llm_fn(SAMPLE_2_LLM_OUTPUT)
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        router = _make_mock_router(SAMPLE_2_LLM_OUTPUT)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         result = extractor.extract(envelope)
 
         assert len(result.intents) >= 1
@@ -279,8 +287,8 @@ class TestCanonicalSample3:
     def test_llm_based_not_full_buy(self):
         """LLM-based: must not output 'open' position_delta_hint."""
         envelope = make_test_envelope(SAMPLE_3_TEXT)
-        mock_llm = _make_mock_llm_fn(SAMPLE_3_LLM_OUTPUT)
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        router = _make_mock_router(SAMPLE_3_LLM_OUTPUT)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         result = extractor.extract(envelope)
 
         assert len(result.intents) >= 1
@@ -309,8 +317,8 @@ class TestCanonicalSample3:
     def test_short_term_does_not_override_long_term(self):
         """'短期下跌趋势不影响长期逻辑' — direction is still bullish overall."""
         envelope = make_test_envelope(SAMPLE_3_TEXT)
-        mock_llm = _make_mock_llm_fn(SAMPLE_3_LLM_OUTPUT)
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        router = _make_mock_router(SAMPLE_3_LLM_OUTPUT)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         result = extractor.extract(envelope)
 
         intent = result.intents[0]
@@ -383,8 +391,8 @@ class TestCanonicalSample4:
     def test_llm_based_temporal_warning(self):
         """LLM-based: must not fabricate dates, must flag temporal unresolved."""
         envelope = make_test_envelope(SAMPLE_4_TEXT)
-        mock_llm = _make_mock_llm_fn(SAMPLE_4_LLM_OUTPUT)
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        router = _make_mock_router(SAMPLE_4_LLM_OUTPUT)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         result = extractor.extract(envelope)
 
         assert len(result.intents) >= 1
@@ -414,8 +422,8 @@ class TestCanonicalSample4:
         assert "上周" not in str(rb_intent.model_dump_json())
 
         # LLM-based
-        mock_llm = _make_mock_llm_fn(SAMPLE_4_LLM_OUTPUT)
-        llm_extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        router = _make_mock_router(SAMPLE_4_LLM_OUTPUT)
+        llm_extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         llm_result = llm_extractor.extract(envelope)
         llm_intent = llm_result.intents[0]
 
@@ -489,14 +497,15 @@ class TestCrossCutting:
         rb = RuleBasedIntentExtractor()
         assert rb.VERSION == "rule_based_v1"
 
-        llm = LLMIntentExtractor(llm_fn=lambda p: "{}")
+        router = MagicMock(spec=ModelRouter)
+        llm = LLMIntentExtractor(router=router, prompt_registry=PromptRegistry())
         assert llm.VERSION == "llm_v1"
 
     def test_sentiment_does_not_replace_intent(self):
         """sentiment_score is auxiliary; intent is determined by the four axes."""
         envelope = make_test_envelope(SAMPLE_2_TEXT)
-        mock_llm = _make_mock_llm_fn(SAMPLE_2_LLM_OUTPUT)
-        extractor = LLMIntentExtractor(llm_fn=mock_llm)
+        router = _make_mock_router(SAMPLE_2_LLM_OUTPUT)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
         result = extractor.extract(envelope)
 
         intent = result.intents[0]
