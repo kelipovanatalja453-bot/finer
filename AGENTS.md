@@ -66,7 +66,7 @@ F0 INTAKE → F1 STANDARDIZE → F1.5 TOPIC ASSEMBLY → F2 ANCHOR → F3 INTENT
 | `parsing/llm_topic_assembly_adapter.py` | F1.5 | Constrained LLM topic proposal adapter |
 | `schemas/topic_block.py` | F1.5 | TopicBlock / TopicAssemblyResult |
 | `enrichment/` | F2 | 实体/质量/时间锚定 |
-| `extraction/intent_extractor.py` | F3 | Intent 提取（当前仅 rule-based） |
+| `extraction/intent_extractor.py` | F3 | Intent 提取（rule-based + LLM via ModelRouter） |
 | `policy/` | F4 | Policy 映射（GlobalBasePolicy 已实现） |
 | `schemas/policy.py` | F4 | PolicyMappingResult 等完整 Schema |
 | `extraction/trade_action_extractor.py` | F5 | TradeAction 生成（legacy direct extraction；需接入 F3→F4→F5 canonical pipeline） |

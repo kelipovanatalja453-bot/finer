@@ -615,7 +615,8 @@ ExecutionTiming(
 
 - `schemas/trade_action.py`
 - `extraction/trade_action_extractor.py`
-- `extraction/enriched_extractor.py`
+- `extraction/canonical_action_builder.py`
+- `extraction/timing_builder.py`
 
 ### Forbidden Responsibilities
 

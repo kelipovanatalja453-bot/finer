@@ -35,6 +35,10 @@ _TASK_TYPE_TO_REGISTRY = {
 class ModelRouter:
     """Routes LLM calls to the right registry based on task_type.
 
+    On each call, tries every available model in the registry (ordered by
+    priority). If a model fails (returns None or raises), it is marked as
+    failed and the next model is tried. Returns None only if all models fail.
+
     Usage:
         router = ModelRouter()
         response = router.call("Summarize this text", task_type="text")
@@ -67,14 +71,6 @@ class ModelRouter:
             self._registries[task_type] = factory()
         return self._registries[task_type]
 
-    def _build_client(self, task_type: str) -> Optional[LLMClient]:
-        """Build an LLMClient from the registry for the given task type."""
-        registry = self._get_registry(task_type)
-        client = LLMClient.from_registry(registry)
-        if client is None:
-            logger.error(f"No available model for task_type='{task_type}'")
-        return client
-
     def call(
         self,
         prompt: str,
@@ -84,7 +80,10 @@ class ModelRouter:
         temperature: float = 0.3,
         max_tokens: Optional[int] = None,
     ) -> Optional[str]:
-        """Send a prompt to the appropriate model and return the raw response.
+        """Send a prompt to the appropriate model with automatic fallback.
+
+        Tries each available model in the registry (ordered by priority).
+        If a model fails, marks it failed and retries with the next one.
 
         Args:
             prompt: The user prompt text.
@@ -94,18 +93,35 @@ class ModelRouter:
             max_tokens: Max tokens in the response.
 
         Returns:
-            The model's response string, or None on failure.
+            The model's response string, or None if all models fail.
         """
-        client = self._build_client(task_type)
-        if client is None:
-            return None
+        registry = self._get_registry(task_type)
+        n_models = len(registry.models)
 
         messages: List[Dict[str, str]] = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        return client.chat(messages, temperature=temperature, max_tokens=max_tokens)
+        last_error: Optional[str] = None
+        for _ in range(n_models):
+            client = LLMClient.from_registry(registry)
+            if client is None:
+                break  # No more available models
+
+            model_name = client.model
+            try:
+                result = client.chat(messages, temperature=temperature, max_tokens=max_tokens)
+                if result is not None:
+                    return result
+                last_error = f"Model {model_name} returned None"
+                registry.mark_failed(model_name, last_error)
+            except Exception as e:
+                last_error = f"Model {model_name} raised {type(e).__name__}: {e}"
+                registry.mark_failed(model_name, last_error)
+
+        logger.error(f"All models failed for task_type='{task_type}': {last_error}")
+        return None
 
     def call_json(
         self,

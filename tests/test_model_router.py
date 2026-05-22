@@ -238,3 +238,95 @@ class TestReasoningModelRegistry:
         r1 = get_reasoning_registry()
         r2 = get_reasoning_registry()
         assert r1 is r2
+
+
+class TestModelRouterFallback:
+    """Test that ModelRouter falls back to next model on failure."""
+
+    def test_primary_failure_falls_back_to_secondary(self):
+        """When primary model fails, router should try the next model."""
+        registry = TextModelRegistry(models=[
+            ModelConfig(
+                name="primary-model",
+                provider=ModelProvider.DEEPSEEK,
+                api_key_env="FAKE_KEY_ENV_1",
+                base_url="https://api.deepseek.com",
+                max_tokens=1024,
+                priority=0,
+            ),
+            ModelConfig(
+                name="secondary-model",
+                provider=ModelProvider.DASHSCOPE,
+                api_key_env="FAKE_KEY_ENV_2",
+                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+                max_tokens=1024,
+                priority=1,
+            ),
+        ])
+
+        models_called = []
+
+        def make_client_side_effect(registry_obj, **kwargs):
+            model = registry_obj.get_available_model()
+            if model is None:
+                return None
+            mock_client = MagicMock()
+            mock_client.model = model.name
+
+            def chat_fn(messages, **kw):
+                models_called.append(model.name)
+                if model.name == "primary-model":
+                    return None  # Primary fails
+                return '{"ok": true}'  # Secondary succeeds
+
+            mock_client.chat = chat_fn
+            return mock_client
+
+        router = ModelRouter(text_registry=registry)
+        with patch("finer.llm.client.LLMClient.from_registry", side_effect=make_client_side_effect), \
+             patch.dict("os.environ", {"FAKE_KEY_ENV_1": "fake1", "FAKE_KEY_ENV_2": "fake2"}):
+            result = router.call("test prompt")
+
+        assert result == '{"ok": true}'
+        assert len(models_called) == 2
+        assert models_called[0] == "primary-model"
+        assert models_called[1] == "secondary-model"
+
+    def test_all_models_fail_returns_none(self):
+        """When all models fail, router returns None."""
+        registry = TextModelRegistry(models=[
+            ModelConfig(
+                name="model-a",
+                provider=ModelProvider.DEEPSEEK,
+                api_key_env="FAKE_KEY_ENV_1",
+                base_url="https://api.deepseek.com",
+                max_tokens=1024,
+                priority=0,
+            ),
+            ModelConfig(
+                name="model-b",
+                provider=ModelProvider.DASHSCOPE,
+                api_key_env="FAKE_KEY_ENV_2",
+                base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+                max_tokens=1024,
+                priority=1,
+            ),
+        ])
+
+        def make_client_side_effect(registry_obj, **kwargs):
+            model = registry_obj.get_available_model()
+            if model is None:
+                return None
+            mock_client = MagicMock()
+            mock_client.model = model.name
+            mock_client.chat.return_value = None  # All fail
+            return mock_client
+
+        router = ModelRouter(text_registry=registry)
+        with patch("finer.llm.client.LLMClient.from_registry", side_effect=make_client_side_effect), \
+             patch.dict("os.environ", {"FAKE_KEY_ENV_1": "fake1", "FAKE_KEY_ENV_2": "fake2"}):
+            result = router.call("test prompt")
+
+        assert result is None
+        assert "model-a" in registry.failed_models
+        assert "model-b" in registry.failed_models

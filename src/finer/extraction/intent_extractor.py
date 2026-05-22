@@ -737,6 +737,19 @@ class LLMIntentExtractor:
                             intent_evidence_spans.append(span)
                             break
 
+                # Fallback: if no exact match, use block-level evidence
+                # from blocks that were selected by the LLM (block_ids)
+                if not intent_evidence_spans and block_ids:
+                    for block in content_blocks:
+                        if block.block_id in block_ids:
+                            span = _create_evidence_span(
+                                block.block_id, block.text, 0,
+                                len(block.text),
+                                span_type="block_level",
+                                confidence=confidence * 0.7,  # lower confidence for fallback
+                            )
+                            intent_evidence_spans.append(span)
+
                 # Clamp values
                 conviction = max(0.0, min(1.0, conviction))
                 confidence = max(0.0, min(1.0, confidence))

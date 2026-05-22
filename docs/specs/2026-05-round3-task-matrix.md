@@ -241,6 +241,12 @@ rg -n "from finer.extraction.extractor|from finer.enriched_extractor|import extr
 rg -n "ExtractedEvent|EnrichedExtractedEvent" src/ tests/
 ```
 
+**Execution Record**
+- T8a scan completed, report archived at `docs/specs/2026-05-t8a-legacy-scan-report.md`
+- Deletion of `extractor.py`, `enriched_extractor.py`, `run_event_extraction.py` was explicitly approved by user (red-line rule: deletion requires human confirmation)
+- Orchestrator executed deletion commit `066212cb` after user approval
+- Owner separation: scan agent (read-only) produced report; orchestrator (with user approval) executed deletion
+
 ---
 
 ### T8b — F7 Opinions Mock Cleanup

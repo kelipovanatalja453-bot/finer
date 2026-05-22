@@ -516,3 +516,60 @@ class TestCrossCutting:
         assert intent.direction == "bullish"
         assert intent.position_delta_hint == "add"
         assert isinstance(intent.conviction, float)
+
+
+class TestEvidenceFallback:
+    """Test that LLMIntentExtractor falls back to block-level evidence
+    when LLM's evidence_text doesn't match any block text exactly."""
+
+    def test_llm_evidence_no_match_falls_back_to_block_level(self):
+        """When evidence_text doesn't match block text, should use block-level span."""
+        # LLM returns evidence_text that doesn't exist verbatim in the block
+        llm_output = {
+            "intents": [{
+                "target_name": "宁德时代",
+                "target_symbol": "CATL",
+                "target_type": "stock",
+                "direction": "bullish",
+                "actionability": "opinion",
+                "position_delta_hint": "none",
+                "conviction": 0.8,
+                "confidence": 0.9,
+                "evidence_text": "this text does NOT appear in the block",  # no match
+            }],
+        }
+        router = _make_mock_router(llm_output)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
+        envelope = make_test_envelope(SAMPLE_1_TEXT, "env_evidence_fallback")
+        result = extractor.extract(envelope)
+
+        assert len(result.intents) == 1
+        intent = result.intents[0]
+        # Should have block-level fallback evidence, not empty
+        assert len(intent.evidence_span_ids) >= 1, \
+            "Intent has no evidence spans after fallback — evidence contract violated"
+
+    def test_llm_evidence_empty_falls_back_to_block_level(self):
+        """When LLM returns empty evidence_text, should use block-level span."""
+        llm_output = {
+            "intents": [{
+                "target_name": "宁德时代",
+                "target_symbol": "CATL",
+                "target_type": "stock",
+                "direction": "bullish",
+                "actionability": "opinion",
+                "position_delta_hint": "none",
+                "conviction": 0.8,
+                "confidence": 0.9,
+                "evidence_text": "",  # empty
+            }],
+        }
+        router = _make_mock_router(llm_output)
+        extractor = LLMIntentExtractor(router=router, prompt_registry=_make_test_prompt_registry())
+        envelope = make_test_envelope(SAMPLE_1_TEXT, "env_evidence_empty")
+        result = extractor.extract(envelope)
+
+        assert len(result.intents) == 1
+        intent = result.intents[0]
+        assert len(intent.evidence_span_ids) >= 1, \
+            "Intent has no evidence spans after empty evidence fallback"
