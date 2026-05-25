@@ -1,16 +1,158 @@
-import type {
-  StageMetrics,
-  BottleneckMetric,
-  ActiveRun,
-  HumanQueueItem,
-  AssetFile,
-  ReviewPayload,
-  TextEvidenceBinding,
-  ImageEvidenceBinding,
-  AudioVideoEvidenceBinding,
-  PdfEvidenceBinding,
-  SchemaEvidenceBinding,
-} from "@/lib/contracts";
+export type FStageId =
+  | "F0"
+  | "F1"
+  | "F1.5"
+  | "F2"
+  | "F3"
+  | "F4"
+  | "F5"
+  | "F6"
+  | "F7"
+  | "F8";
+
+export type StageMetrics = {
+  stageId: FStageId;
+  queued: number;
+  running: number;
+  failed: number;
+  blocked: number;
+  throughputToday: number;
+};
+
+export type BottleneckMetric = {
+  maxBacklogStage: FStageId;
+  backlogCount: number;
+  highestFailureStage: FStageId;
+  failureRate: number;
+  longestWaitP99Ms: number;
+};
+
+export type ActiveRun = {
+  jobId: string;
+  stage: FStageId;
+  status: "queued" | "running" | "failed" | "completed";
+  durationMs: number;
+  inputAssetId: string;
+  error?: {
+    code: string;
+    message: string;
+  };
+  actions: string[];
+};
+
+export type HumanQueueItem = {
+  taskId: string;
+  stage: FStageId;
+  reason: string;
+  evidenceLinks: string[];
+  requestedAt: string;
+};
+
+type EvidenceCreator = "model" | "human" | "system";
+
+type BoundingBox = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  page?: number;
+};
+
+type EvidenceBindingBase<Modality extends string> = {
+  id: string;
+  evidenceId: string;
+  sourceAssetId: string;
+  provenancePath: string;
+  confidence: number;
+  extractedContent: string;
+  createdBy: EvidenceCreator;
+  modality: Modality;
+};
+
+export type TextEvidenceBinding = EvidenceBindingBase<"text"> & {
+  highlightRange: {
+    start: number;
+    end: number;
+  };
+};
+
+export type ImageEvidenceBinding = EvidenceBindingBase<"image"> & {
+  boundingBox: BoundingBox;
+};
+
+export type AudioVideoEvidenceBinding = EvidenceBindingBase<"audio" | "video"> & {
+  timestampRange: {
+    startMs: number;
+    endMs: number;
+  };
+};
+
+export type PdfEvidenceBinding = EvidenceBindingBase<"pdf"> & {
+  pageRange: {
+    start: number;
+    end: number;
+  };
+  boundingBox: BoundingBox;
+};
+
+export type SchemaEvidenceBinding = EvidenceBindingBase<"schema"> & {
+  jsonPath: string;
+};
+
+export type EvidenceBinding =
+  | TextEvidenceBinding
+  | ImageEvidenceBinding
+  | AudioVideoEvidenceBinding
+  | PdfEvidenceBinding
+  | SchemaEvidenceBinding;
+
+export type ReviewAction = {
+  id: string;
+  actionType: string;
+  instrumentType: string;
+  triggerCondition: string;
+  targetPriceLow: string;
+  targetPriceHigh: string;
+  confidence: number;
+  status: "draft" | "active" | "watch";
+};
+
+export type ReviewPayload = {
+  ticker: string;
+  direction: "bullish" | "bearish" | "neutral" | "watchlist" | "risk_warning";
+  timeHorizon: string;
+  rationale: string;
+  evidenceBindings: EvidenceBinding[];
+  decisionStatus: "draft" | "approved" | "rejected";
+  confidence: number;
+  tags: string[];
+  ambiguityNotes: string[];
+  actionChain: ReviewAction[];
+};
+
+export type AssetFile = {
+  id: string;
+  name: string;
+  size: string;
+  date: string;
+  type: string;
+  status: string;
+  pipelineStage: FStageId;
+  stageBadge: FStageId;
+  creatorName: string;
+  sourcePlatform: "wechat" | "bilibili" | "feishu" | "notebooklm" | "local" | "unknown";
+  contentType: string;
+  contentId: string;
+  summary: string;
+  tags: string[];
+  sourceType: "wechat" | "bilibili" | "feishu" | "notebooklm" | "local" | "unknown";
+  sourceGroupId?: string;
+  sourceGroupName?: string;
+  fileType?: string;
+  sourceName?: string;
+  semanticTitle?: string;
+  reviewPayload?: ReviewPayload;
+};
 
 // =============================================================================
 // Pipeline Operations Mock (Agent 2)
