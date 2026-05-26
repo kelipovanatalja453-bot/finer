@@ -1,5 +1,6 @@
 """Tests for Backtest Engine."""
 
+import json
 import pytest
 import pandas as pd
 import numpy as np
@@ -369,8 +370,11 @@ class TestBacktestE2E:
         self.client = TestClient(app)
         self.tmp_path = tmp_path
 
-        # Patch F8_METRICS_DIR to use temp directory
-        with patch("finer.api.routes.backtest.F8_METRICS_DIR", tmp_path):
+        # Patch F8 storage roots to use temp directories
+        with (
+            patch("finer.api.routes.backtest.F8_METRICS_DIR", tmp_path / "F8_metrics"),
+            patch("finer.api.routes.backtest.F8_REVIEW_DIR", tmp_path / "review"),
+        ):
             yield
 
     def test_run_canonical_backtest_returns_result_with_snapshots(self):
@@ -483,6 +487,80 @@ class TestBacktestE2E:
 
         assert resp.status_code == 200
         assert resp.json()["ok"] is True
+
+    def test_list_and_detail_read_review_f8_artifacts(self):
+        """GET endpoints discover data/review/{kol}/F8_backtest artifacts."""
+        kol_id = "kol_alpha"
+        review_dir = self.tmp_path / "review" / kol_id / "F8_backtest"
+        review_dir.mkdir(parents=True)
+
+        result = {
+            "backtest_id": "bt-review-001",
+            "start_date": "2024-01-01T00:00:00",
+            "end_date": "2024-01-03T00:00:00",
+            "run_timestamp": "2024-01-04T12:00:00",
+            "initial_capital": 100000.0,
+            "config": {"default_position_pct": 0.1},
+            "total_return": 0.02,
+            "annualized_return": 0.5,
+            "volatility": 0.1,
+            "sharpe_ratio": 1.4,
+            "sortino_ratio": 1.6,
+            "calmar_ratio": 2.0,
+            "max_drawdown": 0.01,
+            "max_drawdown_duration": 1,
+            "total_trades": 0,
+            "winning_trades": 0,
+            "losing_trades": 0,
+            "win_rate": 0.0,
+            "avg_win": 0.0,
+            "avg_loss": 0.0,
+            "profit_factor": 0.0,
+            "avg_holding_days": 0.0,
+            "value_at_risk_95": 0.0,
+            "expected_shortfall": 0.0,
+            "max_consecutive_losses": 0,
+            "trades": [],
+            "kol_metrics": {
+                kol_id: {
+                    "total_trades": 0.0,
+                    "total_pnl": 0.0,
+                    "win_rate": 0.0,
+                    "avg_return": 0.0,
+                }
+            },
+        }
+        (review_dir / "backtest_result.json").write_text(
+            json.dumps(result),
+            encoding="utf-8",
+        )
+        (review_dir / "equity_curve.csv").write_text(
+            "\n".join(
+                [
+                    "date,total_value,cash,positions_value,cumulative_return,drawdown,num_positions",
+                    "2024-01-01T00:00:00,100000,100000,0,0,0,0",
+                    "2024-01-02T00:00:00,102000,102000,0,0.02,0,0",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        list_resp = self.client.get(
+            "/api/backtest/results",
+            params={"kol_id": kol_id},
+        )
+        assert list_resp.status_code == 200
+        summaries = list_resp.json()["data"]["results"]
+        assert len(summaries) == 1
+        assert summaries[0]["backtest_id"] == "bt-review-001"
+        assert summaries[0]["kol_id"] == kol_id
+
+        detail_resp = self.client.get("/api/backtest/results/bt-review-001")
+        assert detail_resp.status_code == 200
+        detail = detail_resp.json()["data"]
+        assert detail["backtest_id"] == "bt-review-001"
+        assert len(detail["portfolio_snapshots"]) == 2
+        assert detail["portfolio_snapshots"][1]["peak_value"] == 102000.0
 
 
 class TestCompareEndpointReject:

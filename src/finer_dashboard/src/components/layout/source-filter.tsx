@@ -45,15 +45,15 @@ export function SourceFilter({
   const selectedGroup = groups.find((g) => g.id === selectedGroupId);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex shrink-0 flex-wrap items-center gap-2">
       {/* Source Type Dropdown */}
-      <div className="relative">
+      <div className="relative shrink-0">
         <button
           onClick={() => setShowSourceDropdown(!showSourceDropdown)}
-          className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wider border border-stone-200 bg-white rounded-sm hover:border-stone-300 transition-colors"
+          className="flex h-9 shrink-0 items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-bold uppercase tracking-wider border border-stone-200 bg-white rounded-sm hover:border-stone-300 transition-colors"
         >
           <span>{SOURCE_TYPE_LABELS[sourceType]}</span>
-          <ChevronDown className="w-3 h-3" />
+          <ChevronDown className="w-3 h-3 shrink-0" />
         </button>
 
         {showSourceDropdown && (
@@ -81,15 +81,15 @@ export function SourceFilter({
 
       {/* Group Dropdown (only show if there are groups for this source type) */}
       {filteredGroups.length > 0 && (
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             onClick={() => setShowGroupDropdown(!showGroupDropdown)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-wider border border-stone-200 bg-white rounded-sm hover:border-stone-300 transition-colors"
+            className="flex h-9 shrink-0 items-center gap-2 whitespace-nowrap px-3 py-1.5 text-xs font-bold uppercase tracking-wider border border-stone-200 bg-white rounded-sm hover:border-stone-300 transition-colors"
           >
             <span className="max-w-[120px] truncate">
               {selectedGroup ? selectedGroup.name : "全部群组"}
             </span>
-            <ChevronDown className="w-3 h-3" />
+            <ChevronDown className="w-3 h-3 shrink-0" />
           </button>
 
           {showGroupDropdown && (
@@ -141,7 +141,7 @@ export function SourceFilter({
           onClick={onRefresh}
           disabled={isRefreshing}
           className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase tracking-wider border rounded-sm transition-all",
+            "flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 text-xs font-bold uppercase tracking-wider border rounded-sm transition-all",
             isRefreshing
               ? "border-stone-200 text-stone-400 bg-stone-50"
               : "border-morningstar-red/20 text-morningstar-red bg-morningstar-red/5 hover:bg-morningstar-red/10"

@@ -43,7 +43,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-ui-sans), "PingFang SC", "Hiragino Sans GB", sans-serif;
-  letter-spacing: -0.012em;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;

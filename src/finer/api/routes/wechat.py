@@ -9,12 +9,13 @@ Provides endpoints for:
 """
 
 from fastapi import APIRouter, Query
+from pydantic import BaseModel, Field
 
 from finer.errors.exceptions import FinerError
 from finer.errors.codes import ErrorCode
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import Any, List
 import logging
 
 from finer.schemas.wechat import (
@@ -36,9 +37,14 @@ from finer.services.wechat_session_store import (
     LoginState,
 )
 from finer.ingestion.wechat_exporter_client import WeChatExporterClient
-from finer.ingestion.wechat_adapter import get_unified_wechat_adapter
+from finer.ingestion.wechat_adapter import (
+    WeChatChannelsDownloadClient,
+    WeChatChannelsF0Importer,
+    get_unified_wechat_adapter,
+)
 from finer.paths import REPO_ROOT
 from finer.config import load_wechat_service_config
+from finer.schemas.content import ContentRecord
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +54,40 @@ router = APIRouter(tags=["wechat"])
 
 _session_store = WeChatSessionStore(default_ttl=300)
 _exporter_client: WeChatExporterClient | None = None
+
+
+class WeChatChannelsImportRequest(BaseModel):
+    """F0 import request for one WeChat Channels video."""
+
+    url: str = Field(..., description="WeChat Channels feed/share URL")
+    video_file_path: str | None = Field(
+        None,
+        description="Optional already-downloaded local video path. If omitted, set download=true.",
+    )
+    download: bool = Field(
+        False,
+        description="Use scripts/wx_channels_download to download the video before F0 import.",
+    )
+    downloader_base_url: str = Field(
+        "http://127.0.0.1:2022",
+        description="Local wx_channels_download API base URL for profile lookup.",
+    )
+    timeout_seconds: int = Field(300, ge=10, le=1800)
+
+
+class WeChatChannelsImportResponse(BaseModel):
+    """F0 import result for one WeChat Channels video."""
+
+    import_run_id: str
+    status: str
+    content_id: str
+    f0_path: str
+    record_path: str
+    receipt_path: str
+    raw_video_path: str
+    raw_profile_path: str
+    content_record: ContentRecord
+    receipt: dict[str, Any]
 
 
 def _get_exporter_client() -> WeChatExporterClient:
@@ -372,6 +412,119 @@ async def sync_articles(
     except Exception as e:
         logger.error(f"Sync failed: {e}")
         raise FinerError(ErrorCode.WX_EXT_001, f"Sync failed: {e}", stage="F0", operation="wechat_sync", source_channel="wechat", retryable=True, cause=e)
+
+
+# --- WeChat Channels F0 Import ---
+
+@router.post("/channels/import", response_model=WeChatChannelsImportResponse)
+async def import_wechat_channels_video(req: WeChatChannelsImportRequest):
+    """Import one WeChat Channels video into F0 only.
+
+    Outputs raw video/profile artifacts, a ContentRecord, and an import receipt.
+    This endpoint intentionally does not call F1-F8 processing.
+    """
+    if not req.video_file_path and not req.download:
+        raise FinerError(
+            ErrorCode.F0_IN_001,
+            "Provide video_file_path or set download=true",
+            stage="F0",
+            operation="wechat_channels_import",
+            source_channel="wechat",
+            retryable=False,
+        )
+
+    try:
+        client = WeChatChannelsDownloadClient(
+            base_url=req.downloader_base_url,
+            downloader_bin=REPO_ROOT / "scripts" / "wx_channels_download" / "wx_video_download",
+            timeout_seconds=req.timeout_seconds,
+        )
+        importer = WeChatChannelsF0Importer(root=REPO_ROOT, client=client)
+        result = importer.import_video(
+            url=req.url,
+            video_file_path=Path(req.video_file_path).expanduser() if req.video_file_path else None,
+            download=req.download,
+        )
+        receipt: dict[str, Any] = {}
+        if result.receipt_path.exists():
+            import json
+            receipt = json.loads(result.receipt_path.read_text(encoding="utf-8"))
+
+        return WeChatChannelsImportResponse(
+            import_run_id=result.import_run_id,
+            status=result.status,
+            content_id=result.content_record.content_id,
+            f0_path=str(result.f0_dir),
+            record_path=str(result.record_path),
+            receipt_path=str(result.receipt_path),
+            raw_video_path=str(result.artifacts.raw_video_path),
+            raw_profile_path=str(result.artifacts.raw_profile_path),
+            content_record=result.content_record,
+            receipt=receipt,
+        )
+    except FinerError:
+        raise
+    except TimeoutError as e:
+        raise FinerError(
+            ErrorCode.F0_TMO_001,
+            str(e),
+            stage="F0",
+            operation="wechat_channels_import",
+            source_channel="wechat",
+            retryable=True,
+            cause=e,
+        )
+    except ConnectionError as e:
+        raise FinerError(
+            ErrorCode.F0_EXT_001,
+            str(e),
+            stage="F0",
+            operation="wechat_channels_import",
+            source_channel="wechat",
+            retryable=True,
+            cause=e,
+        )
+    except FileNotFoundError as e:
+        raise FinerError(
+            ErrorCode.F0_IN_001,
+            str(e),
+            stage="F0",
+            operation="wechat_channels_import",
+            source_channel="wechat",
+            retryable=False,
+            cause=e,
+        )
+    except ValueError as e:
+        raise FinerError(
+            ErrorCode.F0_EXT_002,
+            str(e),
+            stage="F0",
+            operation="wechat_channels_import",
+            source_channel="wechat",
+            retryable=False,
+            cause=e,
+        )
+    except OSError as e:
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            str(e),
+            stage="F0",
+            operation="wechat_channels_import",
+            source_channel="wechat",
+            retryable=True,
+            cause=e,
+        )
+    except Exception as e:
+        logger.error(f"WeChat Channels import failed: {e}", exc_info=True)
+        raise FinerError(
+            ErrorCode.F0_INT_001,
+            f"WeChat Channels import failed: {e}",
+            stage="F0",
+            operation="wechat_channels_import",
+            source_channel="wechat",
+            retryable=True,
+            cause=e,
+        )
 
 
 # --- Exporter Health ---

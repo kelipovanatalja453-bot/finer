@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from finer.backtest.engine import BacktestEngine, BacktestConfig
+from finer.backtest.storage import save_f8_backtest_artifacts
 from finer.backtest.validators import validate_canonical_action
 
 FIXTURES = ROOT / "tests" / "fixtures" / "kol-backtest-mvp"
@@ -178,64 +179,14 @@ def run_kol_backtest(kol_id: str) -> bool:
     print(f"  Win rate:         {result.win_rate*100:.1f}%")
     print(f"  Avg holding days: {result.avg_holding_days:.1f}")
 
-    # Step 4: Save outputs
-    out_dir = DATA_REVIEW / kol_id / "F8_backtest"
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    # backtest_result.json
-    result_dict = result.model_dump(mode="json")
-    result_dict.pop("portfolio_snapshots", None)
-    result_path = out_dir / "backtest_result.json"
-    result_path.write_text(
-        json.dumps(result_dict, ensure_ascii=False, indent=2, default=str),
-        encoding="utf-8",
-    )
-    print(f"\n  Saved: {result_path}")
-
-    # equity_curve.csv
-    equity_rows = []
-    for snap in result.portfolio_snapshots:
-        equity_rows.append({
-            "date": snap.date.isoformat(),
-            "total_value": snap.total_value,
-            "cash": snap.cash,
-            "positions_value": snap.positions_value,
-            "cumulative_return": snap.cumulative_return,
-            "drawdown": snap.current_drawdown,
-            "num_positions": snap.num_positions,
-        })
-    equity_df = pd.DataFrame(equity_rows)
+    # Step 4: Save outputs through the same F8 artifact store used by API
+    result_path = save_f8_backtest_artifacts(result, kol_id=kol_id)
+    out_dir = result_path.parent
     equity_path = out_dir / "equity_curve.csv"
-    equity_df.to_csv(equity_path, index=False)
-    print(f"  Saved: {equity_path}  ({len(equity_df)} rows)")
-
-    # trades.json
-    trades_rows = []
-    for t in result.trades:
-        trades_rows.append({
-            "trade_id": t.trade_id,
-            "ticker": t.ticker,
-            "side": t.side.value,
-            "entry_date": t.entry_date.isoformat(),
-            "entry_price": round(t.entry_price, 4),
-            "exit_date": t.exit_date.isoformat(),
-            "exit_price": round(t.exit_price, 4),
-            "net_pnl": round(t.net_pnl, 2),
-            "return_pct": round(t.return_pct * 100, 2),
-            "exit_reason": t.exit_reason.value,
-            "holding_days": t.holding_days,
-            "trade_action_id": t.trade_action_id,
-            "kol_id": t.kol_id,
-            "intent_id": t.intent_id,
-            "policy_id": t.policy_id,
-            "evidence_span_ids": t.evidence_span_ids,
-        })
     trades_path = out_dir / "trades.json"
-    trades_path.write_text(
-        json.dumps(trades_rows, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    print(f"  Saved: {trades_path}  ({len(trades_rows)} trades)")
+    print(f"\n  Saved: {result_path}")
+    print(f"  Saved: {equity_path}  ({len(result.portfolio_snapshots)} rows)")
+    print(f"  Saved: {trades_path}  ({len(result.trades)} trades)")
 
     return True
 

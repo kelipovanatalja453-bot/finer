@@ -75,7 +75,7 @@ export function UploadButton({ currentTier, label = "Import Asset", onUploadSucc
   return (
     <div 
       className={cn(
-        "relative rounded-sm border-2 border-transparent transition-all",
+        "relative shrink-0 rounded-sm border-2 border-transparent transition-all",
         isDragOver ? "border-morningstar-red border-dashed bg-morningstar-red/5 scale-105 z-50 p-1" : ""
       )}
       onDragOver={handleDragOver}
@@ -94,7 +94,7 @@ export function UploadButton({ currentTier, label = "Import Asset", onUploadSucc
         onClick={() => status === "idle" && fileInputRef.current?.click()}
         disabled={status === "uploading"}
         className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-sm text-[11px] font-bold uppercase tracking-widest transition-all shadow-sm border",
+          "flex min-h-9 max-w-[14rem] shrink-0 items-center gap-2 overflow-hidden whitespace-nowrap px-3.5 py-2 rounded-sm text-[11px] font-bold uppercase tracking-widest transition-all shadow-sm border",
           status === "idle" && "bg-morningstar-red text-white border-morningstar-red hover:bg-red-700",
           status === "uploading" && "bg-stone-100 text-foreground/40 border-stone-200 cursor-not-allowed",
           status === "success" && "bg-emerald-500 text-white border-emerald-500",
@@ -104,26 +104,26 @@ export function UploadButton({ currentTier, label = "Import Asset", onUploadSucc
       >
         {status === "idle" && (
           <>
-            <Upload className="w-3.5 h-3.5" strokeWidth={2} />
-            {isDragOver ? "Drop files here" : label}
+            <Upload className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+            <span className="min-w-0 truncate">{isDragOver ? "Drop files here" : label}</span>
           </>
         )}
         {status === "uploading" && (
           <>
             <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2} />
-            UPLOADING...
+            <span className="min-w-0 truncate">UPLOADING...</span>
           </>
         )}
         {status === "success" && (
           <>
             <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2} />
-            SUCCESS
+            <span className="min-w-0 truncate">SUCCESS</span>
           </>
         )}
         {status === "error" && (
           <>
             <XCircle className="w-3.5 h-3.5" strokeWidth={2} />
-            ERROR
+            <span className="min-w-0 truncate">ERROR</span>
           </>
         )}
       </button>

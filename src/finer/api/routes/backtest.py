@@ -6,14 +6,13 @@ Provides endpoints for:
 - Comparing multiple KOL strategies
 - Managing backtest result storage
 
-Storage location: data/F8_metrics/
+Storage location: data/review/{kol_id}/F8_backtest with legacy
+data/F8_metrics read compatibility.
 """
 
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -21,9 +20,17 @@ import pandas as pd
 from fastapi import APIRouter, Body, Query
 from pydantic import AliasChoices, BaseModel, Field
 
-from finer.paths import DATA_ROOT
 from finer.backtest.engine import BacktestConfig, BacktestEngine
 from finer.backtest.prices import CachedPriceProvider
+from finer.backtest.storage import (
+    BACKTESTS_DIR,
+    DATA_REVIEW_DIR,
+    count_f8_backtest_results,
+    delete_f8_backtest_result,
+    list_f8_backtest_summaries,
+    load_f8_backtest_result,
+    save_f8_backtest_artifacts,
+)
 from finer.backtest.validators import validate_canonical_action
 from finer.errors.codes import ErrorCode
 from finer.errors.exceptions import FinerError
@@ -33,7 +40,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Storage directory for backtest results
-F8_METRICS_DIR = DATA_ROOT / "F8_metrics"
+F8_METRICS_DIR = BACKTESTS_DIR
+F8_REVIEW_DIR = DATA_REVIEW_DIR
 F8_METRICS_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -41,27 +49,31 @@ F8_METRICS_DIR.mkdir(parents=True, exist_ok=True)
 # Request/Response Models
 # =============================================================================
 
+
 class BacktestRequest(BaseModel):
     """Request to run a backtest."""
+
     # Trade actions to backtest (accepts 'actions' or 'trade_actions')
     actions: List[Dict[str, Any]] = Field(
         ...,
         validation_alias=AliasChoices("actions", "trade_actions"),
         description="List of trade actions (each with timestamp, ticker, direction, etc.). "
-                    "Also accepts 'trade_actions' as field name.",
+        "Also accepts 'trade_actions' as field name.",
     )
 
     # Price data (optional, will use provider if not provided)
     price_data: Optional[List[Dict[str, Any]]] = Field(
         None,
-        description="Price data as list of {date, ticker, open, high, low, close, volume} dicts"
+        description="Price data as list of {date, ticker, open, high, low, close, volume} dicts",
     )
 
     # Configuration
     initial_capital: float = Field(100000.0, description="Starting capital")
     commission_pct: float = Field(0.001, description="Commission rate (0.1% default)")
     slippage_pct: float = Field(0.0005, description="Slippage rate (0.05% default)")
-    default_position_pct: float = Field(0.1, description="Default position size (10% default)")
+    default_position_pct: float = Field(
+        0.1, description="Default position size (10% default)"
+    )
     max_position_pct: float = Field(0.25, description="Max position size (25% default)")
 
     # Date range
@@ -75,67 +87,34 @@ class BacktestRequest(BaseModel):
 
 class PriceDataRequest(BaseModel):
     """Request for price data."""
+
     ticker: str = Field(..., description="Ticker symbol")
     start_date: str = Field(..., description="Start date (ISO format)")
     end_date: str = Field(..., description="End date (ISO format)")
-
-
-class BacktestSummary(BaseModel):
-    """Summary of a backtest result."""
-    backtest_id: str
-    kol_id: Optional[str]
-    start_date: str
-    end_date: str
-    total_return: float
-    sharpe_ratio: float
-    max_drawdown: float
-    win_rate: float
-    total_trades: int
-    created_at: str
 
 
 # =============================================================================
 # Helper Functions
 # =============================================================================
 
+
 def _save_backtest_result(result, kol_id: Optional[str] = None) -> Path:
     """Save backtest result to file."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"backtest_{result.backtest_id}_{timestamp}.json"
-    if kol_id:
-        filename = f"backtest_{kol_id}_{result.backtest_id}_{timestamp}.json"
-
-    filepath = F8_METRICS_DIR / filename
-
-    # Convert to dict for JSON serialization
-    data = result.model_dump(mode='json')
-
-    with open(filepath, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2, default=str)
-
-    logger.info(f"Saved backtest result to {filepath}")
-    return filepath
+    return save_f8_backtest_artifacts(
+        result,
+        kol_id=kol_id,
+        metrics_dir=F8_METRICS_DIR,
+        review_dir=F8_REVIEW_DIR,
+    )
 
 
 def _load_backtest_result(backtest_id: str):
     """Load backtest result from file."""
-    from finer.backtest.engine import BacktestResult
-
-    # Find file with matching backtest_id
-    for filepath in F8_METRICS_DIR.glob(f"backtest_*{backtest_id}*.json"):
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            return BacktestResult.model_validate(data)
-        except Exception as e:
-            logger.error(f"Failed to load backtest {filepath}: {e}")
-
-    return None
-
-
-def _list_backtest_files() -> List[Path]:
-    """List all backtest result files."""
-    return list(F8_METRICS_DIR.glob("backtest_*.json"))
+    return load_f8_backtest_result(
+        backtest_id,
+        metrics_dir=F8_METRICS_DIR,
+        review_dir=F8_REVIEW_DIR,
+    )
 
 
 def _prepare_price_data(
@@ -152,8 +131,8 @@ def _prepare_price_data(
     if price_data:
         # Use provided price data
         df = pd.DataFrame(price_data)
-        if 'date' in df.columns:
-            df['date'] = pd.to_datetime(df['date'])
+        if "date" in df.columns:
+            df["date"] = pd.to_datetime(df["date"])
         return df
 
     raise FinerError(
@@ -169,6 +148,7 @@ def _prepare_price_data(
 # API Endpoints
 # =============================================================================
 
+
 @router.post("/run")
 async def run_backtest(request: BacktestRequest) -> Dict[str, Any]:
     """Run a backtest on trade actions.
@@ -182,7 +162,13 @@ async def run_backtest(request: BacktestRequest) -> Dict[str, Any]:
         Backtest result with performance metrics
     """
     if not request.actions:
-        raise FinerError(ErrorCode.F8_IN_001, "No actions provided", stage="F8", operation="backtest_run", retryable=False)
+        raise FinerError(
+            ErrorCode.F8_IN_001,
+            "No actions provided",
+            stage="F8",
+            operation="backtest_run",
+            retryable=False,
+        )
 
     # Validate each action satisfies canonical TradeAction requirements
     for idx, action in enumerate(request.actions):
@@ -207,7 +193,13 @@ async def run_backtest(request: BacktestRequest) -> Dict[str, Any]:
         )
 
         if price_df.empty:
-            raise FinerError(ErrorCode.F8_EXT_001, "No price data available", stage="F8", operation="price_fetch", retryable=True)
+            raise FinerError(
+                ErrorCode.F8_EXT_001,
+                "No price data available",
+                stage="F8",
+                operation="price_fetch",
+                retryable=True,
+            )
 
         # Create engine and run
         engine = BacktestEngine(config)
@@ -228,7 +220,7 @@ async def run_backtest(request: BacktestRequest) -> Dict[str, Any]:
         # Return result
         return {
             "ok": True,
-            "data": result.model_dump(mode='json'),
+            "data": result.model_dump(mode="json"),
             "saved_to": str(filepath),
         }
 
@@ -236,7 +228,14 @@ async def run_backtest(request: BacktestRequest) -> Dict[str, Any]:
         raise
     except Exception as e:
         logger.error(f"Backtest failed: {e}", exc_info=True)
-        raise FinerError(ErrorCode.F8_INT_001, f"Backtest failed: {str(e)}", stage="F8", operation="backtest_run", retryable=False, cause=e)
+        raise FinerError(
+            ErrorCode.F8_INT_001,
+            f"Backtest failed: {str(e)}",
+            stage="F8",
+            operation="backtest_run",
+            retryable=False,
+            cause=e,
+        )
 
 
 @router.get("/results/{backtest_id}")
@@ -252,11 +251,17 @@ async def get_backtest_result(backtest_id: str) -> Dict[str, Any]:
     result = _load_backtest_result(backtest_id)
 
     if not result:
-        raise FinerError(ErrorCode.F8_NTF_001, f"Backtest not found: {backtest_id}", stage="F8", operation="get_result", retryable=False)
+        raise FinerError(
+            ErrorCode.F8_NTF_001,
+            f"Backtest not found: {backtest_id}",
+            stage="F8",
+            operation="get_result",
+            retryable=False,
+        )
 
     return {
         "ok": True,
-        "data": result.model_dump(mode='json'),
+        "data": result.model_dump(mode="json"),
     }
 
 
@@ -276,45 +281,13 @@ async def list_backtest_results(
     Returns:
         List of backtest summaries
     """
-    results = []
-
-    for filepath in _list_backtest_files()[:limit * 2]:  # Read more for filtering
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-
-            # Filter by KOL ID if provided
-            file_kol_id = filepath.stem.split('_')[1] if len(filepath.stem.split('_')) > 1 else None
-            if kol_id and file_kol_id != kol_id:
-                continue
-
-            # Extract summary
-            summary = {
-                "backtest_id": data.get('backtest_id', ''),
-                "kol_id": file_kol_id,
-                "start_date": data.get('start_date', ''),
-                "end_date": data.get('end_date', ''),
-                "total_return": data.get('total_return', 0.0),
-                "sharpe_ratio": data.get('sharpe_ratio', 0.0),
-                "max_drawdown": data.get('max_drawdown', 0.0),
-                "win_rate": data.get('win_rate', 0.0),
-                "total_trades": data.get('total_trades', 0),
-                "created_at": data.get('run_timestamp', ''),
-                "filepath": str(filepath),
-            }
-            results.append(summary)
-
-        except Exception as e:
-            logger.warning(f"Failed to read {filepath}: {e}")
-
-    # Sort
-    if sort_by in ['total_return', 'sharpe_ratio', 'win_rate']:
-        results.sort(key=lambda x: x.get(sort_by, 0), reverse=True)
-    elif sort_by == 'created_at':
-        results.sort(key=lambda x: x.get(sort_by, ''), reverse=True)
-
-    # Limit
-    results = results[:limit]
+    results = list_f8_backtest_summaries(
+        kol_id=kol_id,
+        limit=limit,
+        sort_by=sort_by,
+        metrics_dir=F8_METRICS_DIR,
+        review_dir=F8_REVIEW_DIR,
+    )
 
     return {
         "ok": True,
@@ -335,23 +308,26 @@ async def delete_backtest_result(backtest_id: str) -> Dict[str, Any]:
     Returns:
         Deletion status
     """
-    deleted = False
+    deleted_files = delete_f8_backtest_result(
+        backtest_id,
+        metrics_dir=F8_METRICS_DIR,
+        review_dir=F8_REVIEW_DIR,
+    )
 
-    for filepath in F8_METRICS_DIR.glob(f"backtest_*{backtest_id}*.json"):
-        try:
-            filepath.unlink()
-            deleted = True
-            logger.info(f"Deleted backtest file: {filepath}")
-        except Exception as e:
-            logger.error(f"Failed to delete {filepath}: {e}")
-
-    if not deleted:
-        raise FinerError(ErrorCode.F8_NTF_001, f"Backtest not found: {backtest_id}", stage="F8", operation="delete_result", retryable=False)
+    if not deleted_files:
+        raise FinerError(
+            ErrorCode.F8_NTF_001,
+            f"Backtest not found: {backtest_id}",
+            stage="F8",
+            operation="delete_result",
+            retryable=False,
+        )
 
     return {
         "ok": True,
         "data": {
             "deleted": backtest_id,
+            "files": [str(path) for path in deleted_files],
             "message": "Backtest result deleted",
         },
     }
@@ -377,7 +353,13 @@ async def compare_strategies(
         Comparison results for all KOLs
     """
     if not kol_actions:
-        raise FinerError(ErrorCode.F8_IN_001, "No KOL actions provided", stage="F8", operation="compare", retryable=False)
+        raise FinerError(
+            ErrorCode.F8_IN_001,
+            "No KOL actions provided",
+            stage="F8",
+            operation="compare",
+            retryable=False,
+        )
 
     results = {}
     all_actions = []
@@ -389,7 +371,7 @@ async def compare_strategies(
             validate_canonical_action(action, idx)
         all_actions.extend(actions)
         for action in actions:
-            ticker = action.get('ticker')
+            ticker = action.get("ticker")
             if ticker:
                 all_tickers.add(ticker)
 
@@ -437,7 +419,7 @@ async def compare_strategies(
     # Sort by total return
     sorted_results = sorted(
         results.items(),
-        key=lambda x: x[1].get('total_return', float('-inf')),
+        key=lambda x: x[1].get("total_return", float("-inf")),
         reverse=True,
     )
 
@@ -445,8 +427,12 @@ async def compare_strategies(
         "ok": True,
         "data": {
             "comparison": dict(sorted_results),
-            "ranking": [kol_id for kol_id, _ in sorted_results if 'error' not in _],
-            "best_performer": sorted_results[0][0] if sorted_results and 'error' not in sorted_results[0][1] else None,
+            "ranking": [kol_id for kol_id, _ in sorted_results if "error" not in _],
+            "best_performer": (
+                sorted_results[0][0]
+                if sorted_results and "error" not in sorted_results[0][1]
+                else None
+            ),
         },
     }
 
@@ -481,23 +467,32 @@ async def get_price_data(request: PriceDataRequest) -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to get prices: {e}")
-        raise FinerError(ErrorCode.F8_EXT_001, f"Failed to get prices: {str(e)}", stage="F8", operation="price_fetch", retryable=True, cause=e)
+        raise FinerError(
+            ErrorCode.F8_EXT_001,
+            f"Failed to get prices: {str(e)}",
+            stage="F8",
+            operation="price_fetch",
+            retryable=True,
+            cause=e,
+        )
 
 
 @router.get("/health")
 async def backtest_health() -> Dict[str, Any]:
     """Check backtest module health."""
-    # Check storage
-    storage_ok = F8_METRICS_DIR.exists()
+    storage_ok = F8_METRICS_DIR.exists() or F8_REVIEW_DIR.exists()
 
-    # Count existing results
-    result_count = len(_list_backtest_files())
+    result_count = count_f8_backtest_results(
+        metrics_dir=F8_METRICS_DIR,
+        review_dir=F8_REVIEW_DIR,
+    )
 
     return {
         "ok": True,
         "data": {
             "status": "healthy" if storage_ok else "degraded",
             "storage_dir": str(F8_METRICS_DIR),
+            "review_dir": str(F8_REVIEW_DIR),
             "storage_ok": storage_ok,
             "result_count": result_count,
         },

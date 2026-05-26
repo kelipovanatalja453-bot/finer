@@ -51,6 +51,7 @@ Application-ready materials:
 - [Architecture alignment plan](docs/architecture-alignment-plan.md)
 - [Multi-agent execution plan](docs/agent-execution-plan.md)
 - [V0/V1 validation report](docs/v0-v1-schema-contract-validation-report.md) *(historical)*
+- [Claude handoff review, 2026-05-26](docs/claude-handoff-review-2026-05-26.md)
 - [Cat Lord fixture contracts](tests/fixtures/kol/)
 
 ---
@@ -78,6 +79,7 @@ Application-ready materials:
 - **NotebookLM 集成** - 同步知识库内容
 - **B站视频/弹幕** - 支持视频转写与评论抓取
 - **微信公众号长图** - OCR 解析金融研报
+- **微信视频号视频** - F0 半成品接入，依赖 `scripts/wx_channels_download` 本地服务/CLI，当前只写入 raw artifacts、`ContentRecord` 和 import receipt
 - **手动上传** - 支持任意格式文件导入
 
 ### 🧱 F0-F2 多源标准化
@@ -134,7 +136,7 @@ Application-ready materials:
 |:---|:---|:---|
 | **核心语言** | Python 3.11+ / TypeScript | 后端逻辑 + 前端交互 |
 | **Web 框架** | FastAPI + Pydantic V2 | API 服务 + 数据校验 |
-| **前端框架** | Next.js 14 + TailwindCSS | Dashboard 工作台 |
+| **前端框架** | Next.js 16 + React 19 + TailwindCSS 4 | Dashboard 工作台 |
 | **大模型** | MiMo-V2.5 / DeepSeek / OpenAI | 视觉解析 + 事件抽取 |
 | **结构约束** | Instructor | Contract-first 强类型输出 |
 | **数据处理** | Data-Juicer / Polars | 数据清洗 + 回测引擎 |
@@ -164,6 +166,10 @@ pip install -e .
 cd src/finer_dashboard
 npm install
 ```
+
+### 可选：微信视频号 F0 半成品依赖
+
+当前 `POST /api/wechat/channels/import` 依赖 `scripts/wx_channels_download` 的本地 API 或 CLI 获取视频号 profile 和下载视频。该目录随本仓库作为 F0 半成品交接源码保留；运行时产物、DB、日志、私钥和本地构建出的 `wx_video_download` binary 不应进入版本控制。接手 Agent 需要先确认该外部项目的授权、构建方式和安全边界，再把它收敛为正式依赖。
 
 ### 配置
 
