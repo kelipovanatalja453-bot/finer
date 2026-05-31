@@ -714,10 +714,22 @@ class BacktestEngine:
         returns = pd.Series([s.daily_pnl / s.total_value for s in snapshots[1:]])
         cumulative_return = snapshots[-1].cumulative_return
 
-        # Annualization factor
+        # Annualization
+        #
+        # Industry practice for short backtest windows: do NOT extrapolate a
+        # sub-year window into an annual figure. Extrapolating e.g. a 2-month
+        # +17% return as (1.17)^(365/68) ≈ +135% is mathematically standard
+        # but materially misleading. When the period is shorter than one
+        # calendar year we report the cumulative period return as-is and call
+        # it "annualized_return" in the schema (single field, conservative).
+        # Downstream Sharpe / Sortino / Calmar therefore use this conservative
+        # value, yielding smaller but consistent risk-adjusted ratios.
         days = (end_date - start_date).days
-        years = max(days / 365.25, 1/365.25)
-        annualized_return = (1 + cumulative_return) ** (1 / years) - 1
+        if days >= 365:
+            years = days / 365.25
+            annualized_return = (1 + cumulative_return) ** (1 / years) - 1
+        else:
+            annualized_return = cumulative_return
 
         # Volatility
         volatility = returns.std() * np.sqrt(252) if len(returns) > 1 else 0.0

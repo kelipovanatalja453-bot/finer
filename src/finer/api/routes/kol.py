@@ -83,6 +83,145 @@ def _load_kol_data(kol_id: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def _load_latest_backtest(kol_id: str) -> Optional[Dict[str, Any]]:
+    """Load the latest backtest_result.json for this KOL, if present.
+
+    Backtest artifacts live under ``data/review/{kol_id}/F8_backtest/``
+    (see ``src/finer/backtest/storage.py``). We read the canonical
+    ``backtest_result.json`` deterministically — no scanning, no fallback.
+    """
+    path = DATA_ROOT / "review" / kol_id / "F8_backtest" / "backtest_result.json"
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning("Failed to load backtest for %s: %s", kol_id, exc)
+        return None
+
+
+def _rating_from_backtest(kol_id: str, backtest: Dict[str, Any]) -> KOLRatingResponse:
+    """Derive a deterministic KOL rating from a real F8 backtest result.
+
+    Used when no F5/F6 action records exist for the KOL but a backtest run does.
+    All numbers come from the backtest artifact — no random fallback, no synthesis.
+    """
+    total_return_pct = float(backtest.get("total_return", 0.0)) * 100
+    win_rate = float(backtest.get("win_rate", 0.0))
+    total_trades = int(backtest.get("total_trades", 0))
+    sharpe = float(backtest.get("sharpe_ratio", 0.0))
+    trades_raw = backtest.get("trades") or []
+
+    # Average per-trade return (percent). Backtest stores fractional return_pct.
+    if trades_raw:
+        avg_return_per_trade = sum(float(t.get("return_pct", 0.0)) for t in trades_raw) / len(trades_raw) * 100
+    else:
+        avg_return_per_trade = 0.0
+
+    # Overall rating (1-5): 60% win-rate component, 40% sharpe component.
+    win_component = win_rate * 5.0  # 0..5
+    sharpe_component = max(0.0, min(5.0, 2.5 + sharpe))  # sharpe 0 → 2.5, +2.5 → 5
+    overall_rating = round(0.6 * win_component + 0.4 * sharpe_component, 1)
+    overall_rating = max(1.0, min(5.0, overall_rating))
+
+    dimensions = [
+        DimensionScore(dimension="accuracy", score=round(max(0.0, min(5.0, win_rate * 5.0)), 1), label="准确率"),
+        DimensionScore(dimension="consistency", score=round(max(0.0, min(5.0, 2.5 + sharpe * 0.5)), 1), label="一致性"),
+        DimensionScore(dimension="timeliness", score=3.5, label="时效性"),
+        DimensionScore(dimension="depth", score=3.0, label="深度"),
+        DimensionScore(dimension="clarity", score=3.5, label="清晰度"),
+    ]
+
+    # Timeline derived from real portfolio_snapshots (up to 30 evenly-sampled points).
+    snapshots = backtest.get("portfolio_snapshots") or []
+    timeline: List[TimelinePoint] = []
+    if snapshots:
+        step = max(1, len(snapshots) // 30)
+        sampled = snapshots[::step][-30:]
+        for s in sampled:
+            d = str(s.get("date", ""))[:10]
+            cum_ret = float(s.get("cumulative_return", 0.0)) * 100
+            timeline.append(TimelinePoint(
+                date=d,
+                rating=overall_rating,
+                return_pct=round(cum_ret, 2),
+            ))
+
+    # Focus areas from distinct tickers traded (deterministic order by frequency, then alpha).
+    ticker_counts: Dict[str, int] = {}
+    for t in trades_raw:
+        tk = str(t.get("ticker", "")).strip()
+        if tk:
+            ticker_counts[tk] = ticker_counts.get(tk, 0) + 1
+    focus_areas = sorted(ticker_counts.keys(), key=lambda k: (-ticker_counts[k], k))[:5]
+
+    # Recent opinions: last 10 trades by exit_date (descending).
+    sorted_trades = sorted(
+        trades_raw,
+        key=lambda t: (str(t.get("exit_date", "")), str(t.get("entry_date", ""))),
+        reverse=True,
+    )[:10]
+    recent_opinions: List[RecentOpinion] = []
+    for t in sorted_trades:
+        side = str(t.get("side", "long"))
+        direction = "bullish" if side == "long" else ("bearish" if side == "short" else "neutral")
+        ret_pct = float(t.get("return_pct", 0.0)) * 100
+        result_label = "success" if ret_pct > 0 else ("failed" if ret_pct < 0 else "pending")
+        recent_opinions.append(RecentOpinion(
+            id=str(t.get("trade_id", "")),
+            ticker=str(t.get("ticker", "")),
+            ticker_name=None,
+            direction=direction,
+            timestamp=str(t.get("exit_date") or t.get("entry_date") or ""),
+            result=result_label,
+        ))
+
+    return KOLRatingResponse(
+        rating={
+            "kolId": kol_id,
+            "name": kol_id,
+            "platform": "Backtest",
+            "overallRating": overall_rating,
+            "avgReturn": round(avg_return_per_trade, 2),
+            "successRate": round(win_rate, 2),
+            "totalOpinions": total_trades,
+        },
+        dimensions=dimensions,
+        timeline=timeline,
+        focusAreas=focus_areas,
+        recentOpinions=recent_opinions,
+    )
+
+
+def _empty_rating(kol_id: str) -> KOLRatingResponse:
+    """Deterministic zero/empty rating when no actions and no backtest exist.
+
+    Returned in place of synthetic random fallback. Frontend gracefully renders
+    empty timeline / focus areas / opinions.
+    """
+    return KOLRatingResponse(
+        rating={
+            "kolId": kol_id,
+            "name": kol_id,
+            "platform": "Unknown",
+            "overallRating": 0.0,
+            "avgReturn": 0.0,
+            "successRate": 0.0,
+            "totalOpinions": 0,
+        },
+        dimensions=[
+            DimensionScore(dimension="accuracy", score=0.0, label="准确率"),
+            DimensionScore(dimension="consistency", score=0.0, label="一致性"),
+            DimensionScore(dimension="timeliness", score=0.0, label="时效性"),
+            DimensionScore(dimension="depth", score=0.0, label="深度"),
+            DimensionScore(dimension="clarity", score=0.0, label="清晰度"),
+        ],
+        timeline=[],
+        focusAreas=[],
+        recentOpinions=[],
+    )
+
+
 def _calculate_kol_rating(kol_id: str) -> KOLRatingResponse:
     """Calculate KOL rating from available data."""
     # Load all actions for this KOL
@@ -101,8 +240,12 @@ def _calculate_kol_rating(kol_id: str) -> KOLRatingResponse:
                 continue
 
     if not actions:
-        # Return mock data if no real data
-        return _generate_mock_rating(kol_id)
+        # No F5/F6 actions — fall back to real backtest result if one exists,
+        # else return a deterministic empty rating. No random/mock fallback.
+        backtest = _load_latest_backtest(kol_id)
+        if backtest is not None:
+            return _rating_from_backtest(kol_id, backtest)
+        return _empty_rating(kol_id)
 
     # Calculate metrics from real data
     total = len(actions)
@@ -191,62 +334,6 @@ def _calculate_kol_rating(kol_id: str) -> KOLRatingResponse:
     )
 
 
-def _generate_mock_rating(kol_id: str) -> KOLRatingResponse:
-    """Generate mock rating data when no real data available."""
-    import random
-
-    overall_rating = round(3 + random.random() * 1.5, 1)
-    avg_return = round(random.uniform(-5, 15), 2)
-
-    dimensions = [
-        DimensionScore(dimension="accuracy", score=round(3 + random.random() * 1.5, 1), label="准确率"),
-        DimensionScore(dimension="consistency", score=round(3 + random.random() * 1.5, 1), label="一致性"),
-        DimensionScore(dimension="timeliness", score=round(3.5, 1), label="时效性"),
-        DimensionScore(dimension="depth", score=round(3.0, 1), label="深度"),
-        DimensionScore(dimension="clarity", score=round(3.5, 1), label="清晰度"),
-    ]
-
-    now = datetime.now()
-    timeline = []
-    for i in range(30):
-        date = (now - timedelta(days=i)).strftime("%Y-%m-%d")
-        timeline.append(TimelinePoint(
-            date=date,
-            rating=round(overall_rating - 0.3 + random.random() * 0.5, 1),
-            return_pct=round(avg_return + random.uniform(-2, 2), 2),
-        ))
-
-    focus_areas = ["NVDA", "AAPL", "TSLA", "AMD", "MSFT"]
-
-    tickers = [("NVDA", "英伟达"), ("AAPL", "苹果"), ("TSLA", "特斯拉")]
-    recent_opinions = []
-    for i, (ticker, name) in enumerate(tickers):
-        recent_opinions.append(RecentOpinion(
-            id=f"opinion-{i}",
-            ticker=ticker,
-            ticker_name=name,
-            direction=random.choice(["bullish", "bearish", "neutral"]),
-            timestamp=(now - timedelta(days=i)).isoformat(),
-            result=random.choice(["success", "failed", "pending"]),
-        ))
-
-    return KOLRatingResponse(
-        rating={
-            "kolId": kol_id,
-            "name": kol_id,
-            "platform": "Mock",
-            "overallRating": overall_rating,
-            "avgReturn": avg_return,
-            "successRate": round(0.5 + random.random() * 0.3, 2),
-            "totalOpinions": random.randint(50, 200),
-        },
-        dimensions=dimensions,
-        timeline=timeline,
-        focusAreas=focus_areas,
-        recentOpinions=recent_opinions,
-    )
-
-
 # ============================================
 # API 端点
 # ============================================
@@ -298,8 +385,18 @@ class KOLListItem(BaseModel):
 
 
 def _discover_kol_ids() -> List[str]:
-    """Discover all KOL IDs from data layers."""
+    """Discover all KOL IDs from data layers.
+
+    Two sources, both deterministic:
+    1. F5/F6 action.json files (legacy L5_candidate / L6_annotated dirs).
+    2. Backtest-attributed runs under ``data/review/{kol_id}/F8_backtest/``.
+
+    Without (2), KOLs that only have backtest results (the common case for
+    fixture-driven runs like ``trader_ji`` / ``kol_cat_lord_fire``) would be
+    invisible to ``GET /api/kol/list/enriched``.
+    """
     kol_ids: Dict[str, int] = {}
+
     for layer in ["L5_candidate", "L6_annotated"]:
         layer_dir = DATA_ROOT / layer
         if not layer_dir.exists():
@@ -312,7 +409,20 @@ def _discover_kol_ids() -> List[str]:
                     kol_ids[kol_id] = kol_ids.get(kol_id, 0) + 1
             except Exception:
                 continue
-    return [k for k, _ in sorted(kol_ids.items(), key=lambda x: -x[1])]
+
+    review_root = DATA_ROOT / "review"
+    if review_root.exists():
+        for kol_dir in review_root.iterdir():
+            if not kol_dir.is_dir():
+                continue
+            if (kol_dir / "F8_backtest" / "backtest_result.json").exists():
+                kol_id = kol_dir.name
+                kol_ids.setdefault(kol_id, 0)
+                # Give at least 1 weight so it sorts above never-seen ids.
+                kol_ids[kol_id] = max(kol_ids[kol_id], 1)
+
+    # Stable sort: count desc, then id asc for determinism on ties.
+    return [k for k, _ in sorted(kol_ids.items(), key=lambda x: (-x[1], x[0]))]
 
 
 @router.get("/list/enriched", response_model=List[KOLListItem])
