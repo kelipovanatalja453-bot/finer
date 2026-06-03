@@ -13,6 +13,8 @@ from unittest.mock import patch, MagicMock
 
 from finer.schemas.quality import QualityCard
 from finer.schemas.content_envelope import ContentEnvelope, ContentBlock
+from finer.schemas.investment_intent import NormalizedInvestmentIntent
+from finer.schemas.policy import PolicyMappedIntent, PolicyMappingBatch
 
 
 # =============================================================================
@@ -72,6 +74,58 @@ def _review_card() -> QualityCard:
     )
 
 
+def _make_intent(
+    *,
+    intent_id: str = "intent-001",
+    envelope_id: str = "env-test-001",
+    block_id: str = "block-test-001",
+    target_symbol: str = "300750.SZ",
+    target_name: str = "宁德时代",
+    market: str = "CN",
+    direction: str = "bullish",
+    confidence: float = 0.85,
+) -> NormalizedInvestmentIntent:
+    """Create a real F3 intent model for runner tests."""
+    return NormalizedInvestmentIntent(
+        intent_id=intent_id,
+        envelope_id=envelope_id,
+        block_ids=[block_id],
+        creator_id="test-kol",
+        target_type="stock",
+        target_name=target_name,
+        target_symbol=target_symbol,
+        market=market,
+        direction=direction,
+        actionability="explicit_action",
+        position_delta_hint="open",
+        conviction=confidence,
+        confidence=confidence,
+        evidence_span_ids=["span-001"],
+    )
+
+
+def _make_policy_batch(
+    *,
+    intent_id: str = "intent-001",
+    policy_id: str = "policy-001",
+    action_hint: str = "open_position",
+    sizing_hint: str = "small",
+    holding_hint: str = "medium_term",
+) -> PolicyMappingBatch:
+    """Create a real F4 policy batch for runner tests."""
+    mapped = PolicyMappedIntent(
+        intent_id=intent_id,
+        policy_id=policy_id,
+        original_intent_summary="bullish explicit action on test target",
+        action_hint=action_hint,
+        position_sizing_hint=sizing_hint,
+        holding_period_hint=holding_hint,
+        mapping_confidence=0.8,
+        requires_human_review=False,
+    )
+    return PolicyMappingBatch(mapped_intents=[mapped], mappings=[])
+
+
 # Verify helper cards have expected gate_status values
 class TestHelperCards:
     """Sanity-check that helper QualityCards produce expected gate_status."""
@@ -100,30 +154,13 @@ class TestGoldenPathQualityGate:
 
         envelope = _make_envelope(_pass_card())
 
-        mock_intent = MagicMock()
-        mock_intent.intent_id = "intent-001"
-        mock_intent.evidence_span_ids = ["span-001"]
-        mock_intent.target_symbol = "300750.SZ"
-        mock_intent.target_name = "宁德时代"
-        mock_intent.market = "CN"
-        mock_intent.direction = "bullish"
-        mock_intent.confidence = 0.85
+        mock_intent = _make_intent()
 
         mock_result = MagicMock()
         mock_result.intents = [mock_intent]
         mock_result.processing_notes = []
 
-        mock_mapped = MagicMock()
-        mock_mapped.intent_id = "intent-001"
-        mock_mapped.policy_id = "policy-001"
-        mock_mapped.action_hint = "open_position"
-        mock_mapped.position_sizing_hint = "small"
-        mock_mapped.holding_period_hint = "medium_term"
-        mock_mapped.requires_human_review = False
-
-        mock_batch = MagicMock()
-        mock_batch.mapped_intents = [mock_mapped]
-        mock_batch.mappings = [mock_mapped]
+        mock_batch = _make_policy_batch()
 
         with (
             patch("finer.pipeline.golden_path.LLMIntentExtractor") as MockExtractor,
@@ -156,30 +193,24 @@ class TestGoldenPathQualityGate:
 
         envelope = _make_envelope(_review_card())
 
-        mock_intent = MagicMock()
-        mock_intent.intent_id = "intent-002"
-        mock_intent.evidence_span_ids = ["span-002"]
-        mock_intent.target_symbol = "0700.HK"
-        mock_intent.target_name = "腾讯"
-        mock_intent.market = "HK"
-        mock_intent.direction = "bullish"
-        mock_intent.confidence = 0.75
+        mock_intent = _make_intent(
+            intent_id="intent-002",
+            target_symbol="0700.HK",
+            target_name="腾讯",
+            market="HK",
+            confidence=0.75,
+        )
 
         mock_result = MagicMock()
         mock_result.intents = [mock_intent]
         mock_result.processing_notes = []
 
-        mock_mapped = MagicMock()
-        mock_mapped.intent_id = "intent-002"
-        mock_mapped.policy_id = "policy-002"
-        mock_mapped.action_hint = "open_position"
-        mock_mapped.position_sizing_hint = "medium"
-        mock_mapped.holding_period_hint = "long_term"
-        mock_mapped.requires_human_review = False
-
-        mock_batch = MagicMock()
-        mock_batch.mapped_intents = [mock_mapped]
-        mock_batch.mappings = [mock_mapped]
+        mock_batch = _make_policy_batch(
+            intent_id="intent-002",
+            policy_id="policy-002",
+            sizing_hint="medium",
+            holding_hint="long_term",
+        )
 
         with (
             patch("finer.pipeline.golden_path.LLMIntentExtractor") as MockExtractor,
@@ -207,30 +238,13 @@ class TestCanonicalRunnerQualityGate:
         """Envelope with 'pass' quality should reach F3 intent extraction."""
         from finer.pipeline.canonical_runner import run_canonical_extraction
 
-        mock_intent = MagicMock()
-        mock_intent.intent_id = "intent-001"
-        mock_intent.evidence_span_ids = ["span-001"]
-        mock_intent.target_symbol = "300750.SZ"
-        mock_intent.target_name = "宁德时代"
-        mock_intent.market = "CN"
-        mock_intent.direction = "bullish"
-        mock_intent.confidence = 0.85
+        mock_intent = _make_intent()
 
         mock_result = MagicMock()
         mock_result.intents = [mock_intent]
         mock_result.evidence_spans = []
 
-        mock_mapped = MagicMock()
-        mock_mapped.intent_id = "intent-001"
-        mock_mapped.policy_id = "policy-001"
-        mock_mapped.action_hint = "open_position"
-        mock_mapped.position_sizing_hint = "small"
-        mock_mapped.holding_period_hint = "medium_term"
-        mock_mapped.requires_human_review = False
-
-        mock_batch = MagicMock()
-        mock_batch.mapped_intents = [mock_mapped]
-        mock_batch.mappings = [mock_mapped]
+        mock_batch = _make_policy_batch()
 
         with (
             patch("finer.extraction.intent_extractor.RuleBasedIntentExtractor") as MockExtractor,
@@ -241,7 +255,11 @@ class TestCanonicalRunnerQualityGate:
 
             result = await run_canonical_extraction(
                 text="看好宁德时代，目标价500",
-                context={"source_id": "test-001", "author": "test-kol"},
+                context={
+                    "source_id": "test-001",
+                    "author": "test-kol",
+                    "timestamp": "2026-03-12T15:36:00+08:00",
+                },
             )
 
             # Extractor should have been called (pass gate allows F3)
@@ -275,30 +293,24 @@ class TestCanonicalRunnerQualityGate:
         """Envelope with 'review' quality should proceed to F3."""
         from finer.pipeline.canonical_runner import run_canonical_extraction
 
-        mock_intent = MagicMock()
-        mock_intent.intent_id = "intent-003"
-        mock_intent.evidence_span_ids = ["span-003"]
-        mock_intent.target_symbol = "0700.HK"
-        mock_intent.target_name = "腾讯"
-        mock_intent.market = "HK"
-        mock_intent.direction = "bullish"
-        mock_intent.confidence = 0.7
+        mock_intent = _make_intent(
+            intent_id="intent-003",
+            target_symbol="0700.HK",
+            target_name="腾讯",
+            market="HK",
+            confidence=0.7,
+        )
 
         mock_result = MagicMock()
         mock_result.intents = [mock_intent]
         mock_result.evidence_spans = []
 
-        mock_mapped = MagicMock()
-        mock_mapped.intent_id = "intent-003"
-        mock_mapped.policy_id = "policy-003"
-        mock_mapped.action_hint = "open_position"
-        mock_mapped.position_sizing_hint = "medium"
-        mock_mapped.holding_period_hint = "long_term"
-        mock_mapped.requires_human_review = False
-
-        mock_batch = MagicMock()
-        mock_batch.mapped_intents = [mock_mapped]
-        mock_batch.mappings = [mock_mapped]
+        mock_batch = _make_policy_batch(
+            intent_id="intent-003",
+            policy_id="policy-003",
+            sizing_hint="medium",
+            holding_hint="long_term",
+        )
 
         # Patch _build_envelope to return review-quality envelope
         review_envelope = _make_envelope(_review_card())
