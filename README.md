@@ -8,18 +8,39 @@
   <img src="https://img.shields.io/badge/Next.js-16-black.svg" alt="next.js">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license">
   <img src="https://img.shields.io/badge/status-research%20prototype-orange.svg" alt="status">
+  <a href="https://finer.t800.click"><img src="https://img.shields.io/badge/%E2%96%B6%20live%20demo-finer.t800.click-e11b22.svg" alt="live demo"></a>
 </p>
 
 > **把财经 KOL 的内容，变成可回测、可审计的投资事件。**
 
 Finer OS 沿 F0–F8 流水线，将任意平台的 KOL 社交媒体内容——聊天记录、图片策略、飞书文档、PDF、音视频转录——统一清洗为标准化内容块，抽取可追溯证据的投资意图，映射为可复核的交易动作，并以**完全跟单者视角**回测，验证「跟随这个 KOL」的真实收益、风险与稳定性。
 
-[快速开始](#快速开始) · [核心能力](#四个核心能力) · [回测证据](#回测证据收益曲线背后是完整证据链) · [架构设计](#架构设计) · [API 文档](docs/API_REFERENCE.md)
+[🌐 在线演示](https://finer.t800.click) · [快速开始](#快速开始) · [核心能力](#四个核心能力) · [回测证据](#回测证据收益曲线背后是完整证据链) · [架构设计](#架构设计) · [API 文档](docs/API_REFERENCE.md)
 
 <p align="center">
-  <img src="src/finer_dashboard/public/landing/research.png" alt="Finer OS KOL 研究视图：对象中心三栏，收益曲线与证据溯源" width="900">
+  <a href="https://finer.t800.click"><img src="docs/assets/demo-hero.png" alt="Finer OS 工作台：KOL 研究视图、累计收益曲线与证据链溯源（演示数据）" width="900"></a>
   <br>
-  <em>KOL 研究视图 — 评分、收益曲线、证据溯源（示例数据）</em>
+  <em>KOL 研究视图 — 评分、累计收益曲线、证据链溯源 · <a href="https://finer.t800.click">🌐 在线体验</a>（演示数据）</em>
+</p>
+
+---
+
+## 🌐 在线演示
+
+无需注册、不连后端——打开浏览器即可走一遍完整流程，界面与真实产品一致，所有数据均为演示数据。
+
+**👉 [finer.t800.click](https://finer.t800.click)**
+
+- **F0 → F8 流水线走查** — 点任一阶段，看一条内容如何逐层变成可溯源的交易动作
+- **KOL 研究视图** — 切换 5 个示例 KOL，看评分、累计收益曲线与观点列表
+- **证据链溯源** — 点一条 `TradeAction`，高亮回溯到原文证据片段与四时钟执行时间
+- **回测曲线** — 累计收益、夏普、最大回撤、胜率，红涨绿跌
+- **RLHF 复核** — 模拟人工裁决，生成 `RLHFFeedback`（演示，不落库）
+
+<p align="center">
+  <a href="https://finer.t800.click/demo"><img src="docs/assets/demo-entry.png" alt="Finer OS 在线演示工作台（演示数据）" width="900"></a>
+  <br>
+  <em>在线演示工作台 — 纯前端模拟，演示数据，不连接真实后端</em>
 </p>
 
 ---
@@ -58,9 +79,9 @@ flowchart LR
 ## 回测证据：收益曲线背后是完整证据链
 
 <p align="center">
-  <img src="src/finer_dashboard/public/landing/backtest.png" alt="Finer OS F8 回测审计：累计收益曲线、关键绩效指标与年度审计表" width="900">
+  <img src="docs/assets/demo-proof.png" alt="Finer OS 工作台：累计收益曲线与右栏证据链溯源、四时钟执行时间（演示数据）" width="900">
   <br>
-  <em>F8 回测审计 — 累计收益、绩效指标与年度审计表（示例数据）</em>
+  <em>累计收益曲线 + 右栏证据链溯源 — 每条 TradeAction 可反查 F3 意图 / F4 策略 / F2 证据（演示数据）</em>
 </p>
 
 每条进入回测的 TradeAction 都满足 canonical 契约：可反查到 F3 投资意图、F4 策略映射、F2 证据片段，以及四个明确区分的执行时钟。
@@ -116,7 +137,7 @@ AI 在每个阶段做**具体可验证**的事；每一条 AI 输出在进入回
 
 - 持久化为 `RLHFFeedback` 记录
 - `GET /api/rlhf/export` 导出为 DPO 训练数据
-- 训练循环为 **contract-only**：数据格式已就绪，模型微调**尚未启动**（不夸大）
+- 训练循环为 **contract-only**：DPO 数据格式与导出 API 已就绪，下一步规划见 [Roadmap](#训练闭环-roadmap)
 
 </td>
 </tr>
@@ -133,6 +154,22 @@ F1–F5 LLM    →    F6 RLHF Panel  →   RLHFFeedback   →   DPO JSONL pairs
   <br>
   <em>F6 RLHF 复核台 — 待审队列与人工裁决入口</em>
 </p>
+
+---
+
+## 训练闭环 Roadmap
+
+我们把训练闭环的**已建成**与**规划中**都摆出来——不夸大。
+
+| | 能力 | 状态 |
+|:---:|:---|:---|
+| ✅ | **RLHFFeedback 记录** — 人工裁决结构化落库 | 已实现 |
+| ✅ | **DPO 数据导出** — `GET /api/rlhf/export` 导出 JSONL pairs | 已实现 |
+| 🔜 | **Prompt 工程** — 持续优化各阶段提示词与约束解码 | 规划中 |
+| 🔜 | **插件 / 工具调用** — 接入外部金融数据源与工具链 | 规划中 |
+| 🔜 | **模型微调** — 基于 `RLHFFeedback` 的 DPO 微调 | 规划中 |
+
+> DPO 数据格式与导出 API 已实现；Prompt 工程、插件调用、模型微调均为**规划中、尚未实现**。
 
 ---
 

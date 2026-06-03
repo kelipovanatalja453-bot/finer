@@ -8,18 +8,39 @@
   <img src="https://img.shields.io/badge/Next.js-16-black.svg" alt="next.js">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license">
   <img src="https://img.shields.io/badge/status-research%20prototype-orange.svg" alt="status">
+  <a href="https://finer.t800.click"><img src="https://img.shields.io/badge/%E2%96%B6%20live%20demo-finer.t800.click-e11b22.svg" alt="live demo"></a>
 </p>
 
 > **Turn financial KOL content into backtestable, auditable investment events.**
 
 Finer OS runs an F0–F8 pipeline that ingests KOL social content from any platform — chat logs, image-based strategy posts, Feishu docs, PDFs, audio/video transcripts — normalizes it into structured content blocks, extracts evidence-linked investment intents, maps them into reviewable trade actions, and backtests them from a **full-follower's perspective** to verify the real return, risk, and stability of "following this KOL."
 
-[Quick Start](#quick-start) · [Capabilities](#four-core-capabilities) · [Backtest Proof](#backtest-proof-an-evidence-chain-behind-every-return) · [Architecture](#architecture) · [API](docs/API_REFERENCE.md)
+[🌐 Live Demo](https://finer.t800.click) · [Quick Start](#quick-start) · [Capabilities](#four-core-capabilities) · [Backtest Proof](#backtest-proof-an-evidence-chain-behind-every-return) · [Architecture](#architecture) · [API](docs/API_REFERENCE.md)
 
 <p align="center">
-  <img src="src/finer_dashboard/public/landing/research.png" alt="Finer OS KOL research view: object-centric three-column layout with return curve and evidence provenance" width="900">
+  <a href="https://finer.t800.click"><img src="docs/assets/demo-hero.png" alt="Finer OS workbench: KOL research view, cumulative-return curve, and evidence-chain provenance (sample data)" width="900"></a>
   <br>
-  <em>KOL Research View — scoring, return curve, evidence provenance (sample data)</em>
+  <em>KOL Research View — scoring, cumulative-return curve, evidence-chain provenance · <a href="https://finer.t800.click">🌐 Try it live</a> (sample data)</em>
+</p>
+
+---
+
+## 🌐 Live Demo
+
+No signup, no backend — open it in a browser and walk the whole pipeline. The UI matches the real product; all data is sample data.
+
+**👉 [finer.t800.click](https://finer.t800.click)**
+
+- **F0 → F8 pipeline walk-through** — click any stage to see how one piece of content becomes a traceable trade action
+- **KOL research view** — switch between 5 sample KOLs; see scores, cumulative-return curves, and viewpoint lists
+- **Evidence-chain provenance** — click a `TradeAction` to highlight its source spans and four execution clocks
+- **Backtest curve** — cumulative return, Sharpe, max drawdown, win rate (red = up, China convention)
+- **RLHF review** — simulate human adjudication, producing an `RLHFFeedback` record (demo, not persisted)
+
+<p align="center">
+  <a href="https://finer.t800.click/demo"><img src="docs/assets/demo-entry.png" alt="Finer OS live demo workbench (sample data)" width="900"></a>
+  <br>
+  <em>Live demo workbench — pure front-end mock, sample data, no real backend</em>
 </p>
 
 ---
@@ -58,9 +79,9 @@ flowchart LR
 ## Backtest Proof: An Evidence Chain Behind Every Return
 
 <p align="center">
-  <img src="src/finer_dashboard/public/landing/backtest.png" alt="Finer OS F8 backtest audit: cumulative return curve, key performance metrics, and annual audit table" width="900">
+  <img src="docs/assets/demo-proof.png" alt="Finer OS workbench: cumulative-return curve with evidence-chain provenance and four execution clocks (sample data)" width="900">
   <br>
-  <em>F8 Backtest Audit — cumulative return, performance metrics, annual audit table (sample data)</em>
+  <em>Cumulative-return curve + evidence-chain provenance — every TradeAction traces back to F3 intent / F4 policy / F2 evidence (sample data)</em>
 </p>
 
 Every TradeAction that enters the backtest satisfies the canonical contract: it can be traced back to the F3 investment intent, the F4 policy mapping, the F2 evidence spans, and four explicitly distinguished execution clocks.
@@ -116,7 +137,7 @@ AI does **concrete, verifiable** work at each stage; every AI output must pass t
 
 - Persisted as `RLHFFeedback` records
 - `GET /api/rlhf/export` exports DPO training data
-- The training loop is **contract-only**: the data format is ready, model fine-tuning **has not started** (no overclaiming)
+- The training loop is **contract-only**: the DPO data format and export API are ready; what comes next is on the [Roadmap](#training-loop-roadmap)
 
 </td>
 </tr>
@@ -133,6 +154,22 @@ F1–F5 LLM    →     F6 RLHF Panel  →    RLHFFeedback    →    DPO JSONL pa
   <br>
   <em>F6 RLHF Review Desk — review queue and human-adjudication entry</em>
 </p>
+
+---
+
+## Training-Loop Roadmap
+
+We put both the **built** and the **planned** parts of the training loop on the table — no overclaiming.
+
+| | Capability | Status |
+|:---:|:---|:---|
+| ✅ | **RLHFFeedback records** — human adjudication persisted as structured fields | shipped |
+| ✅ | **DPO data export** — `GET /api/rlhf/export` exports JSONL pairs | shipped |
+| 🔜 | **Prompt engineering** — continuously tune per-stage prompts & constrained decoding | planned |
+| 🔜 | **Plugin / tool calling** — integrate external financial data sources & toolchains | planned |
+| 🔜 | **Model fine-tuning** — DPO fine-tuning on `RLHFFeedback` | planned |
+
+> The DPO data format and export API are implemented; prompt engineering, plugin calling, and model fine-tuning are all **planned and not yet implemented**.
 
 ---
 
