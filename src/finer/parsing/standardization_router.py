@@ -42,7 +42,8 @@ _EXTRACTOR_VERSION = "1.0.0"
 _PDF_SUFFIXES = {".pdf"}
 _IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
 _TEXT_SUFFIXES = {".md", ".txt"}
-_CHAT_CONTENT_TYPES = {"chat_transcript", "chat_export"}
+_CHAT_RAW_SUFFIXES = {".raw"}
+_CHAT_CONTENT_TYPES = {"feishu_chat", "chat_transcript", "chat_export"}
 _AUDIO_CONTENT_TYPES = {"livestream_audio"}
 
 
@@ -98,7 +99,11 @@ class StandardizationRouter:
         if suffix in _IMAGE_SUFFIXES:
             return "image"
 
-        # 3. Feishu chat markdown (content_type must be chat — platform alone is insufficient)
+        # 3. Feishu chat markdown/raw text (content_type must be chat —
+        # platform alone is insufficient)
+        if suffix in _CHAT_RAW_SUFFIXES and f0_record.source_type in _CHAT_CONTENT_TYPES:
+            return "feishu_chat"
+
         if suffix in _TEXT_SUFFIXES:
             if f0_record.source_type in _CHAT_CONTENT_TYPES:
                 return "feishu_chat"

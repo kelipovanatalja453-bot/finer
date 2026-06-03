@@ -12,7 +12,7 @@ import pytest
 from datetime import datetime
 
 from finer.schemas.quality import QualityCard
-from finer.schemas.content_envelope import ContentEnvelope, ContentBlock
+from finer.schemas.content_envelope import BlockQuality, ContentEnvelope, ContentBlock
 from finer.services.quality_gate import (
     QualityGateDecision,
     QualityGatePolicy,
@@ -229,19 +229,26 @@ class TestEnvelopeEvaluation:
         assert decision.status == "pass"
         assert decision.block_decisions is None
 
-    def test_envelope_majority_blocks_pass(self):
-        """Envelope with majority passing blocks should pass."""
-        # 4 passing blocks, 1 review block
+    def test_envelope_uses_envelope_card_not_block_quality(self):
+        """Envelope gate uses envelope QualityCard, not per-block BlockQuality."""
         blocks = [
-            self.create_block(0.8) for _ in range(4)
-        ] + [self.create_block(0.5)]
-
-        for i, block in enumerate(blocks):
-            block.order = i
+            ContentBlock(
+                block_type="paragraph",
+                text="Readable source text",
+                order_index=0,
+                quality=BlockQuality(
+                    readability=0.1,
+                    extraction_confidence=0.1,
+                    structural_confidence=0.1,
+                    completeness=0.1,
+                    noise_score=0.9,
+                ),
+            )
+        ]
 
         envelope = ContentEnvelope(
-            source_type="feishu_doc",
-            quality_card=QualityCard.create_default(0.75),
+            source_type="feishu_chat",
+            quality_card=QualityCard.create_default(0.8),
             blocks=blocks,
         )
 
@@ -249,103 +256,22 @@ class TestEnvelopeEvaluation:
 
         assert decision.status == "pass"
         assert decision.recommended_next_step == "extract_intent"
-        assert decision.metadata["pass_count"] == 4
+        assert decision.block_decisions is None
+        assert decision.metadata["total_blocks"] == 1
+        assert decision.metadata["envelope_score"] == envelope.quality_card.overall_score
 
-    def test_envelope_with_review_blocks(self):
-        """Envelope with review blocks should go to review."""
-        # 2 passing, 2 review, 1 reject
-        blocks = [
-            self.create_block(0.8),
-            self.create_block(0.8),
-            self.create_block(0.5),
-            self.create_block(0.5),
-            self.create_block(0.25),
-        ]
-
-        for i, block in enumerate(blocks):
-            block.order = i
-
+    def test_envelope_card_review(self):
+        """Envelope-level review card should send the envelope to review."""
         envelope = ContentEnvelope(
-            source_type="feishu_doc",
+            source_type="image",
             quality_card=QualityCard.create_default(0.6),
-            blocks=blocks,
+            blocks=[self.create_block(0.8)],
         )
 
         decision = evaluate_envelope_quality(envelope)
 
         assert decision.status == "review"
         assert decision.recommended_next_step == "manual_review"
-
-    def test_envelope_majority_rejected(self):
-        """Envelope with majority rejected blocks should be rejected."""
-        # 1 pass, 4 reject
-        blocks = [
-            self.create_block(0.8),
-        ] + [self.create_block(0.25) for _ in range(4)]
-
-        for i, block in enumerate(blocks):
-            block.order = i
-
-        envelope = ContentEnvelope(
-            source_type="image",
-            quality_card=QualityCard.create_default(0.3),
-            blocks=blocks,
-        )
-
-        decision = evaluate_envelope_quality(envelope)
-
-        # pass_count=1, review_count=0, reject_count=4
-        # review_count > 0 or (pass_count > 0 and reject_count > 0) → review
-        assert decision.status == "review"
-        assert decision.recommended_next_step == "manual_review"
-
-    def test_envelope_with_table_block_low_ocr(self):
-        """Table with low OCR should go to review (Cat's image strategy)."""
-        # High quality text block
-        text_block = ContentBlock(
-            block_type="paragraph",
-            text="策略正文内容",
-            order=0,
-            quality_card=QualityCard(
-                readability_score=0.9,
-                semantic_completeness_score=0.85,
-                financial_relevance_score=0.95,
-                entity_resolution_score=0.8,
-                temporal_resolution_score=0.7,
-                evidence_traceability_score=0.85,
-            ),
-        )
-
-        # Low OCR table block
-        table_block = ContentBlock(
-            block_type="table",
-            text="[OCR乱码]",
-            order=1,
-            quality_card=QualityCard(
-                readability_score=0.3,  # Low OCR
-                semantic_completeness_score=0.5,
-                financial_relevance_score=0.7,  # Still relevant
-                entity_resolution_score=0.4,
-                temporal_resolution_score=0.5,
-                evidence_traceability_score=0.6,
-            ),
-        )
-
-        envelope = ContentEnvelope(
-            source_type="image",
-            quality_card=QualityCard.create_default(0.6),
-            blocks=[text_block, table_block],
-        )
-
-        decision = evaluate_envelope_quality(envelope)
-
-        # pass_count=1, review_count=1, reject_count=0
-        # pass_count > total_blocks * 0.6 → 1 > 1.2 → False
-        # review_count > 0 → True → review
-        assert decision.status == "review"
-        assert decision.block_decisions is not None
-        assert decision.block_decisions[0].status == "pass"
-        assert decision.block_decisions[1].status == "review"
 
 
 # =============================================================================

@@ -285,16 +285,11 @@ def evaluate_envelope_quality(
 ) -> QualityGateDecision:
     """Evaluate a ContentEnvelope against the gate policy.
 
-    This function evaluates both the envelope-level quality card and
-    individual block quality cards. For image-based content with OCR
-    issues, it applies the 猫大人图片策略 (Cat's image strategy).
-
-    Strategy:
-    - Evaluate each block independently
-    - Large readable text blocks with high financial relevance → PASS
-    - Tables/charts with low OCR but clear structure → REVIEW
-    - Social media UI noise → DROP or low priority
-    - Aggregate block decisions into overall envelope decision
+    The canonical F1 contract stores envelope quality as ``QualityCard`` and
+    block quality as ``BlockQuality``.  Gate decisions are therefore made from
+    the envelope-level ``QualityCard``; block counts are preserved as metadata
+    for diagnostics, but block ``BlockQuality`` values are not passed to
+    ``evaluate_quality_card``.
 
     Args:
         envelope: ContentEnvelope to evaluate.
@@ -316,64 +311,12 @@ def evaluate_envelope_quality(
     if policy is None:
         policy = DEFAULT_POLICY
 
-    # If no blocks, evaluate envelope quality card only
-    if not envelope.blocks:
-        return evaluate_quality_card(envelope.quality_card, policy)
-
-    # Evaluate each block
-    block_decisions: List[QualityGateDecision] = []
-    pass_count = 0
-    review_count = 0
-    reject_count = 0
-
-    for block in envelope.blocks:
-        block_decision = evaluate_quality_card(block.quality_card, policy)
-        block_decisions.append(block_decision)
-
-        if block_decision.status == "pass":
-            pass_count += 1
-        elif block_decision.status == "review":
-            review_count += 1
-        else:
-            reject_count += 1
-
-    # Determine overall envelope status based on block distribution
-    total_blocks = len(envelope.blocks)
-
-    # If majority of blocks pass, envelope passes
-    if pass_count > total_blocks * 0.6:
-        overall_status: GATE_STATUS_LITERAL = "pass"
-        next_step: NEXT_STEP_LITERAL = "extract_intent"
-        reasons: List[str] = []
-    # If significant blocks need review, envelope goes to review
-    elif review_count > 0 or (pass_count > 0 and reject_count > 0):
-        overall_status = "review"
-        next_step = "manual_review"
-        reasons = [f"{review_count} blocks require review, {reject_count} blocks rejected"]
-    # If majority rejected
-    else:
-        overall_status = "reject"
-        next_step = "drop"
-        reasons = [f"{reject_count}/{total_blocks} blocks rejected"]
-
-    # Compute aggregated score (weighted average of block scores)
-    total_score = sum(b.quality_card.overall_score for b in envelope.blocks)
-    avg_score = total_score / total_blocks if total_blocks > 0 else envelope.quality_card.overall_score
-
-    return QualityGateDecision(
-        status=overall_status,
-        score=round(avg_score, 2),
-        reasons=reasons,
-        recommended_next_step=next_step,
-        block_decisions=block_decisions,
-        metadata={
-            "total_blocks": total_blocks,
-            "pass_count": pass_count,
-            "review_count": review_count,
-            "reject_count": reject_count,
-            "envelope_score": envelope.quality_card.overall_score,
-        }
-    )
+    decision = evaluate_quality_card(envelope.quality_card, policy)
+    decision.metadata.update({
+        "total_blocks": len(envelope.blocks),
+        "envelope_score": envelope.quality_card.overall_score,
+    })
+    return decision
 
 
 # =============================================================================

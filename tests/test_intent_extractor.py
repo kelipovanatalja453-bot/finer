@@ -103,6 +103,26 @@ class TestIntentExtractorBasics:
         assert result.extractor_version == "rule_based_v1"
         assert isinstance(result.extraction_timestamp, datetime)
 
+    def test_qa_block_with_answer_is_meaningful_content(self):
+        """A Feishu Q/A block must not be skipped just because it starts with Q:."""
+        envelope = make_test_envelope([
+            "Q:猫大，腾讯音乐的向下空间是不是差不多了\n"
+            "A:我觉得埋伏没问题，但是正常看也就是修复空间20%。",
+        ])
+
+        result = extract_intents_from_envelope(envelope)
+
+        assert len(result.intents) == 1
+        assert result.intents[0].direction == "bullish"
+
+    def test_single_line_question_is_still_skipped(self):
+        """A standalone question without answer is not investment analysis."""
+        envelope = make_test_envelope(["Q:猫大，腾讯音乐的向下空间是不是差不多了"])
+
+        result = extract_intents_from_envelope(envelope)
+
+        assert len(result.intents) == 0
+
 
 class TestDirectionDetection:
     """Tests for direction (bullish/bearish) detection."""

@@ -37,6 +37,7 @@ class LLMClient:
         api_key_header: str = "Authorization",
         api_key_scheme: Optional[str] = "Bearer",
         max_tokens_field: str = "max_tokens",
+        extra_body: Optional[Dict[str, Any]] = None,
     ):
         self._api_key = api_key
         self._base_url = base_url.rstrip("/") if base_url else None
@@ -47,7 +48,13 @@ class LLMClient:
         self._api_key_header = api_key_header
         self._api_key_scheme = api_key_scheme
         self._max_tokens_field = max_tokens_field
+        self._extra_body = extra_body or {}
         self.last_error: Optional[str] = None
+
+    @property
+    def model(self) -> Optional[str]:
+        """Configured model name for router fallback diagnostics."""
+        return self._model
 
     # -------------------------------------------------------------------------
     # Factory methods
@@ -73,6 +80,7 @@ class LLMClient:
             api_key_header=getattr(model_config, "api_key_header", "Authorization"),
             api_key_scheme=getattr(model_config, "api_key_scheme", "Bearer"),
             max_tokens_field=getattr(model_config, "max_tokens_field", "max_tokens"),
+            extra_body=getattr(model_config, "extra_body", None),
             **kwargs,
         )
 
@@ -100,6 +108,7 @@ class LLMClient:
                 "api_key_header": self._api_key_header,
                 "api_key_scheme": self._api_key_scheme,
                 "max_tokens_field": self._max_tokens_field,
+                "extra_body": self._extra_body,
             }
 
         # Registry-based fallback
@@ -121,6 +130,7 @@ class LLMClient:
                 "api_key_header": getattr(model_config, "api_key_header", "Authorization"),
                 "api_key_scheme": getattr(model_config, "api_key_scheme", "Bearer"),
                 "max_tokens_field": getattr(model_config, "max_tokens_field", "max_tokens"),
+                "extra_body": getattr(model_config, "extra_body", {}),
             }
 
         logger.error("LLMClient not configured: provide api_key/base_url/model or registry")
@@ -173,6 +183,9 @@ class LLMClient:
         data[config.get("max_tokens_field", "max_tokens")] = max_tokens or self.max_tokens
         if response_format is not None:
             data["response_format"] = response_format
+        provider_extra_body = dict(config.get("extra_body") or {})
+        if provider_extra_body:
+            data.update(provider_extra_body)
         if extra_body:
             data.update(extra_body)
 

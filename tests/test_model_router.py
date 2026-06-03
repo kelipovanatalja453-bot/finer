@@ -234,10 +234,39 @@ class TestReasoningModelRegistry:
         registry = ReasoningModelRegistry()
         assert registry.models[0].max_tokens_field == "max_completion_tokens"
 
+    def test_mimo_extra_body_disables_thinking(self):
+        registry = ReasoningModelRegistry()
+        assert registry.models[0].extra_body == {
+            "stream": False,
+            "thinking": {"type": "disabled"},
+        }
+
     def test_get_reasoning_registry_singleton(self):
         r1 = get_reasoning_registry()
         r2 = get_reasoning_registry()
         assert r1 is r2
+
+
+class TestTextModelRegistry:
+    def test_qwen_plus_uses_dashscope_bearer_and_max_tokens(self):
+        registry = TextModelRegistry()
+        qwen = next(model for model in registry.models if model.name == "qwen-plus")
+
+        assert qwen.base_url == "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        assert qwen.api_key_env == "DASHSCOPE_API_KEY"
+        assert qwen.api_key_header == "Authorization"
+        assert qwen.api_key_scheme == "Bearer"
+        assert qwen.max_tokens_field == "max_tokens"
+        assert qwen.extra_body == {}
+
+    def test_env_mimo_text_model_gets_mimo_extra_body(self, monkeypatch):
+        monkeypatch.setenv("FINER_LLM_MODEL", "mimo-v2.5-pro")
+        registry = TextModelRegistry()
+
+        assert registry.models[0].extra_body == {
+            "stream": False,
+            "thinking": {"type": "disabled"},
+        }
 
 
 class TestModelRouterFallback:

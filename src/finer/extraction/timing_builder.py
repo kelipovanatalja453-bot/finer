@@ -35,7 +35,12 @@ def build_execution_timing(
     """
     from finer.execution.timing_policy import MarketCalendarTimingPolicy
 
-    published_at = envelope.published_at or datetime.now()
+    if envelope.published_at is None:
+        raise ValueError(
+            "ContentEnvelope.published_at is required to build canonical "
+            "ExecutionTiming without falling back to runtime now()."
+        )
+    published_at = envelope.published_at
 
     # Determine intent_effective_at from temporal anchors
     intent_effective_at = _resolve_intent_effective_at(temporal_anchors)
@@ -60,7 +65,7 @@ def build_execution_timing(
     return ExecutionTiming(
         intent_published_at=result.intent_published_at,
         intent_effective_at=intent_effective_at,
-        action_decision_at=datetime.now(),
+        action_decision_at=result.intent_published_at,
         action_executable_at=result.action_executable_at,
         market=result.market,
         timezone=result.timezone,

@@ -67,6 +67,8 @@ class TestCNTiming:
         assert result.market == "CN"
         assert result.timezone == "Asia/Shanghai"
         assert result.market_session_at_publish == MarketSession.REGULAR
+        assert result.intent_published_at == published
+        assert result.action_decision_at == published
         expected = datetime(2026, 4, 23, 10, 35, tzinfo=ZoneInfo("Asia/Shanghai"))
         assert result.action_executable_at == expected
 
@@ -251,15 +253,12 @@ class TestFallback:
 
         assert result.timezone == "Asia/Shanghai"
 
-    def test_missing_published_at_uses_now(self) -> None:
-        """Envelope without published_at → uses current time."""
+    def test_missing_published_at_raises(self) -> None:
+        """Envelope without published_at must not fall back to runtime now."""
         envelope = _make_envelope(published_at=None)
 
-        result = build_execution_timing(envelope=envelope, market="CN")
-
-        # Should not crash and should produce a valid ExecutionTiming
-        assert isinstance(result, ExecutionTiming)
-        assert result.action_executable_at is not None
+        with pytest.raises(ValueError, match="published_at is required"):
+            build_execution_timing(envelope=envelope, market="CN")
 
     def test_intent_id_recorded(self) -> None:
         """intent_id parameter is accepted (no crash)."""

@@ -19,6 +19,23 @@ import json
 
 logger = logging.getLogger(__name__)
 
+_MIMO_OPENAI_EXTRA_BODY = {"stream": False, "thinking": {"type": "disabled"}}
+
+
+def _text_extra_body_from_env() -> Dict[str, Any]:
+    raw = os.getenv("FINER_LLM_EXTRA_BODY_JSON")
+    if raw:
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            logger.warning("Ignoring invalid FINER_LLM_EXTRA_BODY_JSON")
+    model_name = os.getenv("FINER_LLM_MODEL", "")
+    if model_name.startswith("mimo-"):
+        return dict(_MIMO_OPENAI_EXTRA_BODY)
+    return {}
+
 
 class ModelProvider(Enum):
     """Supported model providers."""
@@ -43,6 +60,7 @@ class ModelConfig:
     api_key_header: str = "Authorization"
     api_key_scheme: Optional[str] = "Bearer"
     max_tokens_field: str = "max_tokens"
+    extra_body: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -98,6 +116,7 @@ class VisionModelRegistry(BaseModelRegistry):
             api_key_header="api-key",
             api_key_scheme=None,
             max_tokens_field="max_completion_tokens",
+            extra_body=dict(_MIMO_OPENAI_EXTRA_BODY),
         ),
     ])
 
@@ -112,8 +131,16 @@ class TextModelRegistry(BaseModelRegistry):
             provider=ModelProvider.DEEPSEEK,
             api_key_env=os.getenv("FINER_LLM_API_KEY_ENV", "DEEPSEEK_API_KEY"),
             base_url=os.getenv("FINER_LLM_BASE_URL", "https://api.deepseek.com"),
-            max_tokens=8192,
+            max_tokens=int(os.getenv("FINER_LLM_MAX_TOKENS", "8192")),
             priority=0,
+            api_key_header=os.getenv("FINER_LLM_API_KEY_HEADER", "Authorization"),
+            api_key_scheme=(
+                None
+                if os.getenv("FINER_LLM_API_KEY_SCHEME", "Bearer") == ""
+                else os.getenv("FINER_LLM_API_KEY_SCHEME", "Bearer")
+            ),
+            max_tokens_field=os.getenv("FINER_LLM_MAX_TOKENS_FIELD", "max_tokens"),
+            extra_body=_text_extra_body_from_env(),
         ),
         ModelConfig(
             name="qwen-plus",
@@ -153,6 +180,7 @@ class ReasoningModelRegistry(BaseModelRegistry):
             api_key_header="api-key",
             api_key_scheme=None,
             max_tokens_field="max_completion_tokens",
+            extra_body=dict(_MIMO_OPENAI_EXTRA_BODY),
         ),
     ])
 

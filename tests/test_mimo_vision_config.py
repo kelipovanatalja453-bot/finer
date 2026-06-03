@@ -18,6 +18,7 @@ def test_vision_registry_only_uses_mimo_v25():
     assert model.api_key_header == "api-key"
     assert model.api_key_scheme is None
     assert model.max_tokens_field == "max_completion_tokens"
+    assert model.extra_body == {"stream": False, "thinking": {"type": "disabled"}}
 
 
 def test_mimo_base_url_can_use_token_plan_endpoint(monkeypatch):
@@ -71,6 +72,8 @@ def test_llm_client_uses_mimo_headers_and_token_field(monkeypatch):
     assert "Authorization" not in captured["headers"]
     assert captured["json"]["model"] == "mimo-v2.5"
     assert captured["json"]["max_completion_tokens"] == 4096
+    assert captured["json"]["stream"] is False
+    assert captured["json"]["thinking"] == {"type": "disabled"}
     assert "max_tokens" not in captured["json"]
     content = captured["json"]["messages"][0]["content"]
     assert content[0]["type"] == "text"

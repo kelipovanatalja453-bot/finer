@@ -138,7 +138,11 @@ def _is_skip_block(text: str) -> bool:
     text = text.strip()
     if not text or len(text) < 4:
         return True
+    if re.match(r'^Q[:：]\s*', text) and "\n" not in text:
+        return True
     for pattern in SKIP_PATTERNS:
+        if pattern.pattern == r'^Q:\s*':
+            continue
         if pattern.match(text):
             return True
     return False
@@ -555,10 +559,12 @@ class LLMIntentExtractor:
         router: ModelRouter,
         prompt_registry: PromptRegistry,
         extractor_version: str = "llm_v1",
+        temperature: float = 0.3,
     ):
         self._router = router
         self._prompt_registry = prompt_registry
         self._version = extractor_version
+        self._temperature = temperature
 
     def extract(self, envelope: ContentEnvelope) -> IntentExtractionResult:
         """Extract intents from a ContentEnvelope using the LLM.
@@ -606,6 +612,7 @@ class LLMIntentExtractor:
                 user_prompt,
                 system_prompt=system_prompt,
                 task_type="text",
+                temperature=self._temperature,
             )
         except Exception as e:
             logger.error(f"LLM call failed: {e}")

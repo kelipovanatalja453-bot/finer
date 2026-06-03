@@ -78,6 +78,15 @@ class TestSelectAdapter:
         )
         assert router._select_adapter(f0, Path("/tmp/chat.md")) == "feishu_chat"
 
+    def test_md_feishu_chat_selects_feishu_chat(self):
+        router = StandardizationRouter()
+        f0 = _make_f0(
+            source_platform="feishu",
+            source_type="feishu_chat",
+            raw_path="/tmp/chat.md",
+        )
+        assert router._select_adapter(f0, Path("/tmp/chat.md")) == "feishu_chat"
+
     def test_md_feishu_platform_alone_selects_manual_text(self):
         """P1: feishu platform without chat source_type should NOT route to chat adapter."""
         router = StandardizationRouter()
@@ -131,6 +140,23 @@ class TestSelectAdapter:
             raw_path="/tmp/export.md",
         )
         assert router._select_adapter(f0, Path("/tmp/export.md")) == "feishu_chat"
+
+    def test_feishu_chat_raw_selects_feishu_chat(self):
+        router = StandardizationRouter()
+        f0 = _make_f0(
+            source_platform="feishu",
+            source_type="feishu_chat",
+            raw_path="/tmp/message.raw",
+        )
+        assert router._select_adapter(f0, Path("/tmp/message.raw")) == "feishu_chat"
+
+    def test_unclassified_raw_returns_unsupported(self):
+        router = StandardizationRouter()
+        f0 = _make_f0(
+            source_type="unclassified",
+            raw_path="/tmp/message.raw",
+        )
+        assert router._select_adapter(f0, Path("/tmp/message.raw")) == "unsupported"
 
 
 # ---------------------------------------------------------------------------
