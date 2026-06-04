@@ -212,6 +212,8 @@ export type AuditTraceBundle = {
 ## 7. 后端 API 契约交付物（本轮只定义，不实现）
 
 > 给后端的明确契约。与现有 `/api/lineage/*`（legacy content/segment/event 血缘）**区分开**，建议挂在 `/api/audit/*` 或 `extraction.py` 下。
+>
+> **可执行任务卡（后端 Agent 冷启动）见 `docs/specs/2026-06-04-audit-trace-backend-api-task.md`** —— 含数据源、bundle 组装链路、字段派生、evidence 缺口处理、error envelope、注册与验收 DoD。
 
 ### 7.1 `GET /api/audit/actions`
 
