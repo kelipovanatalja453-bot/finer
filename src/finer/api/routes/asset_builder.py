@@ -251,8 +251,12 @@ def _build_workflow_assets_uncached(workflow_stage: str) -> List[AssetFile]:
     manifests_by_source_name = index["by_source_name"]
     manifests_data = list(manifests_by_content_id.values())
 
+    # Stop-bleed: the degraded filesystem fallback must NOT recursively walk
+    # data/L0_ingest (~650MB) on every request. Once Project Memory asset_index
+    # is populated, the catalog path serves /api/files; this scan is only a
+    # last-resort fallback and is intentionally scoped to the small intake dirs.
     raw_paths = []
-    for p in collect_files_from_directories([DATA_ROOT / "raw", DATA_ROOT / "L0_ingest", DATA_ROOT / "F0_intake"]):
+    for p in collect_files_from_directories([DATA_ROOT / "raw", DATA_ROOT / "F0_intake"]):
         if not p.name.endswith(".json"):
             raw_paths.append(p)
 

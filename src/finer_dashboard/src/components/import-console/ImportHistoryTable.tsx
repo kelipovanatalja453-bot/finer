@@ -2,12 +2,24 @@
 
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { FileText, Inbox, ChevronDown, ChevronRight } from "lucide-react";
+import { FileText, Inbox, ChevronDown, ChevronRight, WifiOff } from "lucide-react";
 import type { ImportRun } from "@/lib/contracts";
+import type { ApiError } from "@/lib/api-client";
 
 interface ImportHistoryTableProps {
   records: ImportRun[];
   loading: boolean;
+  /** Set when the import-runs fetch failed (404 / unreachable / 5xx). */
+  error?: ApiError | null;
+}
+
+/** Map a failed import-runs fetch to a human-readable reason. */
+function describeRunsError(error: ApiError): string {
+  if (error.status === 0) return "无法连接到后端服务";
+  if (error.status === 404) return "导入历史服务未就绪（接口未找到）";
+  if (error.status === 502) return "后端不可达或连接失败";
+  if (error.status >= 500) return "导入历史服务异常";
+  return error.message || "导入历史获取失败";
 }
 
 const STATUS_BADGE: Record<
@@ -122,6 +134,7 @@ function ErrorDetailsRow({ record }: { record: ImportRun }) {
 export function ImportHistoryTable({
   records,
   loading,
+  error,
 }: ImportHistoryTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
@@ -147,6 +160,27 @@ export function ImportHistoryTable({
               className="h-10 bg-stone-50 rounded animate-pulse"
             />
           ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Fetch failure (404 / 502 / unreachable) must NOT be shown as "暂无导入记录".
+  if (error) {
+    return (
+      <div className="bg-white border border-red-200 rounded-lg p-12">
+        <div className="flex flex-col items-center justify-center text-center">
+          <WifiOff className="w-10 h-10 mb-3 text-red-400" />
+          <p className="text-sm font-medium text-red-600">
+            {describeRunsError(error)}
+          </p>
+          <p className="text-xs mt-1 text-foreground/40 font-mono">
+            {error.code}
+            {error.requestId ? ` · ${error.requestId}` : ""}
+          </p>
+          <p className="text-xs mt-2 text-foreground/40">
+            无法读取导入历史，这不代表没有导入记录
+          </p>
         </div>
       </div>
     );

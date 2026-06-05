@@ -18,6 +18,20 @@ import { ErrorPanel } from "@/components/error-panel/ErrorPanel";
 interface IndexHealthCardProps {
   health: F0IndexHealth | null;
   loading: boolean;
+  /** Set when the health fetch failed (404 / unreachable / 5xx). */
+  error?: ApiError | null;
+}
+
+/**
+ * Map a failed health fetch to a human-readable reason.
+ * Distinguishes "index service not ready / unreachable" from genuine empty data.
+ */
+function describeHealthError(error: ApiError): string {
+  if (error.status === 0) return "无法连接到后端服务";
+  if (error.status === 404) return "索引服务未就绪（接口未找到）";
+  if (error.status === 502) return "后端不可达或连接失败";
+  if (error.status >= 500) return "索引服务异常";
+  return error.message || "索引状态获取失败";
 }
 
 const STATUS_CONFIG: Record<
@@ -68,7 +82,7 @@ function formatTime(iso: string | null): string {
   return new Date(iso).toLocaleString("zh-CN");
 }
 
-export function IndexHealthCard({ health, loading }: IndexHealthCardProps) {
+export function IndexHealthCard({ health, loading, error }: IndexHealthCardProps) {
   const [rebuilding, setRebuilding] = React.useState(false);
   const [rebuildError, setRebuildError] = React.useState<ApiError | null>(null);
 
@@ -110,6 +124,29 @@ export function IndexHealthCard({ health, loading }: IndexHealthCardProps) {
   }
 
   if (!health) {
+    // Distinguish a real fetch failure (404 / 502 / unreachable) from the
+    // benign "no health payload yet" placeholder. A failure must NOT read as
+    // "everything is fine but empty".
+    if (error) {
+      return (
+        <div className="bg-white border border-red-200 rounded-lg p-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-red-50 rounded-lg">
+              <XCircle className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-foreground">索引健康状态</h3>
+              <p className="text-sm text-red-600">{describeHealthError(error)}</p>
+              <p className="text-xs text-foreground/40 mt-0.5 font-mono">
+                {error.code}
+                {error.requestId ? ` · ${error.requestId}` : ""}
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="bg-white border border-stone-200 rounded-lg p-6">
         <div className="flex items-center gap-3">

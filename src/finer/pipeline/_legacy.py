@@ -19,9 +19,19 @@ from finer.services.perception import PerceptionOrchestrator
 
 def init_storage(root: Path) -> dict[str, Any]:
     created = ensure_storage(root)
+
+    # Bootstrap Project Memory schema (idempotent). This only creates the table
+    # structure defined by the migrations — it does NOT scan raw files or
+    # backfill any business rows, so Finer OS startup never triggers a recursive
+    # raw-directory walk.
+    from finer.scripts.project_memory_migrate import apply_migrations
+
+    pm_schema = apply_migrations()
+
     return {
         "status": "ok",
         "created_or_verified": created,
+        "project_memory_schema": pm_schema,
     }
 
 

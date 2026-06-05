@@ -122,6 +122,41 @@ def _apply_migration(conn: sqlite3.Connection, migration: MigrationFile) -> int:
     return elapsed_ms
 
 
+def apply_migrations(db_path: Path = PROJECT_MEMORY_DB) -> dict[str, object]:
+    """Idempotently apply all pending Project Memory migrations.
+
+    Safe to call repeatedly: only pending migrations are applied. Creates the
+    database file and parent directories if missing. This is the programmatic
+    entry point used by ``finer.cli init-storage`` so that schema bootstrap does
+    not require a subprocess/click invocation.
+
+    Does NOT scan raw files or backfill any business rows — it only creates the
+    table structure (projects, contents, asset_index, etc.).
+
+    Returns a summary dict: ``{"db_path", "applied", "already_applied", "version"}``.
+    """
+    conn = _open_db(db_path)
+    try:
+        applied = _applied_versions(conn)
+        all_migrations = discover_migrations()
+        pending = [m for m in all_migrations if m.version not in applied]
+
+        applied_names: list[str] = []
+        for m in pending:
+            _apply_migration(conn, m)
+            applied_names.append(f"{m.version:03d}_{m.name}")
+
+        version = max((m.version for m in all_migrations), default=0)
+        return {
+            "db_path": str(db_path),
+            "applied": applied_names,
+            "already_applied": sorted(applied.keys()),
+            "version": version,
+        }
+    finally:
+        conn.close()
+
+
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
 

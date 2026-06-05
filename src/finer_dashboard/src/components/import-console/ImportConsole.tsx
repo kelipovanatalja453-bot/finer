@@ -73,13 +73,21 @@ export function ImportConsole() {
       )}
 
       {/* Index Health */}
-      <IndexHealthCard health={health} loading={healthLoading} />
+      <IndexHealthCard
+        health={health}
+        loading={healthLoading}
+        error={healthError}
+      />
 
       {/* Source Channels */}
       <SourceChannelStatus />
 
       {/* Import History */}
-      <ImportHistoryTable records={records} loading={recordsLoading} />
+      <ImportHistoryTable
+        records={records}
+        loading={recordsLoading}
+        error={recordsError}
+      />
     </div>
   );
 }
