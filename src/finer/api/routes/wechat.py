@@ -528,8 +528,14 @@ async def import_wechat_channels_video(req: WeChatChannelsImportRequest):
         )
         receipt: dict[str, Any] = {}
         if result.receipt_path.exists():
-            import json
-            receipt = json.loads(result.receipt_path.read_text(encoding="utf-8"))
+            from finer.schemas.import_receipt import ImportReceipt
+            receipt_model = ImportReceipt.model_validate_json(
+                result.receipt_path.read_text(encoding="utf-8")
+            )
+            receipt = receipt_model.model_dump()
+            # Register in Project Memory (best-effort)
+            if result.status in ("imported", "already_imported"):
+                _register_f0_index(result.content_record, receipt_model)
 
         return WeChatChannelsImportResponse(
             import_run_id=result.import_run_id,

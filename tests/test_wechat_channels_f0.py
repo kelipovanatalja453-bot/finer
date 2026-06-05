@@ -90,9 +90,15 @@ def test_wechat_channels_importer_writes_f0_artifacts(tmp_path: Path) -> None:
 
     receipt = json.loads(result.receipt_path.read_text(encoding="utf-8"))
     assert receipt["stage"] == "F0"
-    assert receipt["source_channel"] == "wechat"
+    assert receipt["source_channel"] == "wechat_channels"
     assert receipt["source_kind"] == WECHAT_CHANNELS_SOURCE_KIND
     assert receipt["content_id"] == record.content_id
+    assert receipt["status"] == "completed"
+    assert receipt["records_created"] == 1
+    assert "video" in receipt["raw_sha256"]
+    assert "profile" in receipt["raw_sha256"]
+    assert "video" in receipt["raw_paths"]
+    assert "profile" in receipt["raw_paths"]
 
 
 def test_wechat_channels_importer_is_idempotent(tmp_path: Path) -> None:
@@ -117,6 +123,13 @@ def test_wechat_channels_importer_is_idempotent(tmp_path: Path) -> None:
     assert second.status == "already_imported"
     assert second.content_record.content_id == first.content_record.content_id
     assert second.record_path == first.record_path
+
+    # Receipt must also be written for the already_imported path.
+    assert second.receipt_path.exists()
+    receipt = json.loads(second.receipt_path.read_text(encoding="utf-8"))
+    assert receipt["source_channel"] == "wechat_channels"
+    assert receipt["status"] == "skipped"
+    assert receipt["records_created"] == 0
 
 
 def test_wechat_channels_import_route(tmp_path: Path) -> None:
@@ -146,6 +159,40 @@ def test_wechat_channels_import_route(tmp_path: Path) -> None:
     assert data["content_record"]["metadata"]["source_kind"] == WECHAT_CHANNELS_SOURCE_KIND
     assert Path(data["record_path"]).exists()
     assert Path(data["receipt_path"]).exists()
+    # Receipt in response must be a canonical ImportReceipt dump.
+    assert data["receipt"]["source_channel"] == "wechat_channels"
+    assert data["receipt"]["status"] == "completed"
+
+
+def test_wechat_channels_import_registers_pm(tmp_path: Path) -> None:
+    """Channels import route must register PM (best-effort) via _register_f0_index."""
+    from finer.api.routes import wechat
+    from finer.api.server import app
+
+    video = tmp_path / "downloaded.mp4"
+    video.write_bytes(b"video-bytes")
+
+    with patch.object(wechat, "REPO_ROOT", tmp_path), patch(
+        "finer.ingestion.wechat_adapter.WeChatChannelsDownloadClient.get_feed_profile",
+        return_value=_profile_payload(),
+    ), patch("finer.api.routes.wechat._register_f0_index") as mock_register:
+        client = TestClient(app)
+        resp = client.post(
+            "/api/wechat/channels/import",
+            json={
+                "url": "https://weixin.qq.com/sph/test",
+                "video_file_path": str(video),
+            },
+        )
+
+    assert resp.status_code == 200
+    assert mock_register.call_count == 1
+    # First arg is ContentRecord, second is ImportReceipt.
+    call_args = mock_register.call_args
+    from finer.schemas.content import ContentRecord as CR
+    from finer.schemas.import_receipt import ImportReceipt as IR
+    assert isinstance(call_args[0][0], CR)
+    assert isinstance(call_args[0][1], IR)
 
 
 def test_wechat_channels_import_route_requires_video_or_download() -> None:

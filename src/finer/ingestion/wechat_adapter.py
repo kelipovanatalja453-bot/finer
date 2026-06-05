@@ -31,6 +31,7 @@ from urllib.parse import quote_plus
 import httpx
 
 from finer.schemas.content import ContentRecord
+from finer.schemas.import_receipt import ImportReceipt
 
 # Import secure token storage
 try:
@@ -1465,6 +1466,18 @@ class WeChatChannelsF0Importer:
                 video_sha256=record.metadata.get("raw_video_sha256", ""),
                 profile_sha256=_sha256_file(raw_profile_path) if raw_profile_path.exists() else "",
             )
+            receipt = _build_wechat_channels_receipt(
+                import_run_id=import_run_id,
+                status="already_imported",
+                record=record,
+                record_path=record_path,
+                artifacts=artifacts,
+                f0_dir=f0_dir,
+            )
+            receipt_path.write_text(
+                receipt.model_dump_json(indent=2),
+                encoding="utf-8",
+            )
             return WeChatChannelsImportResult(
                 import_run_id=import_run_id,
                 status="already_imported",
@@ -1518,7 +1531,7 @@ class WeChatChannelsF0Importer:
             f0_dir=f0_dir,
         )
         receipt_path.write_text(
-            json.dumps(receipt, ensure_ascii=False, indent=2),
+            receipt.model_dump_json(indent=2),
             encoding="utf-8",
         )
 
@@ -1702,25 +1715,29 @@ def _build_wechat_channels_receipt(
     record_path: Path,
     artifacts: WeChatChannelsArtifacts,
     f0_dir: Path,
-) -> dict[str, Any]:
-    return {
-        "import_run_id": import_run_id,
-        "stage": "F0",
-        "source_channel": "wechat",
-        "source_kind": WECHAT_CHANNELS_SOURCE_KIND,
-        "status": status,
-        "content_id": record.content_id,
-        "external_source_id": record.external_source_id,
-        "dedupe_fingerprint": record.dedupe_fingerprint,
-        "record_path": str(record_path),
-        "f0_path": str(f0_dir),
-        "raw_artifacts": {
+) -> ImportReceipt:
+    """Build a canonical ImportReceipt for a WeChat Channels video import."""
+    # Map legacy status values to ImportStatus literals.
+    _status_map = {"imported": "completed", "already_imported": "skipped"}
+    mapped_status = _status_map.get(status, status)
+
+    return ImportReceipt(
+        run_id=import_run_id,
+        source_channel="wechat_channels",
+        source_kind=WECHAT_CHANNELS_SOURCE_KIND,
+        status=mapped_status,
+        content_id=record.content_id,
+        external_source_id=record.external_source_id,
+        dedupe_fingerprint=record.dedupe_fingerprint,
+        collected_at=record.collected_at,
+        raw_sha256={
+            "video": artifacts.video_sha256,
+            "profile": artifacts.profile_sha256,
+        },
+        raw_paths={
             "video": str(artifacts.raw_video_path),
             "profile": str(artifacts.raw_profile_path),
         },
-        "raw_hashes": {
-            "video_sha256": artifacts.video_sha256,
-            "profile_sha256": artifacts.profile_sha256,
-        },
-        "created_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-    }
+        record_path=str(record_path),
+        records_created=1 if status == "imported" else 0,
+    )
