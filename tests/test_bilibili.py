@@ -135,23 +135,125 @@ class TestBilibiliClient:
             client.parse_bvid("not-a-valid-id")
 
     @patch("finer.ingestion.bilibili_adapter.httpx.Client")
-    def test_search_videos_returns_stub(self, mock_httpx_cls):
-        """Test that search_videos returns a stub result structure."""
+    def test_search_videos_returns_parsed_results(self, mock_httpx_cls):
+        """Test that search_videos calls the real API and parses results."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status = Mock()
+        mock_response.json.return_value = {
+            "code": 0,
+            "data": {
+                "result": [
+                    {
+                        "bvid": "BV1abc123def",
+                        "title": "Finance <em class=\"keyword\">Analysis</em> 2024",
+                        "author": "TestUP",
+                        "play": 50000,
+                        "duration": "12:34",
+                        "description": "A finance video",
+                        "pic": "//i0.hdslb.com/bfs/archive/abc.jpg",
+                    },
+                    {
+                        "bvid": "BV2xyz456ghi",
+                        "title": "Stock Market",
+                        "author": "AnotherUP",
+                        "play": 10000,
+                        "duration": "05:00",
+                        "description": "Stock tips",
+                        "pic": "//i0.hdslb.com/bfs/archive/xyz.jpg",
+                    },
+                ],
+                "numResults": 2,
+            },
+        }
+
+        mock_client_instance = Mock()
+        mock_client_instance.get.return_value = mock_response
+        mock_client_instance.__enter__ = Mock(return_value=mock_client_instance)
+        mock_client_instance.__exit__ = Mock(return_value=False)
+        mock_httpx_cls.return_value = mock_client_instance
+
         client = BilibiliClient()
-        # search_videos should be a stub that returns empty results
-        result = client.search_videos("test keyword")
-        assert "videos" in result
-        assert "total" in result
+        result = client.search_videos("finance")
+
+        assert result["total"] == 2
+        assert result["page"] == 1
+        assert len(result["videos"]) == 2
+
+        v0 = result["videos"][0]
+        assert v0["bvid"] == "BV1abc123def"
+        assert v0["title"] == "Finance Analysis 2024"  # HTML tags stripped
+        assert v0["author"] == "TestUP"
+        assert v0["play"] == 50000
+        assert v0["duration"] == "12:34"
+        assert v0["pic"] == "//i0.hdslb.com/bfs/archive/abc.jpg"
+
+    @patch("finer.ingestion.bilibili_adapter.httpx.Client")
+    def test_search_videos_api_failure_returns_empty(self, mock_httpx_cls):
+        """Test that search_videos returns empty results when API returns error code."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status = Mock()
+        mock_response.json.return_value = {
+            "code": -412,
+            "message": "请求被拦截",
+        }
+
+        mock_client_instance = Mock()
+        mock_client_instance.get.return_value = mock_response
+        mock_client_instance.__enter__ = Mock(return_value=mock_client_instance)
+        mock_client_instance.__exit__ = Mock(return_value=False)
+        mock_httpx_cls.return_value = mock_client_instance
+
+        client = BilibiliClient()
+        result = client.search_videos("finance")
+
         assert result["videos"] == []
         assert result["total"] == 0
 
     @patch("finer.ingestion.bilibili_adapter.httpx.Client")
-    def test_search_videos_with_pagination(self, mock_httpx_cls):
-        """Test search_videos accepts page and page_size."""
+    def test_search_videos_exception_returns_empty(self, mock_httpx_cls):
+        """Test that search_videos returns empty results on network exception."""
+        mock_client_instance = Mock()
+        mock_client_instance.get.side_effect = Exception("connection timeout")
+        mock_client_instance.__enter__ = Mock(return_value=mock_client_instance)
+        mock_client_instance.__exit__ = Mock(return_value=False)
+        mock_httpx_cls.return_value = mock_client_instance
+
         client = BilibiliClient()
         result = client.search_videos("finance", page=2, page_size=10)
+
+        assert result["videos"] == []
         assert result["page"] == 2
         assert result["page_size"] == 10
+
+    @patch("finer.ingestion.bilibili_adapter.httpx.Client")
+    def test_search_videos_with_pagination(self, mock_httpx_cls):
+        """Test search_videos passes pagination params to the API."""
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.raise_for_status = Mock()
+        mock_response.json.return_value = {
+            "code": 0,
+            "data": {"result": [], "numResults": 0},
+        }
+
+        mock_client_instance = Mock()
+        mock_client_instance.get.return_value = mock_response
+        mock_client_instance.__enter__ = Mock(return_value=mock_client_instance)
+        mock_client_instance.__exit__ = Mock(return_value=False)
+        mock_httpx_cls.return_value = mock_client_instance
+
+        client = BilibiliClient()
+        result = client.search_videos("finance", page=2, page_size=10)
+
+        assert result["page"] == 2
+        assert result["page_size"] == 10
+
+        # Verify params were passed correctly to httpx
+        call_kwargs = mock_client_instance.get.call_args
+        assert call_kwargs[1]["params"]["page"] == 2
+        assert call_kwargs[1]["params"]["page_size"] == 10
 
 
 class TestTranscriptSegment:

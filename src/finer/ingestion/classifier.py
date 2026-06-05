@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import re
+import shutil
 import subprocess
 import json
 from dataclasses import dataclass
@@ -161,9 +162,14 @@ def _ai_classify(
 
 仅返回JSON，不要其他内容。"""
 
+    gemini_bin = shutil.which("gemini")
+    if not gemini_bin:
+        logger.warning("Gemini CLI not found in PATH, skipping AI classification")
+        return None, None, ""
+
     try:
         result = subprocess.run(
-            ["/opt/homebrew/bin/gemini", "-p", prompt],
+            [gemini_bin, "-p", prompt],
             capture_output=True,
             text=True,
             timeout=30,

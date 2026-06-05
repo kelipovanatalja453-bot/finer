@@ -125,6 +125,23 @@ class BilibiliClient:
 
         raise ValueError(f"Cannot parse BV ID from: {url_or_bvid}")
 
+    @staticmethod
+    def _strip_html_tags(text: str) -> str:
+        """Remove HTML tags from a string."""
+        return re.sub(r"<[^>]+>", "", text)
+
+    def _parse_search_video(self, item: dict) -> dict:
+        """Parse a single search result item into a normalized video dict."""
+        return {
+            "bvid": item.get("bvid", ""),
+            "title": self._strip_html_tags(item.get("title", "")),
+            "author": item.get("author", ""),
+            "play": item.get("play", 0),
+            "duration": item.get("duration", ""),
+            "description": item.get("description", ""),
+            "pic": item.get("pic", ""),
+        }
+
     def search_videos(
         self,
         keyword: str,
@@ -133,8 +150,8 @@ class BilibiliClient:
     ) -> dict:
         """Search Bilibili videos by keyword.
 
-        Placeholder implementation — returns empty results until
-        a real search API integration is wired up.
+        Calls the real B站 search API and returns parsed results.
+        Falls back to empty results on API failure or exception.
 
         Args:
             keyword: Search keyword
@@ -144,12 +161,44 @@ class BilibiliClient:
         Returns:
             Dict with keys: videos, total, page, page_size
         """
-        return {
-            "videos": [],
-            "total": 0,
-            "page": page,
-            "page_size": page_size,
-        }
+        empty = {"videos": [], "total": 0, "page": page, "page_size": page_size}
+
+        try:
+            url = "https://api.bilibili.com/x/web-interface/search/type"
+            params = {
+                "search_type": "video",
+                "keyword": keyword,
+                "page": page,
+                "page_size": page_size,
+            }
+
+            with httpx.Client(timeout=self.timeout) as client:
+                response = client.get(url, headers=self.headers, params=params)
+                response.raise_for_status()
+                data = response.json()
+
+            if data.get("code") != 0:
+                logger.warning(
+                    "B站 search API error: code=%s, message=%s",
+                    data.get("code"),
+                    data.get("message", ""),
+                )
+                return empty
+
+            raw_results = data.get("data", {}).get("result", []) or []
+            total = data.get("data", {}).get("numResults", 0)
+
+            videos = [self._parse_search_video(item) for item in raw_results]
+
+            return {
+                "videos": videos,
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+            }
+        except Exception as exc:
+            logger.warning("search_videos failed: %s", exc)
+            return empty
 
     def get_video_info(self, bvid: str) -> BilibiliVideoInfo:
         """Fetch video metadata from B站 API."""
