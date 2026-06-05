@@ -100,7 +100,7 @@ from finer.utils.time import now_utc
 ## 4. Phase 4 — PM 增量写入深化 + IDP-01（PENDING）
 
 ### 卡 P4-IDP01 — artifacts 表确定性去重键
-- F-stage F0 / 状态 PENDING / 依赖：无（独立）/ ⚠️ 触碰 PM 写入路径
+- F-stage F0 / 状态 ✅ DONE / commit `6e86b2a5` / 依赖：无（独立）/ ⚠️ 触碰 PM 写入路径
 - 背景：`F0IndexWriter` 当前**不写 artifacts/storage_objects**（backfill 用随机 `art_<uuid>` 非幂等，重复 backfill 会累积 `is_canonical=0` 历史行 371→742）。
 - 目标：给 artifact 写入设计**确定性去重键**（如 `sha256(content_id+role+raw_sha256)`），使 `F0IndexWriter.record_imported` 能幂等注册 artifacts；可选清理 backfill 已产生的重复历史行（清理=批量删除，**红线，需用户确认**）。
 - allowed：`ingestion/f0_index_writer.py`、`scripts/project_memory_backfill.py`、相关测试；forbidden：migrations 表结构变更（除非用户确认）。
