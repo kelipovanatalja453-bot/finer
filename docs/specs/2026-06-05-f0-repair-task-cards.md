@@ -23,6 +23,7 @@
 | *(无新 commit)* | Line V §7 验证债核实（5 项仍开放，无一阻塞 Phase 3）| ✅ DONE |
 | `6e86b2a5` | P4-IDP01 artifacts 确定性去重键 + backfill 修复 | ✅ DONE |
 | `c9892ffb` | §7 项 1+5 修复（f0_triggered 改名 + _register_f0_index 返回 bool）| ✅ DONE |
+| `f680a700` | P4-COVERAGE 微信视频号 PM 接线（6/6 渠道全覆盖）| ✅ DONE |
 
 - **R-01 ~ R-33 代码层全部解决**（详见 06-04 文档 §10）。全量 `pytest tests/` = 2764 passed / 1 pre-existing F8 失败（`test_get_price_routing`，与 F0 无关）。
 - **6 渠道终态**：本地上传可立即 E2E；微信视频号/公众号、飞书、NotebookLM、B站 代码已收口，E2E 待用户修环境（见 §6）。
@@ -110,7 +111,7 @@ from finer.utils.time import now_utc
 - 🔴 红线：清理历史行属批量删除，需用户确认。
 
 ### 卡 P4-COVERAGE — 各渠道 record_imported 接线覆盖确认
-- F-stage F0 / 状态 PENDING / 依赖：Phase 3 之后
+- F-stage F0 / 状态 ✅ DONE / commit `f680a700` / 依赖：Phase 3 之后
 - 目标：只读核查 6 渠道导入成功路径**是否都真的调了** `F0IndexWriter().record_imported`（BK2/BK3/BK4/BK1 报告称已接，需端到端确认每条 happy path 都落 PM 行，无遗漏/无静默 best-effort 吞错）。补缺失接线。
 - allowed：对应渠道 route/adapter（按渠道单 agent）；forbidden：frozen。
 - 验收：每渠道导入一次 → asset_index 行数 +1；汇总成一张"渠道→PM 写入确认表"。
