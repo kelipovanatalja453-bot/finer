@@ -27,7 +27,7 @@
 | `15d0ab0b` | §7A wechat_adapter 拆分（MP + Channels + shim）| ✅ DONE |
 | `b2735445` | §7B+C search_videos 真实 API + gemini 动态查找 | ✅ DONE |
 
-- **R-01 ~ R-33 代码层全部解决**（详见 06-04 文档 §10）。全量 `pytest tests/` = 2764 passed / 1 pre-existing F8 失败（`test_get_price_routing`，与 F0 无关）。
+- **R-01 ~ R-33 代码层全部解决**（详见 06-04 文档 §10）。固定顺序 `pytest tests/ -q -p no:randomly` = **2772 passed / 1 pre-existing F8 失败**（`test_get_price_routing`，与 F0 无关）。⚠️ 随机顺序存在 order-dependent 测试污染（见卡 P4-POLLUTION）。
 - **6 渠道终态**：本地上传可立即 E2E；微信视频号/公众号、飞书、NotebookLM、B站 代码已收口，E2E 待用户修环境（见 §6）。
 - **下一步入口**：Phase 3 剩余 P3 卡（需用户完成环境清单 §8）/ Phase 4（IDP-01）/ Phase 6（合并）——见下，按用户选择派发。
 
@@ -117,6 +117,15 @@ from finer.utils.time import now_utc
 - 目标：只读核查 6 渠道导入成功路径**是否都真的调了** `F0IndexWriter().record_imported`（BK2/BK3/BK4/BK1 报告称已接，需端到端确认每条 happy path 都落 PM 行，无遗漏/无静默 best-effort 吞错）。补缺失接线。
 - allowed：对应渠道 route/adapter（按渠道单 agent）；forbidden：frozen。
 - 验收：每渠道导入一次 → asset_index 行数 +1；汇总成一张"渠道→PM 写入确认表"。
+
+### 卡 P4-POLLUTION — order-dependent 测试污染排查
+- F-stage F0（测试卫生）/ 状态 PENDING / 依赖：无（独立）/ 优先级：中
+- 背景：随机顺序（项目装了 `pytest-randomly`）坏种子下，全量 suite 出现 ~6 失败 + 连带 error ~54 测试（passed 2772→2707）。污染目标测试：`tests/test_f1_standardization_fixtures.py::...test_manifest_driven_assertions`(×3)、`tests/test_live_mimo_multimodal.py::...test_mimo_vision_config`/`test_missing_key_produces_canonical_envelope`(×3)。**固定顺序（`-p no:randomly`）与单独跑均全过** → 确认是测试污染，非代码 bug。中途 b1ce1495 全量仅 1 失败，疑似本轮 Phase 4/§7 新测试引入。
+- 目标：定位泄漏全局状态的测试（env var / 模块单例 / monkeypatch 未还原 / cwd / 被 patch 的 PM DB / LLM client 缓存），加 fixture teardown 或 autouse 隔离，使随机顺序也稳定。
+- 复现/定位：`pytest tests/ -q -p no:randomly`（对照，应 1 failed）；`pytest tests/ -q -p randomly`（多跑几次撞坏种子）；用 `--randomly-seed=<seed>` 锁定后二分定位污染源测试。
+- allowed：相关测试文件 + `conftest.py`；forbidden：改业务代码绕过、改 frozen、用 `xfail`/`skip` 掩盖。
+- 验收：随机 5 个种子全量 suite 均稳定 = 1 failed(pre-existing) / 2772 passed。
+- 注：污染会掩盖真实回归、误导验收（本轮审阅报告就因此误记 7 failed），值得清理但不阻塞功能。
 
 ---
 
