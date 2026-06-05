@@ -37,11 +37,11 @@ from finer.services.wechat_session_store import (
     LoginState,
 )
 from finer.ingestion.wechat_exporter_client import WeChatExporterClient
-from finer.ingestion.wechat_adapter import (
+from finer.ingestion.wechat_mp_adapter import get_unified_wechat_adapter
+from finer.ingestion.wechat_channels_adapter import (
     WeChatChannelsDownloadClient,
     WeChatChannelsDownloaderUnavailable,
     WeChatChannelsF0Importer,
-    get_unified_wechat_adapter,
     resolve_wx_channels_download_bin,
 )
 from finer.paths import REPO_ROOT

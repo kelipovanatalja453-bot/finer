@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from finer.ingestion.wechat_adapter import (
+from finer.ingestion.wechat_channels_adapter import (
     WECHAT_CHANNELS_SOURCE_KIND,
     WeChatChannelsDownloadClient,
     WeChatChannelsF0Importer,
@@ -140,7 +140,7 @@ def test_wechat_channels_import_route(tmp_path: Path) -> None:
     video.write_bytes(b"video-bytes")
 
     with patch.object(wechat, "REPO_ROOT", tmp_path), patch(
-        "finer.ingestion.wechat_adapter.WeChatChannelsDownloadClient.get_feed_profile",
+        "finer.ingestion.wechat_channels_adapter.WeChatChannelsDownloadClient.get_feed_profile",
         return_value=_profile_payload(),
     ):
         client = TestClient(app)
@@ -173,7 +173,7 @@ def test_wechat_channels_import_registers_pm(tmp_path: Path) -> None:
     video.write_bytes(b"video-bytes")
 
     with patch.object(wechat, "REPO_ROOT", tmp_path), patch(
-        "finer.ingestion.wechat_adapter.WeChatChannelsDownloadClient.get_feed_profile",
+        "finer.ingestion.wechat_channels_adapter.WeChatChannelsDownloadClient.get_feed_profile",
         return_value=_profile_payload(),
     ), patch("finer.api.routes.wechat._register_f0_index") as mock_register:
         client = TestClient(app)
@@ -219,13 +219,13 @@ class TestBinaryExternalInstall:
 
     def test_path_install_wins(self, tmp_path: Path) -> None:
         import os
-        from finer.ingestion.wechat_adapter import (
+        from finer.ingestion.wechat_channels_adapter import (
             WX_CHANNELS_DOWNLOAD_BIN_ENV,
             resolve_wx_channels_download_bin,
         )
 
         with patch(
-            "finer.ingestion.wechat_adapter.shutil.which",
+            "finer.ingestion.wechat_channels_adapter.shutil.which",
             return_value="/usr/local/bin/wx_video_download",
         ), patch.dict(os.environ, {WX_CHANNELS_DOWNLOAD_BIN_ENV: "/env/wx_video_download"}):
             resolved = resolve_wx_channels_download_bin(tmp_path)
@@ -233,12 +233,12 @@ class TestBinaryExternalInstall:
 
     def test_env_override_used_when_not_on_path(self, tmp_path: Path) -> None:
         import os
-        from finer.ingestion.wechat_adapter import (
+        from finer.ingestion.wechat_channels_adapter import (
             WX_CHANNELS_DOWNLOAD_BIN_ENV,
             resolve_wx_channels_download_bin,
         )
 
-        with patch("finer.ingestion.wechat_adapter.shutil.which", return_value=None), patch.dict(
+        with patch("finer.ingestion.wechat_channels_adapter.shutil.which", return_value=None), patch.dict(
             os.environ, {WX_CHANNELS_DOWNLOAD_BIN_ENV: "/opt/wx/wx_video_download"}
         ):
             resolved = resolve_wx_channels_download_bin(tmp_path)
@@ -246,7 +246,7 @@ class TestBinaryExternalInstall:
 
     def test_vendored_is_last_resort(self, tmp_path: Path) -> None:
         import os
-        from finer.ingestion.wechat_adapter import resolve_wx_channels_download_bin
+        from finer.ingestion.wechat_channels_adapter import resolve_wx_channels_download_bin
 
         vendored = tmp_path / "scripts" / "wx_channels_download" / "wx_video_download"
         vendored.parent.mkdir(parents=True)
@@ -254,7 +254,7 @@ class TestBinaryExternalInstall:
 
         env = {k: v for k, v in os.environ.items()}
         env.pop("WX_CHANNELS_DOWNLOAD_BIN", None)
-        with patch("finer.ingestion.wechat_adapter.shutil.which", return_value=None), patch.dict(
+        with patch("finer.ingestion.wechat_channels_adapter.shutil.which", return_value=None), patch.dict(
             os.environ, env, clear=True
         ):
             resolved = resolve_wx_channels_download_bin(tmp_path)
@@ -262,11 +262,11 @@ class TestBinaryExternalInstall:
 
     def test_returns_none_when_nothing_found(self, tmp_path: Path) -> None:
         import os
-        from finer.ingestion.wechat_adapter import resolve_wx_channels_download_bin
+        from finer.ingestion.wechat_channels_adapter import resolve_wx_channels_download_bin
 
         env = {k: v for k, v in os.environ.items()}
         env.pop("WX_CHANNELS_DOWNLOAD_BIN", None)
-        with patch("finer.ingestion.wechat_adapter.shutil.which", return_value=None), patch.dict(
+        with patch("finer.ingestion.wechat_channels_adapter.shutil.which", return_value=None), patch.dict(
             os.environ, env, clear=True
         ):
             resolved = resolve_wx_channels_download_bin(tmp_path)
@@ -274,7 +274,7 @@ class TestBinaryExternalInstall:
 
     def test_missing_binary_download_raises_unavailable(self, tmp_path: Path) -> None:
         """A download with no resolvable binary is an external dep failure."""
-        from finer.ingestion.wechat_adapter import (
+        from finer.ingestion.wechat_channels_adapter import (
             WeChatChannelsDownloadClient,
             WeChatChannelsDownloaderUnavailable,
         )
@@ -294,9 +294,9 @@ def test_channels_import_missing_binary_maps_to_f0_ext_001(tmp_path: Path) -> No
     env.pop("WX_CHANNELS_DOWNLOAD_BIN", None)
 
     with patch.object(wechat, "REPO_ROOT", tmp_path), patch(
-        "finer.ingestion.wechat_adapter.WeChatChannelsDownloadClient.get_feed_profile",
+        "finer.ingestion.wechat_channels_adapter.WeChatChannelsDownloadClient.get_feed_profile",
         return_value=_profile_payload(),
-    ), patch("finer.ingestion.wechat_adapter.shutil.which", return_value=None), patch.dict(
+    ), patch("finer.ingestion.wechat_channels_adapter.shutil.which", return_value=None), patch.dict(
         os.environ, env, clear=True
     ):
         client = TestClient(app, raise_server_exceptions=False)
@@ -334,9 +334,9 @@ def test_exporter_base_url_single_source_of_truth() -> None:
 def test_no_simulated_login_in_adapter() -> None:
     """The debug _test_poll_count simulated-login path must not exist."""
     import inspect
-    from finer.ingestion import wechat_adapter
+    from finer.ingestion import wechat_mp_adapter
 
-    source = inspect.getsource(wechat_adapter)
+    source = inspect.getsource(wechat_mp_adapter)
     assert "_test_poll_count" not in source
     assert "Simulated login" not in source
     assert "测试公众号" not in source
