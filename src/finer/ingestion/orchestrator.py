@@ -54,22 +54,28 @@ F1_HANDOFF_SEAM = (
 _RECORD_FILE_TYPES = {"chat_log", "image", "pdf", "doc", "audio", "video", "text"}
 
 
-def _register_f0_index(record: ContentRecord, receipt: ImportReceipt) -> None:
+def _register_f0_index(record: ContentRecord, receipt: ImportReceipt) -> bool:
     """Best-effort Project Memory registration for a successful F0 import.
 
     Idempotent (``F0IndexWriter.record_imported`` uses INSERT OR IGNORE). Any
-    failure (PM DB missing/locked) is logged and swallowed so an import is never
-    lost just because the hot index could not be updated. Tests patch this to a
-    no-op to avoid writing to the live project database.
+    failure (PM DB missing/locked) is logged so an import is never lost just
+    because the hot index could not be updated. Tests patch this to a no-op
+    to avoid writing to the live project database.
+
+    Returns True on success, False on failure.
     """
     try:
         from finer.ingestion.f0_index_writer import F0IndexWriter
 
         F0IndexWriter().record_imported(record, receipt)
+        return True
     except Exception as exc:  # pragma: no cover - PM availability is environmental
         logger.warning(
-            "Project Memory registration skipped for %s: %s", record.content_id, exc
+            "Project Memory registration skipped for %s: %s",
+            record.content_id,
+            exc,
         )
+        return False
 
 
 def _archive_file(

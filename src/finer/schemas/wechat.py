@@ -190,7 +190,7 @@ class SyncResultResponse(BaseModel):
     articles: List[str] = Field(default_factory=list, description="Paths to synced articles")
     content_record_ids: List[str] = Field(default_factory=list, description="F0 ContentRecord IDs")
     errors: List[str] = Field(default_factory=list)
-    l0_triggered: bool = False
+    f0_triggered: bool = False
     sync_time: datetime = Field(default_factory=datetime.now)
     source_type: WeChatSourceType = WeChatSourceType.HYBRID
 

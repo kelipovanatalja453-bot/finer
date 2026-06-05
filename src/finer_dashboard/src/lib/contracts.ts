@@ -1055,7 +1055,7 @@ export type WeChatSyncResult = {
   articles: string[];
   content_record_ids: string[];
   errors: string[];
-  l0_triggered: boolean;
+  f0_triggered: boolean;
 };
 
 export type ExporterHealth = {

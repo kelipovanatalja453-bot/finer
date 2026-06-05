@@ -100,7 +100,7 @@
     "/path/to/article2.md"
   ],
   "errors": [],
-  "l0_triggered": false
+  "f0_triggered": false
 }
 ```
 
