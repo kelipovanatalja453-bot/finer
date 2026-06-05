@@ -52,7 +52,20 @@ async def list_f0_records(
     limit: int = Query(50, le=200),
     offset: int = 0,
 ) -> dict:
-    """Query F0 content records from asset_index."""
+    """Query F0 records from the Project Memory ``asset_index`` hot index.
+
+    The returned ``records`` are real ``asset_index`` rows (the populated F0 hot
+    index), not the documentation-only ``content_records`` shape. Filters and
+    sort keys are mapped onto the columns ``asset_index`` actually has:
+
+    - ``source_type`` / ``source_platform`` -> equality filter on those columns.
+    - ``sort_by="collected_at"`` -> ``sort_key`` (where the writer stores
+      ``ContentRecord.collected_at``); ``updated_at`` and ``display_name`` are
+      also accepted. Anything else falls back to ``sort_key``.
+    - ``creator_id`` has no column in ``asset_index`` and is ignored (the F0 hot
+      index does not carry creator identity); callers needing it should read the
+      ContentRecord JSON under ``data/F0_intake/``.
+    """
     startup = check_f0_index_on_startup()
     if startup.state.value in ("missing", "corrupt"):
         raise FinerError(
@@ -65,21 +78,43 @@ async def list_f0_records(
 
     try:
         conn = _get_connection()
-        # Query asset_index for F0-stage assets
-        valid_sort = sort_by if sort_by in ("updated_at", "display_name") else "updated_at"
+
+        # Map requested sort key onto a real asset_index column. ``collected_at``
+        # is the API-level name; in asset_index that value lives in ``sort_key``.
+        _SORT_MAP = {
+            "collected_at": "sort_key",
+            "sort_key": "sort_key",
+            "updated_at": "updated_at",
+            "display_name": "display_name",
+        }
+        valid_sort = _SORT_MAP.get(sort_by, "sort_key")
         order = "DESC" if sort_order.lower() == "desc" else "ASC"
 
-        # Count total
+        # Build WHERE over columns asset_index genuinely has.
+        where = ["stage = 'F0'"]
+        params: list[object] = []
+        if source_type:
+            where.append("source_type = ?")
+            params.append(source_type)
+        if source_platform:
+            where.append("source_platform = ?")
+            params.append(source_platform)
+        where_sql = " AND ".join(where)
+
+        # Count total (filtered)
         count_row = conn.execute(
-            "SELECT COUNT(*) FROM asset_index WHERE stage = 'F0'"
+            f"SELECT COUNT(*) FROM asset_index WHERE {where_sql}",
+            tuple(params),
         ).fetchone()
         total_count = count_row[0] if count_row else 0
 
-        # Fetch page
+        # Fetch page. NULL sort_key rows sort last so freshly imported records
+        # with a timestamp are not buried beneath legacy rows missing one.
         rows = conn.execute(
-            f"SELECT * FROM asset_index WHERE stage = 'F0' "
-            f"ORDER BY {valid_sort} {order} LIMIT ? OFFSET ?",
-            (limit, offset),
+            f"SELECT * FROM asset_index WHERE {where_sql} "
+            f"ORDER BY {valid_sort} IS NULL, {valid_sort} {order} "
+            f"LIMIT ? OFFSET ?",
+            (*params, limit, offset),
         ).fetchall()
 
         records = [dict(r) for r in rows]

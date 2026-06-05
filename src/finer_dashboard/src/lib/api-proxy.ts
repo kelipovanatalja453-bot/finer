@@ -8,6 +8,30 @@
 import { NextResponse } from "next/server";
 
 /**
+ * Origin of the Python FastAPI backend.
+ *
+ * Configurable via the `BACKEND_ORIGIN` environment variable so the dashboard
+ * can point at a non-local backend (staging, docker network, remote dev box)
+ * without editing route code. Defaults to the local dev backend.
+ *
+ * Example: BACKEND_ORIGIN=http://api.internal:8000
+ */
+export const BACKEND_ORIGIN = (
+  process.env.BACKEND_ORIGIN || "http://127.0.0.1:8000"
+).replace(/\/+$/, "");
+
+/**
+ * Build an absolute backend URL from a path under `/api`.
+ *
+ * @param apiPath - Path beginning with `/` (e.g. "/api/files", "/api/wechat").
+ * @returns Absolute URL rooted at BACKEND_ORIGIN.
+ */
+export function backendUrl(apiPath: string): string {
+  const suffix = apiPath.startsWith("/") ? apiPath : `/${apiPath}`;
+  return `${BACKEND_ORIGIN}${suffix}`;
+}
+
+/**
  * Safely parse a backend response as JSON.
  *
  * If the response is not JSON (e.g. plain-text error from uvicorn/gunicorn),

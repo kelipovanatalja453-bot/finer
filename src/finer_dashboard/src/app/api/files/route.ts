@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { proxyGet, safeJsonResponse } from "@/lib/api-proxy";
+import { backendUrl, proxyGet, safeJsonResponse } from "@/lib/api-proxy";
 
-const UPSTREAM_URL = "http://127.0.0.1:8000/api/files";
+const UPSTREAM_URL = backendUrl("/api/files");
 
 export async function GET(request: Request) {
   return proxyGet(UPSTREAM_URL, request);

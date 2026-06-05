@@ -590,7 +590,11 @@ class TestTryCatalogQuery:
 class TestEdgeCases:
     """Edge cases for the files API."""
 
-    def test_upload_still_works(self, app):
+    def test_upload_still_works(self, app, tmp_path, monkeypatch):
+        # Isolate the data root so the upload lands its raw payload + ContentRecord
+        # under tmp_path (and its Project Memory write targets a tmp DB), keeping
+        # this test hermetic instead of polluting the real data/ dir.
+        monkeypatch.setattr("finer.api.routes.files.DATA_ROOT", tmp_path)
         client = TestClient(app)
         resp = client.post(
             "/api/files",
@@ -598,6 +602,7 @@ class TestEdgeCases:
         )
         assert resp.status_code == 200
         assert resp.json()["success"] is True
+        assert resp.json()["contentId"]
 
     def test_empty_catalog_returns_empty_list(self, app, pm_db):
         db_path, conn = pm_db

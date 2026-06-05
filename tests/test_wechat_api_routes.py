@@ -63,9 +63,14 @@ class TestAccountEndpoints:
 
 
 class TestSyncPagination:
+    @patch("finer.api.routes.wechat._register_f0_index")
     @patch("finer.api.routes.wechat._get_exporter_client")
-    def test_sync_paginates_articles(self, mock_get_client, client):
-        """Sync should loop get_articles until has_more is False."""
+    def test_sync_paginates_articles(self, mock_get_client, mock_register, client, tmp_path):
+        """Sync should loop get_articles until has_more is False.
+
+        ``_register_f0_index`` is patched to a no-op and ``REPO_ROOT`` to a tmp
+        dir so the test never writes to the live Project Memory DB or repo data.
+        """
         from finer.ingestion.wechat_exporter_client import ArticleListResult, WeChatArticleInfo
 
         mock_client = AsyncMock()
@@ -90,7 +95,8 @@ class TestSyncPagination:
         mock_client.auth_key = "test_key"
         mock_get_client.return_value = mock_client
 
-        with patch("finer.api.routes.wechat.load_wechat_service_config"):
+        with patch("finer.api.routes.wechat.load_wechat_service_config"), \
+                patch("finer.api.routes.wechat.REPO_ROOT", tmp_path):
             resp = client.post("/api/wechat/sync/test_account")
 
         assert resp.status_code == 200
@@ -103,6 +109,97 @@ class TestSyncPagination:
         # Second call: begin=10, size=10
         assert mock_client.get_articles.call_args_list[1].kwargs.get("begin") == 10 or \
                mock_client.get_articles.call_args_list[1].args[1] == 10
+
+
+class TestSyncReceipt:
+    """Official-account sync must emit a GATE ImportReceipt and register PM."""
+
+    @patch("finer.api.routes.wechat._register_f0_index")
+    @patch("finer.api.routes.wechat._get_exporter_client")
+    def test_sync_writes_receipt_and_registers_pm(
+        self, mock_get_client, mock_register, client, tmp_path
+    ):
+        import json as _json
+        from pathlib import Path
+        from finer.ingestion.wechat_exporter_client import ArticleListResult, WeChatArticleInfo
+
+        article = WeChatArticleInfo(
+            aid="art_1",
+            title="A",
+            link="https://mp.weixin.qq.com/s/abc",
+            create_time=1700000000,
+        )
+        mock_client = AsyncMock()
+        mock_client.get_articles = AsyncMock(
+            return_value=ArticleListResult(articles=[article], total=1, has_more=False)
+        )
+        mock_client.export_article = AsyncMock(return_value="# Body")
+        mock_client.search_account = AsyncMock(return_value=[])
+        mock_client.auth_key = "test_key"
+        mock_get_client.return_value = mock_client
+
+        with patch("finer.api.routes.wechat.load_wechat_service_config"), \
+                patch("finer.api.routes.wechat.REPO_ROOT", tmp_path):
+            resp = client.post("/api/wechat/sync/test_account")
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["synced_count"] == 1
+        content_id = data["content_record_ids"][0]
+
+        # Receipt is written next to the ContentRecord, named {content_id}.receipt.json
+        receipt_path = (
+            tmp_path / "data" / "F0_intake" / "wechat" / "test_account" / f"{content_id}.receipt.json"
+        )
+        assert receipt_path.exists()
+        receipt = _json.loads(receipt_path.read_text(encoding="utf-8"))
+        assert receipt["source_channel"] == "wechat"
+        assert receipt["source_kind"] == "wechat_article"
+        assert receipt["status"] == "completed"
+        assert receipt["records_created"] == 1
+        # raw_artifact_kind == exporter_markdown is encoded as the artifact role
+        assert "exporter_markdown" in receipt["raw_paths"]
+        assert "exporter_markdown" in receipt["raw_sha256"]
+
+        # Project Memory registration was attempted exactly once for the article.
+        assert mock_register.call_count == 1
+
+    @patch("finer.api.routes.wechat._register_f0_index")
+    @patch("finer.api.routes.wechat._get_exporter_client")
+    def test_receipt_projects_to_import_run_row(
+        self, mock_get_client, mock_register, client, tmp_path
+    ):
+        """The persisted receipt must project cleanly onto an import_runs row."""
+        import json as _json
+        from finer.schemas.import_receipt import ImportReceipt
+        from finer.ingestion.wechat_exporter_client import ArticleListResult, WeChatArticleInfo
+
+        article = WeChatArticleInfo(
+            aid="art_2", title="B", link="https://mp.weixin.qq.com/s/xyz", create_time=1700000000
+        )
+        mock_client = AsyncMock()
+        mock_client.get_articles = AsyncMock(
+            return_value=ArticleListResult(articles=[article], total=1, has_more=False)
+        )
+        mock_client.export_article = AsyncMock(return_value="# Body")
+        mock_client.search_account = AsyncMock(return_value=[])
+        mock_client.auth_key = "test_key"
+        mock_get_client.return_value = mock_client
+
+        with patch("finer.api.routes.wechat.load_wechat_service_config"), \
+                patch("finer.api.routes.wechat.REPO_ROOT", tmp_path):
+            resp = client.post("/api/wechat/sync/test_account")
+
+        content_id = resp.json()["content_record_ids"][0]
+        receipt_path = (
+            tmp_path / "data" / "F0_intake" / "wechat" / "test_account" / f"{content_id}.receipt.json"
+        )
+        receipt = ImportReceipt.model_validate_json(receipt_path.read_text(encoding="utf-8"))
+        row = receipt.to_import_run()
+        assert row["source_channel"] == "wechat"
+        assert row["status"] == "completed"
+        assert row["records_created"] == 1
+        assert row["error_code"] is None
 
 
 class TestExporterHealth:

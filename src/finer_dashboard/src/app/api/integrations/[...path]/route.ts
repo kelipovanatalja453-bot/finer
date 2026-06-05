@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { safeJsonResponse } from "@/lib/api-proxy";
+import { backendUrl, safeJsonResponse } from "@/lib/api-proxy";
 
-const UPSTREAM_BASE = "http://127.0.0.1:8000/api/integrations";
+const UPSTREAM_BASE = backendUrl("/api/integrations");
 
 export async function GET(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;

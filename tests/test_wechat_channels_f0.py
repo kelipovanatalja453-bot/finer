@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 from finer.ingestion.wechat_adapter import (
@@ -81,7 +82,7 @@ def test_wechat_channels_importer_writes_f0_artifacts(tmp_path: Path) -> None:
     record = ContentRecord.model_validate_json(result.record_path.read_text(encoding="utf-8"))
     assert record.file_type == "video"
     assert record.source_platform == "wechat"
-    assert record.source_type == "unclassified"
+    assert record.source_type == "wechat_channels_video"
     assert record.external_source_id == "14819096805414996657"
     assert record.metadata["source_kind"] == WECHAT_CHANNELS_SOURCE_KIND
     assert record.metadata["raw_video_sha256"] == result.artifacts.video_sha256
@@ -161,3 +162,134 @@ def test_wechat_channels_import_route_requires_video_or_download() -> None:
     assert data["error"]["code"] == "F0_IN_001"
     assert data["error"]["details"]["stage"] == "F0"
     assert data["error"]["details"]["source_channel"] == "wechat"
+
+
+# --- R-07: binary external-install resolution order ---
+
+
+class TestBinaryExternalInstall:
+    """resolve_wx_channels_download_bin must honor PATH > env > config > vendored."""
+
+    def test_path_install_wins(self, tmp_path: Path) -> None:
+        import os
+        from finer.ingestion.wechat_adapter import (
+            WX_CHANNELS_DOWNLOAD_BIN_ENV,
+            resolve_wx_channels_download_bin,
+        )
+
+        with patch(
+            "finer.ingestion.wechat_adapter.shutil.which",
+            return_value="/usr/local/bin/wx_video_download",
+        ), patch.dict(os.environ, {WX_CHANNELS_DOWNLOAD_BIN_ENV: "/env/wx_video_download"}):
+            resolved = resolve_wx_channels_download_bin(tmp_path)
+        assert resolved == Path("/usr/local/bin/wx_video_download")
+
+    def test_env_override_used_when_not_on_path(self, tmp_path: Path) -> None:
+        import os
+        from finer.ingestion.wechat_adapter import (
+            WX_CHANNELS_DOWNLOAD_BIN_ENV,
+            resolve_wx_channels_download_bin,
+        )
+
+        with patch("finer.ingestion.wechat_adapter.shutil.which", return_value=None), patch.dict(
+            os.environ, {WX_CHANNELS_DOWNLOAD_BIN_ENV: "/opt/wx/wx_video_download"}
+        ):
+            resolved = resolve_wx_channels_download_bin(tmp_path)
+        assert resolved == Path("/opt/wx/wx_video_download")
+
+    def test_vendored_is_last_resort(self, tmp_path: Path) -> None:
+        import os
+        from finer.ingestion.wechat_adapter import resolve_wx_channels_download_bin
+
+        vendored = tmp_path / "scripts" / "wx_channels_download" / "wx_video_download"
+        vendored.parent.mkdir(parents=True)
+        vendored.write_text("#!/bin/sh\n")
+
+        env = {k: v for k, v in os.environ.items()}
+        env.pop("WX_CHANNELS_DOWNLOAD_BIN", None)
+        with patch("finer.ingestion.wechat_adapter.shutil.which", return_value=None), patch.dict(
+            os.environ, env, clear=True
+        ):
+            resolved = resolve_wx_channels_download_bin(tmp_path)
+        assert resolved == vendored
+
+    def test_returns_none_when_nothing_found(self, tmp_path: Path) -> None:
+        import os
+        from finer.ingestion.wechat_adapter import resolve_wx_channels_download_bin
+
+        env = {k: v for k, v in os.environ.items()}
+        env.pop("WX_CHANNELS_DOWNLOAD_BIN", None)
+        with patch("finer.ingestion.wechat_adapter.shutil.which", return_value=None), patch.dict(
+            os.environ, env, clear=True
+        ):
+            resolved = resolve_wx_channels_download_bin(tmp_path)
+        assert resolved is None
+
+    def test_missing_binary_download_raises_unavailable(self, tmp_path: Path) -> None:
+        """A download with no resolvable binary is an external dep failure."""
+        from finer.ingestion.wechat_adapter import (
+            WeChatChannelsDownloadClient,
+            WeChatChannelsDownloaderUnavailable,
+        )
+
+        client = WeChatChannelsDownloadClient(downloader_bin=None)
+        with pytest.raises(WeChatChannelsDownloaderUnavailable):
+            client.download_media(media_url="https://x/y.mp4", decode_key=None, filename="y.mp4")
+
+
+def test_channels_import_missing_binary_maps_to_f0_ext_001(tmp_path: Path) -> None:
+    """R-08: downloader-unavailable (binary missing) -> retryable F0_EXT_001, not F0_IN_001."""
+    import os
+    from finer.api.routes import wechat
+    from finer.api.server import app
+
+    env = {k: v for k, v in os.environ.items()}
+    env.pop("WX_CHANNELS_DOWNLOAD_BIN", None)
+
+    with patch.object(wechat, "REPO_ROOT", tmp_path), patch(
+        "finer.ingestion.wechat_adapter.WeChatChannelsDownloadClient.get_feed_profile",
+        return_value=_profile_payload(),
+    ), patch("finer.ingestion.wechat_adapter.shutil.which", return_value=None), patch.dict(
+        os.environ, env, clear=True
+    ):
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post(
+            "/api/wechat/channels/import",
+            json={"url": "https://weixin.qq.com/sph/test", "download": True},
+        )
+
+    assert resp.status_code == 502
+    data = resp.json()
+    assert data["error"]["code"] == "F0_EXT_001"
+    assert data["error"]["details"]["retryable"] is True
+    assert data["error"]["details"]["source_channel"] == "wechat"
+
+
+# --- R-06: exporter base URL single source of truth ---
+
+
+def test_exporter_base_url_single_source_of_truth() -> None:
+    """config default, YAML, and the exporter client must agree on one port."""
+    from finer.config import WeChatServiceConfig, load_wechat_service_config
+    from finer.ingestion.wechat_exporter_client import WeChatExporterClient
+    from finer.paths import REPO_ROOT
+
+    configured = load_wechat_service_config(REPO_ROOT).exporter_url
+    # The dataclass default must match the YAML truth (no port disagreement).
+    assert WeChatServiceConfig.exporter_url == configured
+    # A client constructed without an explicit base_url resolves from config.
+    assert WeChatExporterClient().base_url == configured.rstrip("/")
+
+
+# --- R-21: simulated login must be gone ---
+
+
+def test_no_simulated_login_in_adapter() -> None:
+    """The debug _test_poll_count simulated-login path must not exist."""
+    import inspect
+    from finer.ingestion import wechat_adapter
+
+    source = inspect.getsource(wechat_adapter)
+    assert "_test_poll_count" not in source
+    assert "Simulated login" not in source
+    assert "测试公众号" not in source

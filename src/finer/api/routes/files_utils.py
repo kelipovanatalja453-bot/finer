@@ -583,3 +583,124 @@ def _build_source_summary(assets: List[AssetFile]) -> Dict[str, Any]:
 def safe_file_name(value: str) -> str:
     """Sanitize a string for use as a file name. Allows CJK, word chars, dots, hyphens."""
     return re.sub(r'[^\w一-鿿.-]+', '_', value)
+
+
+# ---------------------------------------------------------------------------
+# Local upload (F0) — basename safety, whitelist, file-type mapping
+# ---------------------------------------------------------------------------
+
+# Upload guardrails (R-28). Size cap defends the intake inbox from oversized
+# payloads; the extension/MIME allowlist keeps executables and unknown blobs out
+# of the F0 raw archive. These are intentionally generous for a research tool but
+# closed by default (reject when not on the list).
+MAX_UPLOAD_BYTES = 100 * 1024 * 1024  # 100 MB hard cap per uploaded file
+
+# extension (no dot) -> canonical ContentRecord.file_type literal
+_UPLOAD_EXT_TO_FILE_TYPE: Dict[str, str] = {
+    # text / chat
+    "txt": "text", "md": "text", "json": "text", "csv": "text",
+    "yaml": "text", "yml": "text", "log": "text", "html": "text", "htm": "text",
+    # documents
+    "pdf": "pdf",
+    "doc": "doc", "docx": "doc", "rtf": "doc",
+    "xls": "doc", "xlsx": "doc", "ppt": "doc", "pptx": "doc",
+    # images
+    "png": "image", "jpg": "image", "jpeg": "image", "gif": "image",
+    "webp": "image", "bmp": "image", "svg": "image", "tiff": "image",
+    # audio
+    "mp3": "audio", "wav": "audio", "m4a": "audio", "aac": "audio", "flac": "audio",
+    # video
+    "mp4": "video", "mov": "video", "mkv": "video", "webm": "video", "avi": "video",
+}
+
+# Allowed upload extensions == the keys of the file-type map above.
+ALLOWED_UPLOAD_EXTENSIONS = frozenset(_UPLOAD_EXT_TO_FILE_TYPE.keys())
+
+# Allowed MIME prefixes/exact types. We accept by extension first (authoritative
+# for the on-disk file_type) and use MIME only as a coarse secondary gate so a
+# mislabeled content_type does not block a legitimate, whitelisted extension.
+_ALLOWED_MIME_PREFIXES = ("text/", "image/", "audio/", "video/")
+_ALLOWED_MIME_EXACT = frozenset({
+    "application/pdf",
+    "application/json",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/octet-stream",  # browsers send this for many known-good files
+    "application/rtf",
+    "application/xml",
+    "",  # some clients omit content_type entirely
+})
+
+
+def sanitize_upload_filename(raw_filename: Optional[str]) -> str:
+    """Reduce an untrusted upload filename to a safe basename (R-17).
+
+    Strips any directory components (``../``, absolute paths, Windows separators)
+    by taking only the final path segment, then sanitizes the remaining
+    characters. Raises ``ValueError`` if nothing usable survives (e.g. the
+    filename was empty, ``..`` or only separators) so the caller can reject the
+    request rather than write to an attacker-chosen location.
+    """
+    if not raw_filename or not raw_filename.strip():
+        raise ValueError("empty filename")
+
+    # Normalize Windows separators so PurePosixPath sees a single final segment.
+    candidate = raw_filename.replace("\\", "/")
+    # ``Path(...).name`` discards every directory component, including any
+    # leading ``../`` or absolute prefix — this is the core path-traversal guard.
+    base = Path(candidate).name
+
+    # Reject traversal/relative artifacts that survive as the basename.
+    if base in ("", ".", ".."):
+        raise ValueError("filename has no safe basename")
+
+    safe = safe_file_name(base).strip("._") or ""
+    # Re-attach a leading char if sanitization stripped everything meaningful.
+    if not safe:
+        raise ValueError("filename sanitized to empty")
+
+    return safe
+
+
+def upload_file_type(extension: Optional[str]) -> Optional[str]:
+    """Map an upload extension (no dot) to a canonical ContentRecord file_type.
+
+    Returns ``None`` when the extension is not on the allowlist.
+    """
+    if not extension:
+        return None
+    return _UPLOAD_EXT_TO_FILE_TYPE.get(extension.lower())
+
+
+def is_allowed_upload_mime(content_type: Optional[str]) -> bool:
+    """Coarse secondary MIME gate for uploads (extension is authoritative)."""
+    if content_type is None:
+        return True
+    mime = content_type.split(";", 1)[0].strip().lower()
+    if mime in _ALLOWED_MIME_EXACT:
+        return True
+    return any(mime.startswith(prefix) for prefix in _ALLOWED_MIME_PREFIXES)
+
+
+def unique_landing_path(target_dir: Path, filename: str) -> Path:
+    """Return a non-clobbering path inside *target_dir* for *filename*.
+
+    If ``target_dir/filename`` already exists, append ``_1``, ``_2`` ... before
+    the suffix until a free slot is found. Never overwrites an existing file.
+    """
+    candidate = target_dir / filename
+    if not candidate.exists():
+        return candidate
+
+    stem = candidate.stem
+    suffix = candidate.suffix
+    counter = 1
+    while True:
+        alt = target_dir / f"{stem}_{counter}{suffix}"
+        if not alt.exists():
+            return alt
+        counter += 1

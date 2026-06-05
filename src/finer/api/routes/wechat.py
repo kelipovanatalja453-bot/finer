@@ -39,8 +39,10 @@ from finer.services.wechat_session_store import (
 from finer.ingestion.wechat_exporter_client import WeChatExporterClient
 from finer.ingestion.wechat_adapter import (
     WeChatChannelsDownloadClient,
+    WeChatChannelsDownloaderUnavailable,
     WeChatChannelsF0Importer,
     get_unified_wechat_adapter,
+    resolve_wx_channels_download_bin,
 )
 from finer.paths import REPO_ROOT
 from finer.config import load_wechat_service_config
@@ -88,6 +90,63 @@ class WeChatChannelsImportResponse(BaseModel):
     raw_profile_path: str
     content_record: ContentRecord
     receipt: dict[str, Any]
+
+
+def _build_wechat_article_receipt(
+    *,
+    run_id: str,
+    record: ContentRecord,
+    record_path: Path,
+    md_path: str,
+    md_sha256: str,
+    status: str = "completed",
+) -> "ImportReceipt":
+    """Build the GATE ImportReceipt for one synced official-account article.
+
+    The raw artifact role is ``exporter_markdown`` (raw_artifact_kind): the
+    exporter returns normalized markdown, not raw HTML, so that is the archived
+    payload we record provenance for.
+    """
+    from finer.schemas.import_receipt import ImportReceipt
+    from finer.utils.time import now_utc
+
+    finished = now_utc()
+    return ImportReceipt(
+        run_id=run_id,
+        source_channel="wechat",
+        source_kind="wechat_article",
+        status=status,
+        content_id=record.content_id,
+        external_source_id=record.external_source_id,
+        dedupe_fingerprint=record.dedupe_fingerprint,
+        collected_at=record.collected_at,
+        started_at=finished,
+        finished_at=finished,
+        raw_sha256={"exporter_markdown": md_sha256},
+        raw_paths={"exporter_markdown": md_path},
+        record_path=str(record_path),
+        records_created=1,
+    )
+
+
+def _register_f0_index(record: ContentRecord, receipt: "ImportReceipt") -> None:
+    """Best-effort Project Memory registration for a successful F0 import.
+
+    Idempotent (``F0IndexWriter.record_imported`` uses INSERT OR IGNORE). Any
+    failure (PM DB missing/locked) is logged and swallowed so an import is never
+    lost just because the hot index could not be updated. Tests patch this to a
+    no-op to avoid writing to the live project database.
+    """
+    try:
+        from finer.ingestion.f0_index_writer import F0IndexWriter
+
+        F0IndexWriter().record_imported(record, receipt)
+    except Exception as exc:  # pragma: no cover - PM availability is environmental
+        logger.warning(
+            "Project Memory registration skipped for %s: %s",
+            record.content_id,
+            exc,
+        )
 
 
 def _get_exporter_client() -> WeChatExporterClient:
@@ -366,13 +425,15 @@ async def sync_articles(
                     markdown=content,
                 )
 
-                # Build ContentRecord
+                # Build ContentRecord. Use the locally-resolved client (not the
+                # module global, which may be None under test/first-call) so the
+                # auth key reference is always bound.
                 record = build_content_record(
                     article=article,
                     account_id=account_id,
                     account_name=account_name,
                     artifacts=saved,
-                    exporter_session_id=_exporter_client.auth_key or "",
+                    exporter_session_id=client.auth_key or "",
                 )
 
                 # Persist ContentRecord
@@ -383,6 +444,22 @@ async def sync_articles(
                     record.model_dump_json(indent=2),
                     encoding="utf-8",
                 )
+
+                # Emit the GATE ImportReceipt (raw_artifact_kind=exporter_markdown)
+                # alongside the record, then register the import in Project Memory.
+                receipt = _build_wechat_article_receipt(
+                    run_id=f"wxart_{record.content_id}",
+                    record=record,
+                    record_path=record_path,
+                    md_path=str(saved.raw_md_path),
+                    md_sha256=saved.md_sha256,
+                )
+                receipt_path = f0_dir / f"{record.content_id}.receipt.json"
+                receipt_path.write_text(
+                    receipt.model_dump_json(indent=2),
+                    encoding="utf-8",
+                )
+                _register_f0_index(record, receipt)
 
                 content_record_ids.append(record.content_id)
                 article_paths.append(str(saved.raw_md_path))
@@ -436,7 +513,7 @@ async def import_wechat_channels_video(req: WeChatChannelsImportRequest):
     try:
         client = WeChatChannelsDownloadClient(
             base_url=req.downloader_base_url,
-            downloader_bin=REPO_ROOT / "scripts" / "wx_channels_download" / "wx_video_download",
+            downloader_bin=resolve_wx_channels_download_bin(REPO_ROOT),
             timeout_seconds=req.timeout_seconds,
         )
         importer = WeChatChannelsF0Importer(root=REPO_ROOT, client=client)
@@ -484,7 +561,21 @@ async def import_wechat_channels_video(req: WeChatChannelsImportRequest):
             retryable=True,
             cause=e,
         )
+    except WeChatChannelsDownloaderUnavailable as e:
+        # The local downloader binary/service is missing or failed — this is an
+        # external-dependency failure, not bad input, so it is retryable.
+        raise FinerError(
+            ErrorCode.F0_EXT_001,
+            str(e),
+            stage="F0",
+            operation="wechat_channels_import",
+            source_channel="wechat",
+            retryable=True,
+            cause=e,
+        )
     except FileNotFoundError as e:
+        # A user-supplied video_file_path that does not exist is genuine bad
+        # input (the downloader-missing case is handled above as F0_EXT_001).
         raise FinerError(
             ErrorCode.F0_IN_001,
             str(e),

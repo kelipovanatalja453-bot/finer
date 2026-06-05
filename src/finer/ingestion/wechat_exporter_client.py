@@ -22,6 +22,28 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
+def _resolve_exporter_base_url() -> str:
+    """Resolve the exporter base URL from the single source of truth.
+
+    Order: ``configs/wechat.yaml`` (via ``load_wechat_service_config``) →
+    ``WeChatExporterClient.DEFAULT_BASE_URL``. We never read a port literal in
+    more than one place; this helper is the only client-side resolver.
+    """
+    try:
+        # Imported lazily to avoid a config <-> ingestion import cycle.
+        from finer.config import load_wechat_service_config
+        from finer.paths import REPO_ROOT
+
+        return load_wechat_service_config(REPO_ROOT).exporter_url
+    except Exception as exc:  # pragma: no cover - config load is best-effort
+        logger.warning(
+            "Falling back to default exporter base URL (%s): %s",
+            WeChatExporterClient.DEFAULT_BASE_URL,
+            exc,
+        )
+        return WeChatExporterClient.DEFAULT_BASE_URL
+
+
 class _RateLimiter:
     """Fixed-window rate limiter for exporter API calls.
 
@@ -134,6 +156,10 @@ class WeChatExporterClient:
             articles = await client.get_articles(fakeid)
     """
 
+    # Last-resort fallback only. The single source of truth for the exporter
+    # base URL is ``configs/wechat.yaml`` loaded via ``load_wechat_service_config``;
+    # callers that do not pass ``base_url`` resolve it from there. This constant
+    # exists purely so the client can still construct when config is unavailable.
     DEFAULT_BASE_URL = "http://localhost:3000"
     DEFAULT_TIMEOUT = 30.0
     POLL_INTERVAL = 2.0  # seconds between poll requests
@@ -141,17 +167,22 @@ class WeChatExporterClient:
 
     def __init__(
         self,
-        base_url: str = DEFAULT_BASE_URL,
+        base_url: str | None = None,
         timeout: float = DEFAULT_TIMEOUT,
         requests_per_minute: int = 60,
     ):
         """Initialize the client.
 
         Args:
-            base_url: Base URL of the wechat-article-exporter service
+            base_url: Base URL of the wechat-article-exporter service. If omitted,
+                it is resolved from ``configs/wechat.yaml`` (the single source of
+                truth) and only falls back to ``DEFAULT_BASE_URL`` if that load
+                fails.
             timeout: HTTP request timeout in seconds
             requests_per_minute: Maximum requests per minute (rate limit)
         """
+        if base_url is None:
+            base_url = _resolve_exporter_base_url()
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.auth_key: Optional[str] = None
@@ -755,7 +786,7 @@ class WeChatExporterClient:
 
 # Convenience function for quick login flow
 async def login_with_qrcode(
-    base_url: str = WeChatExporterClient.DEFAULT_BASE_URL,
+    base_url: str | None = None,
     on_qrcode: Optional[callable] = None,
 ) -> WeChatExporterClient:
     """Perform interactive login with QR code.

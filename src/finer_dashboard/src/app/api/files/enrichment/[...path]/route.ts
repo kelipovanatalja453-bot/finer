@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { safeJsonResponse } from "@/lib/api-proxy";
+import { backendUrl, safeJsonResponse } from "@/lib/api-proxy";
 
-const UPSTREAM_URL = "http://127.0.0.1:8000/api/files/enrichment";
+const UPSTREAM_URL = backendUrl("/api/files/enrichment");
 
 export async function GET(
   request: Request,

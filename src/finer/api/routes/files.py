@@ -6,20 +6,62 @@ Falls back to filesystem scan (degraded_scan) when Project Memory is unavailable
 
 from fastapi import APIRouter, UploadFile, File, Query
 from typing import Optional
+from pathlib import Path
+import hashlib
+import json
 import logging
+import uuid
 
 from finer.api.routes.files_utils import (
     DATA_ROOT,
     WORKFLOW_BY_TIER,
+    MAX_UPLOAD_BYTES,
+    ALLOWED_UPLOAD_EXTENSIONS,
     _assets_cache,
     _build_source_summary,
+    sanitize_upload_filename,
+    upload_file_type,
+    is_allowed_upload_mime,
+    unique_landing_path,
 )
 from finer.api.routes.asset_builder import build_workflow_assets
 from finer.errors.exceptions import FinerError, FinerInternalError
 from finer.errors.codes import ErrorCode
+from finer.schemas.content import ContentRecord
+from finer.schemas.import_receipt import ImportReceipt
+from finer.utils.time import now_utc
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Local-upload F0 landing platform (canonical: data/raw/local, data/F0_intake/local).
+_LOCAL_PLATFORM = "local"
+
+
+def _project_memory_db_path() -> Path:
+    """Resolve the Project Memory DB under the *active* data root.
+
+    Anchoring on the module-level ``DATA_ROOT`` (rather than importing the frozen
+    ``PROJECT_MEMORY_DB`` constant) means that when a test monkeypatches
+    ``files.DATA_ROOT`` to a tmp path the upload's PM write targets a tmp DB —
+    never the live catalog. In production ``DATA_ROOT`` is the real data root, so
+    this resolves to the same ``data/project_memory/finer.project.sqlite3`` the
+    catalog reads.
+    """
+    return DATA_ROOT / "project_memory" / "finer.project.sqlite3"
+
+
+def _record_imported_to_pm(record: ContentRecord, receipt: ImportReceipt) -> None:
+    """Register an uploaded ContentRecord in Project Memory (idempotent).
+
+    Thin seam over the frozen ``F0IndexWriter`` so tests can inject a temp DB by
+    patching this function or ``files.DATA_ROOT``. Failure here must not lose the
+    on-disk record/receipt that were already persisted, so the caller treats
+    PM-write errors as soft.
+    """
+    from finer.ingestion.f0_index_writer import F0IndexWriter
+
+    F0IndexWriter(db_path=_project_memory_db_path()).record_imported(record, receipt)
 
 # Canonical F-stage → asset_index.stage mapping
 _TIER_TO_STAGE = {
@@ -291,32 +333,210 @@ async def get_files(
 
 @router.post("")
 async def upload_file(file: UploadFile = File(...)):
+    """F0 local-upload intake.
+
+    Lands the raw payload under ``data/raw/local/`` and registers a canonical
+    ``ContentRecord`` + ``ImportReceipt`` in Project Memory so the upload is
+    traceable by F1 (R-16). The filename is reduced to a safe basename before any
+    path is constructed (R-17), and the payload is gated by a size cap +
+    extension/MIME allowlist (R-28).
+    """
+    request_id = f"req-{uuid.uuid4().hex[:12]}"
+
+    # 1. Filename safety (R-17): collapse to a basename, reject traversal.
     try:
-        target_dir = DATA_ROOT / "raw" / "_inbox" / "unclassified"
-        target_dir.mkdir(parents=True, exist_ok=True)
-
-        file_path = target_dir / file.filename
-        with open(file_path, "wb") as buffer:
-            import shutil
-            shutil.copyfileobj(file.file, buffer)
-
-        _assets_cache.clear()
-
-        return {
-            "success": True,
-            "contract": "canonical_asset_v1",
-            "message": f"File {file.filename} imported into canonical intake inbox",
-            "path": str(file_path),
-            "workflow": "intake",
-            "stageBadge": "F0"
-        }
-    except Exception as e:
+        safe_name = sanitize_upload_filename(file.filename)
+    except ValueError as exc:
         raise FinerError(
             ErrorCode.F0_IO_001,
-            f"Failed to upload file: {e}",
+            f"Rejected unsafe upload filename: {exc}",
+            stage="F0",
+            operation="file_upload",
+            source_channel="local",
+            retryable=False,
+            status_code=400,
+            request_id=request_id,
+            fix_hint="Re-upload with a plain filename (no path separators or '..').",
+        )
+
+    extension = Path(safe_name).suffix.replace(".", "").lower()
+
+    # 2. Extension allowlist (R-28).
+    file_type = upload_file_type(extension)
+    if file_type is None:
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            f"Unsupported upload file type: '.{extension or '(none)'}'",
+            stage="F0",
+            operation="file_upload",
+            source_channel="local",
+            retryable=False,
+            status_code=400,
+            request_id=request_id,
+            fix_hint=(
+                "Allowed extensions: "
+                + ", ".join(sorted(ALLOWED_UPLOAD_EXTENSIONS))
+            ),
+        )
+
+    # 3. MIME secondary gate (R-28).
+    if not is_allowed_upload_mime(file.content_type):
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            f"Unsupported upload content type: '{file.content_type}'",
+            stage="F0",
+            operation="file_upload",
+            source_channel="local",
+            retryable=False,
+            status_code=400,
+            request_id=request_id,
+            fix_hint="Upload a text, document, image, audio, or video file.",
+        )
+
+    # 4. Read payload with a hard size cap (R-28) and hash for dedupe.
+    try:
+        payload = await file.read()
+    except Exception as exc:
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            f"Failed to read upload stream: {exc}",
             stage="F0",
             operation="file_upload",
             source_channel="local",
             retryable=True,
-            cause=e,
+            request_id=request_id,
+            cause=exc,
         )
+
+    if len(payload) > MAX_UPLOAD_BYTES:
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            f"Upload exceeds size limit ({len(payload)} > {MAX_UPLOAD_BYTES} bytes)",
+            stage="F0",
+            operation="file_upload",
+            source_channel="local",
+            retryable=False,
+            status_code=413,
+            request_id=request_id,
+            fix_hint=f"Split the file or keep it under {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.",
+        )
+    if not payload:
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            "Refusing to import an empty file",
+            stage="F0",
+            operation="file_upload",
+            source_channel="local",
+            retryable=False,
+            status_code=400,
+            request_id=request_id,
+            fix_hint="Upload a non-empty file.",
+        )
+
+    fingerprint = hashlib.sha256(payload).hexdigest()
+    content_id = str(uuid.uuid4())
+    collected_at = now_utc()
+
+    # 5. Land raw payload under canonical data/raw/local/ (non-clobbering).
+    #    Paths are anchored on the module-level DATA_ROOT so test isolation
+    #    (monkeypatching files.DATA_ROOT) keeps writes inside tmp_path while the
+    #    on-disk layout still matches the GATE f0_raw_dir / f0_record_path shape.
+    try:
+        raw_dir = DATA_ROOT / "raw" / _LOCAL_PLATFORM
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_path = unique_landing_path(raw_dir, safe_name)
+        raw_path.write_bytes(payload)
+
+        rel_raw_path = str(raw_path.relative_to(DATA_ROOT))
+
+        record = ContentRecord(
+            content_id=content_id,
+            source_type="manual_upload",
+            source_platform=_LOCAL_PLATFORM,
+            collected_at=collected_at,
+            title=raw_path.stem,
+            raw_path=rel_raw_path,
+            file_type=file_type,
+            dedupe_fingerprint=fingerprint,
+            metadata={
+                "original_filename": safe_name,
+                "registered_via": "api_upload",
+                "content_type": file.content_type,
+                "byte_size": len(payload),
+            },
+        )
+
+        receipt = ImportReceipt(
+            run_id=f"local-{content_id}",
+            request_id=request_id,
+            source_channel="local_upload",
+            source_kind="manual_upload",
+            status="completed",
+            content_id=content_id,
+            dedupe_fingerprint=fingerprint,
+            collected_at=collected_at,
+            started_at=collected_at,
+            finished_at=now_utc(),
+            raw_sha256={"upload": fingerprint},
+            raw_paths={"upload": str(raw_path)},
+            records_created=1,
+        )
+
+        # 6. Persist ContentRecord + ImportReceipt JSON under data/F0_intake/local/.
+        intake_dir = DATA_ROOT / "F0_intake" / _LOCAL_PLATFORM
+        intake_dir.mkdir(parents=True, exist_ok=True)
+        record_path = intake_dir / f"{content_id}.json"
+        receipt_path = intake_dir / f"{content_id}.receipt.json"
+        record_path.write_text(
+            record.model_dump_json(indent=2), encoding="utf-8"
+        )
+        receipt.record_path = str(record_path)
+        receipt_path.write_text(
+            receipt.model_dump_json(indent=2), encoding="utf-8"
+        )
+    except FinerError:
+        raise
+    except Exception as exc:
+        logger.exception("Local upload failed to persist record for %s", safe_name)
+        raise FinerError(
+            ErrorCode.F0_IO_001,
+            f"Failed to persist uploaded content: {type(exc).__name__}: {exc}",
+            stage="F0",
+            operation="file_upload",
+            source_channel="local",
+            retryable=True,
+            request_id=request_id,
+            content_id=content_id,
+            cause=exc,
+        )
+
+    # 7. Register in Project Memory (asset_index hot row + contents chain).
+    #    PM is the catalog; if it is unavailable the on-disk record still exists
+    #    and a rebuild can recover it, so a PM failure is logged, not fatal.
+    pm_registered = True
+    try:
+        _record_imported_to_pm(record, receipt)
+    except Exception as exc:
+        pm_registered = False
+        logger.warning(
+            "Upload %s persisted on disk but Project Memory registration failed: %s",
+            content_id, exc, exc_info=True,
+        )
+
+    _assets_cache.clear()
+
+    return {
+        "success": True,
+        "contract": "canonical_asset_v1",
+        "message": f"File {safe_name} imported into canonical F0 intake",
+        "contentId": content_id,
+        "sourceRecordId": f"sr_{hashlib.sha256(f'sr:{content_id}'.encode()).hexdigest()[:16]}",
+        "rawPath": rel_raw_path,
+        "recordPath": str(record_path),
+        "dedupeFingerprint": fingerprint,
+        "projectMemoryRegistered": pm_registered,
+        "requestId": request_id,
+        "path": str(raw_path),
+        "workflow": "intake",
+        "stageBadge": "F0",
+    }

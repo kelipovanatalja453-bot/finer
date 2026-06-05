@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { safeJsonResponse } from "@/lib/api-proxy";
+import { backendUrl, safeJsonResponse } from "@/lib/api-proxy";
 
-const UPSTREAM_BASE = "http://127.0.0.1:8000/api/f0-index";
+const UPSTREAM_BASE = backendUrl("/api/f0-index");
 
 async function proxyRequest(
   request: Request,

@@ -5,7 +5,7 @@ import { RefreshCw, Trash2, Loader2, ExternalLink, AlertCircle } from "lucide-re
 import { QRCodeDisplay } from "./QRCodeDisplay";
 import { SyncStatus, SyncStatusType } from "./SyncStatus";
 import { cn } from "@/lib/utils";
-import { apiFetch, ApiError } from "@/lib/api-client";
+import { apiFetch, apiGet, apiDelete, ApiError } from "@/lib/api-client";
 import { ErrorPanel } from "@/components/error-panel/ErrorPanel";
 import type { WeChatAccount, WeChatArticle, WeChatLoginStatus } from "@/lib/contracts";
 
@@ -52,10 +52,10 @@ export function WeChatConfig() {
 
   const checkExporterHealth = async () => {
     try {
-      const res = await fetch("/api/wechat/exporter/health");
-      const data = await res.json();
-      setExporterAvailable(data.available);
+      const data = await apiGet<{ available?: boolean }>("/api/wechat/exporter/health");
+      setExporterAvailable(Boolean(data.available));
     } catch {
+      // Health probe is best-effort — a failure just means "offline".
       setExporterAvailable(false);
     }
   };
@@ -121,8 +121,9 @@ export function WeChatConfig() {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/wechat/login/${loginSessionId}/status`);
-        const data = await res.json();
+        const data = await apiGet<{ status: WeChatLoginStatus; error_msg?: string }>(
+          `/api/wechat/login/${loginSessionId}/status`,
+        );
         setLoginStatus(data.status);
 
         if (data.status === "confirmed") {
@@ -140,6 +141,11 @@ export function WeChatConfig() {
           setLoginError(data.error_msg || "登录失败");
         }
       } catch (err) {
+        // Keep polling on transient errors; surface a hint if the backend
+        // returned a structured error.
+        if (err instanceof ApiError) {
+          setLoginError(err.fixHint ? `${err.message} — ${err.fixHint}` : err.message);
+        }
         console.error("Failed to poll login status:", err);
       }
     }, 2500);
@@ -163,10 +169,14 @@ export function WeChatConfig() {
   const loadArticles = async (accountId: string) => {
     setLoadingArticles(true);
     try {
-      const res = await fetch(`/api/wechat/articles/${accountId}`);
-      const data = await res.json();
+      const data = await apiGet<{ articles?: WeChatArticle[] }>(
+        `/api/wechat/articles/${accountId}`,
+      );
       setArticles(data.articles || []);
     } catch (err) {
+      if (err instanceof ApiError) {
+        setFetchError(err);
+      }
       console.error("Failed to load articles:", err);
     } finally {
       setLoadingArticles(false);
@@ -209,10 +219,13 @@ export function WeChatConfig() {
 
   const handleRemoveAccount = async (accountId: string) => {
     try {
-      await fetch(`/api/wechat/accounts/${accountId}`, { method: "DELETE" });
+      await apiDelete(`/api/wechat/accounts/${accountId}`);
       await loadAccounts();
       if (selectedAccountId === accountId) setSelectedAccountId(null);
     } catch (err) {
+      if (err instanceof ApiError) {
+        setFetchError(err);
+      }
       console.error("Failed to remove account:", err);
     }
   };

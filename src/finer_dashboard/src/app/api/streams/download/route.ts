@@ -1,15 +1,16 @@
 import { NextResponse } from "next/server";
+import { backendUrl } from "@/lib/api-proxy";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const path = searchParams.get("path");
-  
+
   if (!path) {
     return new NextResponse("Missing path", { status: 400 });
   }
-  
+
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/streams/download?path=${encodeURIComponent(path)}`);
+    const res = await fetch(backendUrl(`/api/streams/download?path=${encodeURIComponent(path)}`));
     
     // We stream the exact response back to Next.js Client
     const headers = new Headers(res.headers);

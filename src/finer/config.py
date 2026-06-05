@@ -65,12 +65,21 @@ class ASRConfig:
 
 @dataclass
 class WeChatServiceConfig:
-    """WeChat integration configuration."""
+    """WeChat integration configuration.
 
-    exporter_url: str = "http://localhost:3000"
+    The exporter base URL has a single source of truth: ``configs/wechat.yaml``.
+    The default below must match that file's ``exporter_url`` so there is no
+    port disagreement when the YAML is absent.
+    """
+
+    exporter_url: str = "http://localhost:3001"
     source_type: str = "hybrid"  # direct_api, exporter_service, hybrid
     prefer_exporter: bool = True
     cache_credentials: bool = True
+    # Optional explicit path to the wx_video_download binary (WeChat Channels
+    # downloader). Left unset by default: the channels importer resolves the
+    # binary via PATH / WX_CHANNELS_DOWNLOAD_BIN env / this field / vendored copy.
+    channels_downloader_bin: Optional[str] = None
 
 
 def load_creator_config(root: Path, creator_id: str) -> dict[str, Any]:
@@ -142,12 +151,13 @@ def load_wechat_service_config(root: Path) -> WeChatServiceConfig:
     if config_path.exists():
         data = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         return WeChatServiceConfig(
-            exporter_url=data.get("exporter_url", "http://localhost:3000"),
+            exporter_url=data.get("exporter_url", WeChatServiceConfig.exporter_url),
             source_type=data.get("source_type", "hybrid"),
             prefer_exporter=data.get("prefer_exporter", True),
             cache_credentials=data.get("cache_credentials", True),
+            channels_downloader_bin=data.get("channels_downloader_bin"),
         )
     return WeChatServiceConfig(
-        exporter_url=os.getenv("WECHAT_EXPORTER_URL", "http://localhost:3000"),
+        exporter_url=os.getenv("WECHAT_EXPORTER_URL", WeChatServiceConfig.exporter_url),
         source_type=os.getenv("WECHAT_SOURCE_TYPE", "hybrid"),
     )

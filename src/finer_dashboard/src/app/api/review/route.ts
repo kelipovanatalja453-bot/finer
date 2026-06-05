@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { safeJsonResponse } from "@/lib/api-proxy";
+import { backendUrl, safeJsonResponse } from "@/lib/api-proxy";
 
-const UPSTREAM_URL = "http://127.0.0.1:8000/api/review";
+const UPSTREAM_URL = backendUrl("/api/review");
 
 export async function POST(request: Request) {
   try {

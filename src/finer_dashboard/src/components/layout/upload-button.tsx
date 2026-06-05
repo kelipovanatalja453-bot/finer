@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Upload, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { apiFetch, ApiError } from "@/lib/api-client";
 
 interface UploadButtonProps {
   currentTier: string;
@@ -21,31 +22,38 @@ export function UploadButton({ currentTier, label = "Import Asset", onUploadSucc
     setErrorMessage("");
 
     try {
-      // Allow batch sequentially or grouped. Here we upload sequentially using FormData per file to match the backend easily.
+      // Upload sequentially with one FormData per file. Goes through apiFetch so
+      // backend errors surface as the canonical envelope (error_code / request_id
+      // / fix_hint) instead of a bare HTTP status.
       for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
         formData.append("file", files[i]);
         formData.append("tier", currentTier);
 
-        const response = await fetch("/api/files", {
+        await apiFetch("/api/files", {
           method: "POST",
           body: formData,
         });
-
-        if (!response.ok) {
-          throw new Error("Upload failed on " + files[i].name);
-        }
       }
 
+      // Success here means F0 intake only — the file was archived as a
+      // ContentRecord, NOT parsed / standardized. The label reflects that.
       setStatus("success");
       onUploadSuccess();
-      
+
       setTimeout(() => setStatus("idle"), 2000);
     } catch (err: unknown) {
       console.error(err);
       setStatus("error");
-      setErrorMessage("上传发生错误: " + (err instanceof Error ? err.message : String(err)));
-      setTimeout(() => setStatus("idle"), 3000);
+      if (err instanceof ApiError) {
+        const parts = [`[${err.code}] ${err.message}`];
+        if (err.fixHint) parts.push(err.fixHint);
+        if (err.requestId) parts.push(`req: ${err.requestId}`);
+        setErrorMessage(parts.join(" — "));
+      } else {
+        setErrorMessage("上传发生错误: " + (err instanceof Error ? err.message : String(err)));
+      }
+      setTimeout(() => setStatus("idle"), 5000);
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -117,7 +125,7 @@ export function UploadButton({ currentTier, label = "Import Asset", onUploadSucc
         {status === "success" && (
           <>
             <CheckCircle2 className="w-3.5 h-3.5" strokeWidth={2} />
-            <span className="min-w-0 truncate">SUCCESS</span>
+            <span className="min-w-0 truncate">已入库 F0</span>
           </>
         )}
         {status === "error" && (
@@ -129,7 +137,7 @@ export function UploadButton({ currentTier, label = "Import Asset", onUploadSucc
       </button>
 
       {status === "error" && errorMessage && (
-        <div className="absolute top-full mt-2 left-0 w-48 bg-white border border-stone-200 p-2 shadow-xl z-50 text-[10px] font-bold text-amber-700 rounded-sm">
+        <div className="absolute top-full mt-2 left-0 w-72 bg-white border border-stone-200 p-2 shadow-xl z-50 text-[10px] font-bold text-amber-700 rounded-sm break-words">
           {errorMessage}
         </div>
       )}

@@ -452,18 +452,10 @@ class WeChatAuthClient:
                     logger.warning(f"QR code expired for session {session_id}")
 
             except Exception as e:
+                # Surface the real failure. Do NOT fabricate a confirmed login:
+                # an earlier debug path here returned a fake "登录成功" after N
+                # polls, which would falsely report success in production.
                 logger.error(f"Failed to check login status: {e}")
-                # For testing: simulate login after 10 polls
-                if hasattr(self, '_test_poll_count'):
-                    self._test_poll_count += 1
-                else:
-                    self._test_poll_count = 1
-
-                if self._test_poll_count >= 10:
-                    session.status = WeChatLoginStatus.CONFIRMED
-                    session.account_id = "test_account"
-                    session.account_name = "测试公众号"
-                    logger.info(f"[TEST] Simulated login for session {session_id}")
 
         return session
 
@@ -1249,6 +1241,63 @@ def get_unified_wechat_adapter(
 
 WECHAT_CHANNELS_SOURCE_KIND = "wechat_channels_video"
 
+# Name of the WeChat Channels downloader binary as it appears on PATH.
+WX_CHANNELS_DOWNLOAD_BINARY_NAME = "wx_video_download"
+# Environment variable that pins an explicit downloader binary path.
+WX_CHANNELS_DOWNLOAD_BIN_ENV = "WX_CHANNELS_DOWNLOAD_BIN"
+
+
+class WeChatChannelsDownloaderUnavailable(RuntimeError):
+    """Raised when the WeChat Channels downloader binary cannot be located/used.
+
+    This is an *external dependency* failure (the local downloader service/CLI
+    is not installed or not reachable), NOT an invalid-input failure. The API
+    layer maps it to a retryable ``F0_EXT_001`` rather than ``F0_IN_001``.
+    """
+
+
+def _vendored_wx_channels_download_bin(root: Path) -> Path:
+    """Last-resort vendored binary path bundled in the repo."""
+    return root / "scripts" / "wx_channels_download" / WX_CHANNELS_DOWNLOAD_BINARY_NAME
+
+
+def resolve_wx_channels_download_bin(root: Path) -> Path | None:
+    """Resolve the WeChat Channels downloader binary via external-install order.
+
+    Resolution order (first hit wins):
+
+    1. ``shutil.which("wx_video_download")`` — a system/PATH install.
+    2. ``$WX_CHANNELS_DOWNLOAD_BIN`` — explicit env override.
+    3. ``WeChatServiceConfig.channels_downloader_bin`` — configs/wechat.yaml.
+    4. Vendored copy under ``scripts/wx_channels_download/`` — last resort.
+
+    Returns the resolved path, or ``None`` if nothing is found (the caller then
+    raises :class:`WeChatChannelsDownloaderUnavailable`). This function does not
+    verify the file is executable beyond ``which``'s own check; existence of an
+    explicit/vendored path is validated at download time.
+    """
+    on_path = shutil.which(WX_CHANNELS_DOWNLOAD_BINARY_NAME)
+    if on_path:
+        return Path(on_path)
+
+    env_value = os.environ.get(WX_CHANNELS_DOWNLOAD_BIN_ENV)
+    if env_value:
+        return Path(env_value).expanduser()
+
+    try:
+        from finer.config import load_wechat_service_config
+
+        configured = load_wechat_service_config(root).channels_downloader_bin
+    except Exception:  # pragma: no cover - config load is best-effort
+        configured = None
+    if configured:
+        return Path(configured).expanduser()
+
+    vendored = _vendored_wx_channels_download_bin(root)
+    if vendored.exists():
+        return vendored
+    return None
+
 
 @dataclass(frozen=True)
 class WeChatChannelsArtifacts:
@@ -1318,9 +1367,16 @@ class WeChatChannelsDownloadClient:
     ) -> Path:
         """Download one video through the bundled wx_channels_download CLI."""
         if not self.downloader_bin:
-            raise FileNotFoundError("wx_channels_download binary path is not configured")
+            raise WeChatChannelsDownloaderUnavailable(
+                "wx_video_download binary not found: install it on PATH, set "
+                f"{WX_CHANNELS_DOWNLOAD_BIN_ENV}, configure channels_downloader_bin, "
+                "or provide the vendored copy under scripts/wx_channels_download/"
+            )
         if not self.downloader_bin.exists():
-            raise FileNotFoundError(f"wx_channels_download binary not found: {self.downloader_bin}")
+            raise WeChatChannelsDownloaderUnavailable(
+                f"wx_video_download binary not found at {self.downloader_bin}: install it "
+                f"on PATH or set {WX_CHANNELS_DOWNLOAD_BIN_ENV} to a valid path"
+            )
 
         safe_filename = Path(filename).name
         download_path = Path.home() / "Downloads" / safe_filename
@@ -1345,9 +1401,13 @@ class WeChatChannelsDownloadClient:
         )
         if result.returncode != 0:
             stderr = result.stderr.strip() or result.stdout.strip()
-            raise RuntimeError(f"wx_channels_download failed: {stderr}")
+            raise WeChatChannelsDownloaderUnavailable(
+                f"wx_video_download failed (exit {result.returncode}): {stderr}"
+            )
         if not download_path.exists():
-            raise FileNotFoundError(f"wx_channels_download did not create {download_path}")
+            raise WeChatChannelsDownloaderUnavailable(
+                f"wx_video_download did not produce {download_path}"
+            )
         return download_path
 
 
@@ -1362,7 +1422,7 @@ class WeChatChannelsF0Importer:
     ) -> None:
         self.root = root
         self.client = client or WeChatChannelsDownloadClient(
-            downloader_bin=root / "scripts" / "wx_channels_download" / "wx_video_download"
+            downloader_bin=resolve_wx_channels_download_bin(root)
         )
 
     def import_video(
@@ -1615,12 +1675,11 @@ def _build_wechat_channels_content_record(
         "acquisition_method": acquisition_method,
         "downloader": "scripts/wx_channels_download",
         "downloader_bin": str(downloader_bin) if downloader_bin else None,
-        "schema_note": "source_type remains unclassified until F0 core contract adds wechat_channels_video",
     }
 
     return ContentRecord(
         content_id=content_id,
-        source_type="unclassified",
+        source_type=WECHAT_CHANNELS_SOURCE_KIND,
         source_platform="wechat",
         creator_id=creator_id,
         creator_name=creator_name,
