@@ -58,8 +58,20 @@ except Exception:  # pragma: no cover
 WATCHLIST_CHOSEN = {
     "ticker": "NONE", "direction": "watchlist", "conviction": 0.2,
     "action_chain": [{"action_type": "watch"}],
+    "time_horizon": None,
     "rationale": "证据不足，观望（原文未提供可溯的标的/价位支撑）",
 }
+
+# validate_dpo_hq.REQUIRED_CHOSEN_KEYS 的镜像：HQ cleaned chosen 顶层 key 必须恰好是这 6 个
+CHOSEN_KEYS = ("ticker", "direction", "conviction", "action_chain", "time_horizon", "rationale")
+
+
+def normalize_chosen(obj: Dict[str, Any]) -> Dict[str, Any]:
+    """chosen 收敛为 HQ 校验的 6 个顶层 key：多删（模型附带字段）、少补（time_horizon 缺省 None）。"""
+    out = {k: obj.get(k) for k in CHOSEN_KEYS}
+    if not isinstance(out["action_chain"], list):
+        out["action_chain"] = []
+    return out
 
 
 def _norm_ticker_loose(t: str) -> str:
@@ -151,15 +163,16 @@ def evidence_quote(ticker: str, evidence_text: str, width: int = 40) -> Optional
 def calibrate(rejected_raw: str, evidence_text: str) -> Dict[str, Any]:
     """把基座 rejected 校准为"证据对齐的克制"版 chosen。确定性。
 
-    关键改动：证据不足时**降低 conviction 而非清零方向**；只有标的在原文完全找不到
-    （真编造）才降级观望。标的可溯性走 entity_registry，解决中文名↔ticker 字面匹配。
+    关键改动：证据不足时**降低 conviction 而非清零方向**；只有输出不可解析/结构破格
+    才降级观望，标的不可溯时保留方向但 conviction 压到 0.3。标的可溯性走
+    entity_registry，解决中文名↔ticker 字面匹配。chosen 顶层 key 收敛为 HQ 校验的 6 键。
     """
     obj = parse_output(rejected_raw)
     ok, _ = validate_structure(obj)
     if not ok or obj is None:
         c = dict(WATCHLIST_CHOSEN)
         c["rationale"] = "原输出不可解析或结构破格，保守观望"
-        return c
+        return normalize_chosen(c)
 
     ticker = str(obj.get("ticker", ""))
     grounded = ticker_grounded(ticker, evidence_text)
@@ -181,25 +194,23 @@ def calibrate(rejected_raw: str, evidence_text: str) -> Dict[str, Any]:
     if not committal:
         obj["conviction"] = 0.5 if grounded else 0.3
         obj.setdefault("rationale", "原文未给出明确方向承诺")
-        return obj
+        return normalize_chosen(obj)
 
     # 承诺：**降信念而非清零**。方向保留(源自真实 KOL 观点)、价位已去编造，
     # 用 conviction 表达证据强弱；标的可溯性(字面 or entity_registry)+价位可溯性 共同决定。
-    if grounded_prices:
+    if grounded and grounded_prices:
         conviction = 0.8          # 标的+价位都可溯，最强
     elif grounded and not cited:
         conviction = 0.6          # 标的可溯、无具体价位（纯方向观点）
     elif grounded:
         conviction = 0.45         # 标的可溯但引用价位是编的（已置空）→ 降信念
     else:
-        conviction = 0.3          # 方向源自原文、标的未验证到 → 低信念保留（不清零）
+        conviction = 0.3          # 标的未验证到（即使价位可溯）→ 低信念保留（不清零）
     obj["conviction"] = conviction
     quote = evidence_quote(ticker, evidence_text)
     basis = "可溯证据" if grounded else "方向（标的待核）"
     obj["rationale"] = f"基于原文{basis}" + (f"：…{quote}…" if quote else "")
-    if quote:
-        obj["evidence_quote"] = quote
-    return obj
+    return normalize_chosen(obj)
 
 
 # ---------------------------------------------------------------------------
