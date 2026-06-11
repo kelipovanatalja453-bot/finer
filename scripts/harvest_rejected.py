@@ -245,7 +245,9 @@ def harvest(
             "chosen": chosen_raw,
             "rejected": rejected_raw,
             "meta": {"passage_id": c.get("id"), "creator": c.get("creator"),
-                     "source_file": c.get("source_file"), "mock": mock},
+                     "source_file": c.get("source_file"), "mock": mock,
+                     "hq_category": c.get("hq_category"),
+                     "hq_score": (c.get("signals") or {}).get("hq_score")},
         })
         stats["kept"] += 1
     return {"pairs": pairs, "stats": stats}

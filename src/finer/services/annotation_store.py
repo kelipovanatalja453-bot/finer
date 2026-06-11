@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import random
 import re
 from dataclasses import dataclass, field
@@ -241,9 +242,18 @@ class AnnotationStore:
         self,
         dpo_dir: Optional[Path] = None,
         kol_notes_dir: Optional[Path] = None,
+        pairs_source_name: Optional[str] = None,
+        full_pair_review_required: Optional[bool] = None,
     ) -> None:
-        self.dpo_dir = dpo_dir or (DATA_ROOT / "dpo")
+        env_dpo_dir = os.environ.get("FINER_ANNOTATION_DPO_DIR")
+        self.dpo_dir = dpo_dir or (_as_repo_path(env_dpo_dir) if env_dpo_dir else (DATA_ROOT / "dpo"))
         self.kol_notes_dir = kol_notes_dir or (DATA_ROOT / "kol_profiles" / "notes")
+        self.pairs_source_name = pairs_source_name or os.environ.get(
+            "FINER_ANNOTATION_PAIRS_SOURCE", "pairs.jsonl"
+        )
+        if full_pair_review_required is None:
+            full_pair_review_required = os.environ.get("FINER_ANNOTATION_FULL_PAIR_REVIEW") == "1"
+        self.full_pair_review_required = full_pair_review_required
 
     @property
     def eval_source(self) -> Path:
@@ -272,7 +282,7 @@ class AnnotationStore:
 
     @property
     def pairs_source(self) -> Path:
-        return self.dpo_dir / "pairs.jsonl"
+        return self.dpo_dir / self.pairs_source_name
 
     @property
     def pairs_annotations(self) -> Path:
@@ -758,7 +768,7 @@ class AnnotationStore:
         annotation_ids = {
             row.get("pair_id") for row in ann_report.rows if isinstance(row.get("pair_id"), str)
         }
-        sampled_rows = self._sample_pair_rows(
+        sampled_rows = source_report.rows if self.full_pair_review_required else self._sample_pair_rows(
             source_report.rows,
             DEFAULT_PAIR_SAMPLE_SIZE,
             DEFAULT_PAIR_SAMPLE_SEED,
@@ -820,9 +830,8 @@ class AnnotationStore:
         if q.invalid_annotations:
             reasons.append(f"存在 {q.invalid_annotations} 条不符合当前 schema 的抽检标注")
         if q.incomplete_items:
-            reasons.append(
-                f"默认抽样队列 {q.pair_sample_reviewed}/{q.pair_sample_size}，尚未完成抽检"
-            )
+            label = "全量审核队列" if self.full_pair_review_required else "默认抽样队列"
+            reasons.append(f"{label} {q.pair_sample_reviewed}/{q.pair_sample_size}，尚未完成抽检")
         return reasons
 
     def task_summary(self, task_id: AnnotationTaskId) -> AnnotationTaskSummary:
@@ -921,8 +930,12 @@ class AnnotationStore:
         counts = {"accept": 0, "edit": 0, "reject": 0, "unreviewed": 0}
         sampled_ids = {
             row["pair_id"]
-            for row in self._sample_pair_rows(
-                self._pairs_source_rows(), DEFAULT_PAIR_SAMPLE_SIZE, DEFAULT_PAIR_SAMPLE_SEED
+            for row in (
+                self._pairs_source_rows()
+                if self.full_pair_review_required
+                else self._sample_pair_rows(
+                    self._pairs_source_rows(), DEFAULT_PAIR_SAMPLE_SIZE, DEFAULT_PAIR_SAMPLE_SEED
+                )
             )
         }
         for row in self._pairs_source_rows():

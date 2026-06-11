@@ -185,6 +185,49 @@ def test_pairs_formal_export_requires_seeded_sample_complete(store: AnnotationSt
     assert result["exported"] == 40
 
 
+def test_pairs_hq_mode_requires_full_review(tmp_path: Path):
+    dpo = tmp_path / "dpo" / "hq_v1"
+    pair_rows = [
+        {
+            "prompt": PROMPT_TMPL.format(evidence=f"阿特斯 CSIQ {15 + i} 元以下可入场"),
+            "chosen": json.dumps({
+                "ticker": "CSIQ",
+                "direction": "bullish",
+                "conviction": 0.8,
+                "action_chain": [{"action_type": "long"}],
+                "time_horizon": "medium_term",
+                "rationale": "原文明确给出 CSIQ 入场条件",
+            }),
+            "rejected": json.dumps({
+                "ticker": "CSIQ",
+                "direction": "bullish",
+                "action_chain": [{"action_type": "long", "target_price_low": 999}],
+            }),
+            "meta": {"passage_id": f"psg_hq{i:02d}", "creator": "kol_a"},
+        }
+        for i in range(3)
+    ]
+    write_jsonl(dpo / "pairs_draft.jsonl", pair_rows)
+    store = AnnotationStore(
+        dpo_dir=dpo,
+        pairs_source_name="pairs_draft.jsonl",
+        full_pair_review_required=True,
+    )
+
+    assert store.pairs_source.name == "pairs_draft.jsonl"
+    with pytest.raises(ValueError, match="全量审核队列 0/3"):
+        store.export("pairs_review", "formal")
+
+    for item in store.list_items("pairs_review"):
+        store.submit("pairs_review", pair_ann(item["pair_id"]))
+
+    result = store.export("pairs_review", "formal")
+    assert result["sample_size"] == 3
+    assert result["unreviewed"] == 0
+    assert result["exported"] == 3
+    assert store.pairs_export.name == "pairs_cleaned.jsonl"
+
+
 def test_rebuild_eval_source_writes_manifest_and_filters(tmp_path: Path):
     root = tmp_path / "project"
     dpo = root / "data" / "dpo"
