@@ -1188,3 +1188,196 @@ export interface ImportRun {
   retryable: boolean;
   fix_hint: string | null;
 }
+
+// =============================================================================
+// Annotation Workbench (mirrors src/finer/schemas/annotation.py)
+// =============================================================================
+
+/** Annotation task identifier. */
+export type AnnotationTaskId = "eval_gold" | "pairs_review";
+export type AnnotationExportMode = "formal" | "draft";
+export type AnnotationItemStatus = "pending" | "annotated" | "excluded";
+export type EvalSampleVerdict = "gold" | "exclude";
+
+/** Single step in a gold action chain (mirrors GoldActionStep). */
+export interface GoldActionStep {
+  action_type: string;
+  trigger_condition?: string | null;
+  target_price_low?: number | null;
+  target_price_high?: number | null;
+}
+
+/** Gold extraction answer for eval set (mirrors GoldExtraction). */
+export interface GoldExtraction {
+  ticker: string;
+  direction: "bullish" | "bearish" | "neutral" | "watchlist" | "risk_warning";
+  action_chain: GoldActionStep[];
+  conviction?: number | null;
+  rationale?: string | null;
+}
+
+/** Neighboring source message merged into evidence (mirrors ContextBlock). */
+export interface ContextBlock {
+  offset: number;
+  timestamp?: string | null;
+  content: string;
+}
+
+/** One eval-set annotation (mirrors EvalGoldAnnotation). */
+export interface EvalGoldAnnotation {
+  id: string;
+  reviewer_id: string;
+  annotation_schema_version: string;
+  sample_verdict: EvalSampleVerdict;
+  exclude_reason?: "image_placeholder" | "insufficient_context" | "non_investment" | "duplicate" | "other" | null;
+  expected_abstain: boolean;
+  gold?: GoldExtraction | null;
+  alt_golds?: GoldExtraction[];
+  context_blocks?: ContextBlock[];
+  notes?: string | null;
+  duration_ms?: number | null;
+  annotated_at?: string;
+}
+
+/** One DPO pair review verdict (mirrors PairReviewAnnotation). */
+export interface PairReviewAnnotation {
+  pair_id: string;
+  reviewer_id: string;
+  annotation_schema_version: string;
+  verdict: "accept" | "edit" | "reject";
+  edited_chosen?: string | null;
+  notes?: string | null;
+  duration_ms?: number | null;
+  annotated_at?: string;
+}
+
+export interface AnnotationQualityStatus {
+  bad_source_lines: number;
+  bad_annotation_lines: number;
+  dangling_annotations: number;
+  legacy_missing_reviewer: number;
+  invalid_annotations: number;
+  train_eval_overlap_ids: string[];
+  image_placeholder_items: number;
+  weak_signal_items: number;
+  unexcluded_image_placeholder_items: number;
+  unexcluded_weak_signal_items: number;
+  incomplete_items: number;
+  excluded_items: number;
+  effective_gold_items: number;
+  pair_sample_size?: number | null;
+  pair_sample_reviewed?: number | null;
+  manifest_path?: string | null;
+  manifest?: Record<string, unknown> | null;
+  formal_blocking_reasons: string[];
+}
+
+/** Task summary from GET /api/annotation/tasks (mirrors AnnotationTaskSummary). */
+export interface AnnotationTaskSummary {
+  task_id: AnnotationTaskId;
+  title: string;
+  source_path: string;
+  annotations_path: string;
+  export_path: string;
+  ready: boolean;
+  total: number;
+  annotated: number;
+  fix_hint?: string | null;
+  quality: AnnotationQualityStatus;
+}
+
+/** Eval item from GET /api/annotation/items?task_id=eval_gold. */
+export interface EvalAnnotationItem {
+  id: string;
+  evidence_text: string;
+  creator?: string | null;
+  source_file?: string | null;
+  timestamp?: string | null;
+  signals?: {
+    has_direction?: boolean;
+    has_price?: boolean;
+    has_ticker?: boolean;
+    horizon_hint?: string;
+    signal_score?: number;
+  } | null;
+  char_len?: number | null;
+  status: AnnotationItemStatus;
+  annotation?: EvalGoldAnnotation | null;
+  /** 模型初稿（run_inference 对 passages 的输出 JSON 串），仅标注辅助。 */
+  draft?: string | null;
+}
+
+/** Pair item from GET /api/annotation/items?task_id=pairs_review. */
+export interface PairReviewItem {
+  pair_id: string;
+  evidence_text: string;
+  chosen: string;
+  rejected: string;
+  creator?: string | null;
+  source_file?: string | null;
+  status: AnnotationItemStatus;
+  annotation?: PairReviewAnnotation | null;
+}
+
+/** Result of POST /api/annotation/export. */
+export interface AnnotationExportResult {
+  export_path: string;
+  exported: number;
+  excluded?: number;
+  mode?: AnnotationExportMode;
+  sample_size?: number;
+  expected_abstain_count?: number;
+  train_eval_overlap_ids?: string[];
+  accept?: number;
+  edit?: number;
+  reject?: number;
+  unreviewed?: number;
+}
+
+export interface AnnotationEnums {
+  annotation_schema_version: string;
+  directions: GoldExtraction["direction"][];
+  action_types: string[];
+  eval_exclude_reasons: NonNullable<EvalGoldAnnotation["exclude_reason"]>[];
+  pair_sample_size: number;
+  pair_sample_seed: number;
+  entity_aliases: Record<string, { ticker: string; market: string }>;
+}
+
+/** One block from GET /api/annotation/context. */
+export interface ContextResponseBlock {
+  position: "before" | "self" | "after";
+  offset: number;
+  timestamp?: string | null;
+  content: string;
+}
+
+/** Response data of GET /api/annotation/context. */
+export interface ContextResponse {
+  item_id: string;
+  source_file: string;
+  block_index: number;
+  total_blocks: number;
+  blocks: ContextResponseBlock[];
+}
+
+/** One daily bar in the market window. */
+export interface MarketBar {
+  trade_date: string;
+  close: number;
+  pct_chg?: number | null;
+}
+
+/** Response data of GET /api/annotation/market. */
+export interface MarketWindowResult {
+  ticker: string;
+  ts_code?: string;
+  name?: string | null;
+  coverage: "local" | "unsupported_market" | "unknown_ticker" | "no_local_data";
+  market?: string | null;
+  hint?: string;
+  anchor_date?: string;
+  anchor_close?: number;
+  anchor_pct_chg?: number | null;
+  window?: MarketBar[];
+}

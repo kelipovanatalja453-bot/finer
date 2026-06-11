@@ -8,6 +8,7 @@ import {
   Users,
   GitCompare,
   LineChart,
+  ClipboardCheck,
   Settings,
   Database,
 } from "lucide-react";
@@ -17,6 +18,7 @@ const navItems = [
   { href: "/kol", label: "KOL", icon: Users },
   { href: "/kol/compare", label: "对比", icon: GitCompare },
   { href: "/backtest", label: "回测", icon: LineChart },
+  { href: "/annotation", label: "标注", icon: ClipboardCheck },
   { href: "/settings", label: "设置", icon: Settings },
 ];
 
