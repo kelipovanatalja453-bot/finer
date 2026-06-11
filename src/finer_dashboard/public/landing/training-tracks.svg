@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Finer OS data tracks</title>
+  <desc id="desc">Evaluation and training tracks are stored separately with human annotation nodes highlighted.</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#d8cec0" stroke-width="1" opacity=".35"/>
+    </pattern>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#605347"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#3c2818" flood-opacity=".12"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="720" fill="#f3efe7"/>
+  <rect width="1200" height="720" fill="url(#grid)"/>
+  <rect x="48" y="48" width="1104" height="624" rx="8" fill="#fffdf8" stroke="#cbd5e1" filter="url(#shadow)"/>
+  <text x="86" y="102" fill="#9f1d22" font-family="Avenir Next, PingFang SC, sans-serif" font-size="18" font-weight="800" letter-spacing="4">DATA FLOW</text>
+  <text x="86" y="142" fill="#181512" font-family="Songti SC, Noto Serif CJK SC, serif" font-size="36" font-weight="700">两条轨道，各自落盘</text>
+  <text x="86" y="178" fill="#806f61" font-family="Avenir Next, PingFang SC, sans-serif" font-size="18">训练集负责让模型学习；人工验证集负责诚实打分。两条轨道不混用。</text>
+
+  <g transform="translate(86 250)" font-family="Avenir Next, PingFang SC, sans-serif">
+    <text x="0" y="-20" fill="#9b7b45" font-size="17" font-weight="800" letter-spacing="2">验证轨道</text>
+    <line x1="0" y1="74" x2="1010" y2="74" stroke="#9b7b45" stroke-width="3" opacity=".75"/>
+    <g>
+      <rect x="0" y="28" width="150" height="92" rx="7" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="20" y="64" fill="#181512" font-size="15" font-weight="800">passages.jsonl</text>
+      <text x="20" y="88" fill="#806f61" font-size="12">held-out 段落</text>
+    </g>
+    <g>
+      <rect x="210" y="18" width="160" height="112" rx="7" fill="#fffaf0" stroke="#d9c18f" stroke-width="2.2"/>
+      <text x="230" y="60" fill="#181512" font-size="16" font-weight="900">人工 Gold 标注</text>
+      <text x="230" y="86" fill="#806f61" font-size="12">唯一人类节点</text>
+      <circle cx="340" cy="38" r="11" fill="#9b7b45"/>
+      <text x="340" y="42" text-anchor="middle" fill="#fff" font-size="12" font-weight="800">H</text>
+    </g>
+    <g>
+      <rect x="430" y="28" width="150" height="92" rx="7" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="450" y="64" fill="#181512" font-size="15" font-weight="800">eval_set.jsonl</text>
+      <text x="450" y="88" fill="#806f61" font-size="12">人工考卷</text>
+    </g>
+    <g>
+      <rect x="640" y="28" width="150" height="92" rx="7" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="660" y="64" fill="#181512" font-size="15" font-weight="800">run_inference</text>
+      <text x="660" y="88" fill="#806f61" font-size="12">before / after</text>
+    </g>
+    <g>
+      <rect x="850" y="28" width="160" height="92" rx="7" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="870" y="64" fill="#181512" font-size="15" font-weight="800">eval_compare</text>
+      <text x="870" y="88" fill="#806f61" font-size="12">三项指标</text>
+    </g>
+    <path d="M150 74 H198" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M370 74 H418" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M580 74 H628" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M790 74 H838" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+
+  <g transform="translate(86 450)" font-family="Avenir Next, PingFang SC, sans-serif">
+    <text x="0" y="-20" fill="#9f1d22" font-size="17" font-weight="800" letter-spacing="2">训练轨道</text>
+    <line x1="0" y1="74" x2="1010" y2="74" stroke="#9f1d22" stroke-width="3" opacity=".75"/>
+    <g>
+      <rect x="0" y="28" width="138" height="92" rx="7" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="18" y="64" fill="#181512" font-size="14" font-weight="800">candidates</text>
+      <text x="18" y="88" fill="#806f61" font-size="12">真实原文</text>
+    </g>
+    <g>
+      <rect x="168" y="28" width="138" height="92" rx="7" fill="#fff8f8" stroke="#ecd1d3"/>
+      <text x="186" y="64" fill="#181512" font-size="14" font-weight="800">harvest rejected</text>
+      <text x="186" y="88" fill="#806f61" font-size="12">基座失败</text>
+    </g>
+    <g>
+      <rect x="336" y="28" width="138" height="92" rx="7" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="354" y="64" fill="#181512" font-size="14" font-weight="800">pairs.jsonl</text>
+      <text x="354" y="88" fill="#806f61" font-size="12">偏好对</text>
+    </g>
+    <g>
+      <rect x="504" y="18" width="148" height="112" rx="7" fill="#fff8f8" stroke="#d8a4a7" stroke-width="2.2"/>
+      <text x="522" y="60" fill="#181512" font-size="15" font-weight="900">人工抽检</text>
+      <text x="522" y="86" fill="#806f61" font-size="12">chosen 侧质检</text>
+      <circle cx="625" cy="38" r="11" fill="#9f1d22"/>
+      <text x="625" y="42" text-anchor="middle" fill="#fff" font-size="12" font-weight="800">H</text>
+    </g>
+    <g>
+      <rect x="682" y="28" width="138" height="92" rx="7" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="700" y="64" fill="#181512" font-size="14" font-weight="800">to_bailian</text>
+      <text x="700" y="88" fill="#806f61" font-size="12">ChatML</text>
+    </g>
+    <g>
+      <rect x="850" y="28" width="160" height="92" rx="7" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="868" y="64" fill="#181512" font-size="14" font-weight="800">DPO LoRA</text>
+      <text x="868" y="88" fill="#806f61" font-size="12">微调模型</text>
+    </g>
+    <path d="M138 74 H156" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M306 74 H324" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M474 74 H492" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M652 74 H670" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M820 74 H838" stroke="#605347" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+
+  <rect x="86" y="626" width="1028" height="38" rx="5" fill="#181512"/>
+  <text x="110" y="650" fill="#ffffff" font-family="SFMono-Regular, Menlo, monospace" font-size="14">guardrail: train_ids ∩ eval_ids = ∅ · overlap 会在 API 响应和前端警告中点名</text>
+</svg>

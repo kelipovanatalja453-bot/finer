@@ -23,6 +23,7 @@ auth_token.txt
 data/
 reports/
 .claude/
+.workbuddy/
 trader韭菜*/
 *.json
 !pyproject.toml

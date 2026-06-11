@@ -1,12 +1,13 @@
 import Link from "next/link";
 import {
-  Activity,
   ArrowRight,
   ArrowUpRight,
   Boxes,
   Check,
+  ClipboardCheck,
   Cpu,
   GitBranch,
+  GraduationCap,
   LayoutGrid,
   LineChart,
   Mail,
@@ -23,26 +24,19 @@ import {
 } from "lucide-react";
 import { ProductFrame } from "@/components/landing/product-frame";
 import { PipelineStrip } from "@/components/landing/pipeline-strip";
+import {
+  CONTACT_EMAIL,
+  SiteFooter,
+  SiteHeader,
+} from "@/components/landing/site-chrome";
 import { cn } from "@/lib/utils";
-
-/** GitHub octocat mark (lucide dropped brand icons for trademark reasons). */
-function GitHubMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
-      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-    </svg>
-  );
-}
-
-const GITHUB_URL = "https://github.com/kelipovanatalja453-bot/finer";
-const CONTACT_EMAIL = "kelipovanatalja453@gmail.com";
 
 const NAV_LINKS = [
   { href: "#pipeline", label: "流水线" },
   { href: "#demo", label: "在线演示" },
   { href: "#proof", label: "回测证据" },
   { href: "#capabilities", label: "能力" },
-  { href: "#human-loop", label: "AI · 人" },
+  { href: "#human-loop", label: "标注训练" },
   { href: "#engineering", label: "技术" },
 ];
 
@@ -124,7 +118,7 @@ const ROADMAP_PLANNED = [
   {
     icon: Cpu,
     title: "模型微调",
-    body: "基于 RLHFFeedback 的 DPO 微调，让模型真正从人工裁决中学习。",
+    body: "三指标评测器、训练脚本与百炼 ChatML 转换已就绪；等待真实 DPO-LoRA 实跑，回填微调前后对比数字。",
   },
 ];
 
@@ -132,47 +126,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       {/* ===== Nav ===== */}
-      <header className="sticky top-0 z-30 border-b border-[var(--table-border)] bg-[rgba(243,239,231,0.86)] backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-morningstar-red">
-              <Activity className="h-4 w-4 text-white" strokeWidth={1.8} />
-            </div>
-            <span className="text-[17px] font-bold tracking-tight text-foreground">
-              Finer OS
-            </span>
-          </div>
-          <nav className="hidden items-center gap-7 md:flex">
-            {NAV_LINKS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="text-[13px] font-medium text-foreground/65 transition-colors hover:text-morningstar-red"
-              >
-                {l.label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            <a
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="hidden h-9 w-9 items-center justify-center rounded-sm border border-[var(--table-border)] bg-white text-foreground/70 transition-colors hover:border-foreground/30 hover:text-foreground sm:inline-flex"
-            >
-              <GitHubMark className="h-4 w-4" />
-            </a>
-            <Link
-              href="/demo"
-              className="inline-flex items-center gap-1.5 rounded-sm bg-morningstar-red px-3.5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-morningstar-red/90"
-            >
-              在线演示
-              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
-            </Link>
-          </div>
-        </div>
-      </header>
+      <SiteHeader links={NAV_LINKS} />
 
       {/* ===== Hero ===== */}
       <section className="mx-auto max-w-[1200px] px-6 pt-16 pb-12 lg:pt-24">
@@ -387,6 +341,59 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {/* Annotation workbench feature */}
+          <div className="mb-10 grid gap-6 lg:grid-cols-[minmax(0,1.18fr)_minmax(320px,0.82fr)] lg:items-center">
+            <ProductFrame
+              src="/landing/annotation-workbench.png"
+              alt="Finer OS 标注工作台：原文证据、Gold 表单、质量闸和 Formal export 阻断"
+              width={1440}
+              height={980}
+              label="finer.os / annotation"
+            />
+            <div className="border-t-2 border-morningstar-red bg-white p-6 shadow-[var(--shadow-soft)]">
+              <div className="flex items-center gap-2">
+                <ClipboardCheck className="h-7 w-7 text-morningstar-red" strokeWidth={1.5} />
+                <span className="rounded-sm border border-[rgba(225,27,34,0.18)] bg-[rgba(225,27,34,0.08)] px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-morningstar-red">
+                  HUMAN LABELING
+                </span>
+              </div>
+              <h3 className="mt-4 text-[20px] font-bold tracking-tight text-foreground">
+                标注台不是外包页面，是训练资产入口
+              </h3>
+              <p className="mt-3 text-[13px] leading-6 text-[var(--ink-soft)]">
+                评测集 Gold、DPO chosen 侧抽检、F6 字段级纠错都在同一套工作台里落盘。
+                每条记录都带 reviewer_id / reviewed_at，可重建、可 diff、可导出。
+              </p>
+              <div className="mt-4 space-y-2 text-[12px] leading-5 text-foreground/70">
+                {[
+                  "Gold 标注：独立 held-out 考卷，不喂给模型",
+                  "偏好抽检：chosen / rejected 的质量闸",
+                  "RLHF 纠错：真实 F5 错误回流成 DPO pairs",
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-2">
+                    <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-morningstar-red" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href="/training"
+                  className="inline-flex items-center gap-2 rounded-sm bg-morningstar-red px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-morningstar-red/90"
+                >
+                  <GraduationCap className="h-4 w-4" strokeWidth={1.8} />
+                  看训练数据页
+                </Link>
+                <Link
+                  href="/demo"
+                  className="inline-flex items-center gap-2 rounded-sm border border-[var(--table-border)] bg-white px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:border-foreground/30"
+                >
+                  在演示里试 F6 复核
+                </Link>
+              </div>
+            </div>
+          </div>
+
           {/* Three concept columns */}
           <div className="grid gap-6 lg:grid-cols-3">
             {/* AI does what */}
@@ -460,8 +467,11 @@ export default function LandingPage() {
                   <span className="font-mono">GET /api/rlhf/export</span> 导出为 DPO 训练数据
                 </li>
                 <li>
-                  训练循环为 contract-only：DPO 数据格式与导出 API 已就绪，
-                  <strong className="text-foreground">下一步规划见下方 Roadmap</strong>
+                  偏好对流水线与三指标评测器已建成，真实微调待实跑——
+                  <Link href="/training" className="font-semibold text-morningstar-red hover:underline">
+                    训练数据页
+                  </Link>
+                  讲清全貌
                 </li>
               </ul>
             </div>
@@ -505,7 +515,7 @@ export default function LandingPage() {
               ))}
             </div>
             <div className="mt-3 text-[11px] leading-5 text-[var(--ink-soft)]">
-              训练循环写明 contract-only：DPO 数据格式与导出 API 已实现，模型微调待启动。
+              DPO 数据格式、导出 API、偏好对流水线与三指标评测器已实现；真实模型微调待实跑。
               我们更愿意把已建成与未建成都说清楚。
             </div>
           </div>
@@ -658,10 +668,14 @@ export default function LandingPage() {
             </div>
 
             <div className="border-t border-[var(--grid-line)] bg-[var(--surface-muted)] px-6 py-3 text-[12px] leading-6 text-[var(--ink-soft)]">
-              <span className="font-semibold text-foreground">RLHFFeedback 记录与 DPO 数据导出已实现</span>
-              ；Prompt 工程、插件调用、模型微调均为
-              <strong className="text-foreground">规划中、尚未实现</strong>
-              。我们更愿意把已建成与未建成都说清楚。
+              <span className="font-semibold text-foreground">RLHFFeedback 记录、DPO 数据导出与评测/训练脚本地基已实现</span>
+              ；Prompt 工程、插件调用为规划中，模型微调
+              <strong className="text-foreground">待真实实跑、尚无成绩</strong>
+              。完整现状见
+              <Link href="/training" className="font-semibold text-morningstar-red hover:underline">
+                训练数据页
+              </Link>
+              。
             </div>
           </div>
         </div>
@@ -766,64 +780,7 @@ export default function LandingPage() {
       </section>
 
       {/* ===== Footer ===== */}
-      <footer className="border-t border-[var(--table-border)] bg-[var(--surface-strong)]">
-        <div className="mx-auto max-w-[1200px] px-6 py-10">
-          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-            <div className="max-w-sm">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-morningstar-red">
-                  <Activity className="h-4 w-4 text-white" strokeWidth={1.8} />
-                </div>
-                <span className="text-[15px] font-bold tracking-tight text-foreground">
-                  Finer OS
-                </span>
-              </div>
-              <p className="mt-3 text-[13px] leading-6 text-[var(--ink-soft)]">
-                AI-native 投研自动化流水线。把 KOL 内容转化为结构化、可回测、
-                可审计的投资事件。
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-[13px]">
-              <div className="space-y-2">
-                <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/40">
-                  产品
-                </div>
-                <Link href="/demo" className="block text-foreground/70 hover:text-morningstar-red">
-                  在线演示
-                </Link>
-                <a href="#proof" className="block text-foreground/70 hover:text-morningstar-red">
-                  回测证据
-                </a>
-                <a href="#capabilities" className="block text-foreground/70 hover:text-morningstar-red">
-                  能力
-                </a>
-              </div>
-              <div className="space-y-2">
-                <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/40">
-                  联系
-                </div>
-                <a
-                  href={GITHUB_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-foreground/70 hover:text-morningstar-red"
-                >
-                  GitHub
-                </a>
-                <a
-                  href={`mailto:${CONTACT_EMAIL}`}
-                  className="block text-foreground/70 hover:text-morningstar-red"
-                >
-                  邮箱
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="mt-8 border-t border-[var(--grid-line)] pt-5 text-[12px] text-foreground/40">
-            内部研究系统原型 · 数据与回测结果仅供研究，不构成投资建议。
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
