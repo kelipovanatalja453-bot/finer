@@ -339,10 +339,11 @@ export function AnnotationWorkbench() {
   const formalBlocked = Boolean(task?.quality.formal_blocking_reasons.length);
 
   // ── Entity detection for current item ───────────────────────────────────
+  const entityAliases = enums?.entity_aliases;
   const detectedEntities: DetectedEntity[] = React.useMemo(() => {
-    if (!item || !enums?.entity_aliases) return [];
-    return detectEntities(item.evidence_text, enums.entity_aliases);
-  }, [item, enums?.entity_aliases]);
+    if (!item || !entityAliases) return [];
+    return detectEntities(item.evidence_text, entityAliases);
+  }, [item, entityAliases]);
 
   // ── Context expansion ───────────────────────────────────────────────────
   const currentItemId = item ? itemKey(activeTask, item) : null;

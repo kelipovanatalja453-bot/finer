@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   Anchor,
@@ -18,6 +19,7 @@ import {
   Target,
   X,
 } from "lucide-react";
+import { ProductFrame } from "@/components/landing/product-frame";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 纯静态叙事页。所有结构与数字均取自仓库内已落地的 spec / schema / 脚本：
@@ -146,6 +148,17 @@ const TRAIN_TRACK = [
   { node: "百炼 DPO LoRA", note: "微调模型" },
 ];
 
+const REAL_PAIR_CASE = {
+  source:
+    "港股中国能源建设：A 股短期资金炒作，港股到正常目标价，向上空间不大，目前风险大于价值。",
+  chosen:
+    "ticker=00352.HK · direction=risk_warning · action=hold · target_price=null",
+  rejected:
+    "同样方向但把无目标价写成 target_price=0，容易把“未知”误读成真实价格。",
+  why:
+    "chosen 保留风险警示和 hold 判断，同时用 null 表达原文没有价格锚点；这是“证据不足不硬填”的真实偏好原则。",
+};
+
 export default function TrainingPage() {
   return (
     <div className="finer-scrollbar min-h-full bg-background">
@@ -204,6 +217,43 @@ export default function TrainingPage() {
               TradeDirection / ActionType 枚举与数据契约，零转换层。标注全部落为
               append-only JSONL，可 diff、可重建、不动 SQLite。
             </p>
+          </div>
+
+          <div className="mb-8 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-center">
+            <ProductFrame
+              src="/landing/annotation-workbench.png"
+              alt="Finer OS 标注工作台：左侧原文证据，右侧 Gold 结构化表单与 Formal export 阻断"
+              width={1440}
+              height={980}
+              label="finer.os / annotation"
+              className="bg-white"
+            />
+            <div className="border-t-2 border-morningstar-red bg-white p-6 shadow-[var(--shadow-soft)]">
+              <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-morningstar-red">
+                REAL WORKBENCH
+              </div>
+              <h3 className="mt-3 text-[20px] font-bold tracking-tight text-foreground">
+                标注对象就是原文证据与结构化表单
+              </h3>
+              <p className="mt-3 text-[13px] leading-6 text-[var(--ink-soft)]">
+                左侧保留 KOL 原文、上下文扩展和实体检测；右侧直接填
+                ticker / direction / action chain。Formal 导出被质量闸拦住时，
+                页面点名未标样本、弱信号和 gold 数量，不允许悄悄产出训练文件。
+              </p>
+              <dl className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-[var(--grid-line)] bg-[var(--grid-line)] text-[12px]">
+                {[
+                  ["当前任务源", "30 条"],
+                  ["已处理", "9 条"],
+                  ["有效 gold", "2 条"],
+                  ["Formal 闸", "blocked"],
+                ].map(([k, v]) => (
+                  <div key={k} className="bg-[var(--surface-strong)] px-3 py-2">
+                    <dt className="text-foreground/45">{k}</dt>
+                    <dd className="mt-0.5 font-mono font-bold text-foreground">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
 
           <div className="grid gap-px overflow-hidden rounded-sm border border-[var(--table-border)] bg-[var(--table-border)] lg:grid-cols-3">
@@ -374,39 +424,72 @@ export default function TrainingPage() {
               </div>
             </div>
 
-            {/* 2x2 原则矩阵 */}
-            <div className="overflow-hidden rounded-sm border border-[var(--table-border)] bg-white">
-              <div className="grid grid-cols-[88px_1fr_1fr] bg-[var(--table-header-bg)] text-[12px] font-bold text-foreground/55">
-                <div className="px-4 py-3" />
-                <div className="border-l border-[var(--grid-line)] px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 text-[#0f7a54]">
-                    <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> chosen（偏好）
-                  </span>
+            <div className="space-y-4">
+              {/* 2x2 原则矩阵 */}
+              <div className="overflow-hidden rounded-sm border border-[var(--table-border)] bg-white">
+                <div className="grid grid-cols-[88px_1fr_1fr] bg-[var(--table-header-bg)] text-[12px] font-bold text-foreground/55">
+                  <div className="px-4 py-3" />
+                  <div className="border-l border-[var(--grid-line)] px-4 py-3">
+                    <span className="inline-flex items-center gap-1.5 text-[#0f7a54]">
+                      <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> chosen（偏好）
+                    </span>
+                  </div>
+                  <div className="border-l border-[var(--grid-line)] px-4 py-3">
+                    <span className="inline-flex items-center gap-1.5 text-morningstar-red">
+                      <X className="h-3.5 w-3.5" strokeWidth={2.5} /> rejected（拒绝）
+                    </span>
+                  </div>
                 </div>
-                <div className="border-l border-[var(--grid-line)] px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 text-morningstar-red">
-                    <X className="h-3.5 w-3.5" strokeWidth={2.5} /> rejected（拒绝）
-                  </span>
-                </div>
+                {PRINCIPLE_ROWS.map((r, i) => (
+                  <div
+                    key={r.evidence}
+                    className={`grid grid-cols-[88px_1fr_1fr] text-[12px] leading-5 ${
+                      i > 0 ? "border-t border-[var(--grid-line)]" : ""
+                    }`}
+                  >
+                    <div className="flex items-center px-4 py-4 font-bold text-foreground/70">
+                      {r.evidence}
+                    </div>
+                    <div className="border-l border-[var(--grid-line)] bg-[rgba(16,185,129,0.04)] px-4 py-4 text-foreground/85">
+                      {r.chosen}
+                    </div>
+                    <div className="border-l border-[var(--grid-line)] bg-[rgba(159,29,34,0.04)] px-4 py-4 text-foreground/85">
+                      {r.rejected}
+                    </div>
+                  </div>
+                ))}
               </div>
-              {PRINCIPLE_ROWS.map((r, i) => (
-                <div
-                  key={r.evidence}
-                  className={`grid grid-cols-[88px_1fr_1fr] text-[12px] leading-5 ${
-                    i > 0 ? "border-t border-[var(--grid-line)]" : ""
-                  }`}
-                >
-                  <div className="flex items-center px-4 py-4 font-bold text-foreground/70">
-                    {r.evidence}
+
+              <div className="border-t-2 border-[var(--accent-gold)] bg-white p-5 shadow-[var(--shadow-soft)]">
+                <div className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/40">
+                  REAL PAIR CASE · data/dpo/pairs.jsonl
+                </div>
+                <p className="mt-3 text-[13px] leading-6 text-[var(--ink-soft)]">
+                  <span className="font-bold text-foreground">原文：</span>
+                  {REAL_PAIR_CASE.source}
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-sm border border-[#cbe2d8] bg-[rgba(16,185,129,0.04)] p-3">
+                    <div className="flex items-center gap-1.5 text-[12px] font-bold text-[#0f7a54]">
+                      <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> chosen
+                    </div>
+                    <p className="mt-2 font-mono text-[11px] leading-5 text-foreground/80">
+                      {REAL_PAIR_CASE.chosen}
+                    </p>
                   </div>
-                  <div className="border-l border-[var(--grid-line)] bg-[rgba(16,185,129,0.04)] px-4 py-4 text-foreground/85">
-                    {r.chosen}
-                  </div>
-                  <div className="border-l border-[var(--grid-line)] bg-[rgba(159,29,34,0.04)] px-4 py-4 text-foreground/85">
-                    {r.rejected}
+                  <div className="rounded-sm border border-[#ecd1d3] bg-[rgba(159,29,34,0.04)] p-3">
+                    <div className="flex items-center gap-1.5 text-[12px] font-bold text-morningstar-red">
+                      <X className="h-3.5 w-3.5" strokeWidth={2.5} /> rejected
+                    </div>
+                    <p className="mt-2 font-mono text-[11px] leading-5 text-foreground/80">
+                      {REAL_PAIR_CASE.rejected}
+                    </p>
                   </div>
                 </div>
-              ))}
+                <p className="mt-3 text-[12px] leading-5 text-foreground/55">
+                  {REAL_PAIR_CASE.why}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -425,6 +508,12 @@ export default function TrainingPage() {
             两个环区分清楚，避免把「跑通」当成「变好」。
           </p>
         </div>
+
+        <TrainingVisual
+          src="/landing/training-loops.svg"
+          alt="环 A 半真实 bootstrap 与环 B 真实反馈飞轮的双循环示意图"
+          caption="环 A 只证明管线可运行；环 B 才把真实 F5 错误、F6 人工修正和 DPO 导出连成质量飞轮。"
+        />
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* 环 A */}
@@ -489,6 +578,13 @@ export default function TrainingPage() {
               在人工验证集上对比微调前后。前两项是确定性计算、免费、可复现；只有偏好胜率需要 judge。
             </p>
           </div>
+
+          <TrainingVisual
+            src="/landing/training-metrics.svg"
+            alt="结构合规率、证据挂靠率、偏好胜率三项评测指标示意图"
+            caption="前两项指标直接由 JSON Schema 与原文 evidence_text 计算；偏好胜率才进入 judge，且用 A/B 互换降低位置偏置。"
+          />
+
           <div className="grid gap-px overflow-hidden rounded-sm border border-[var(--table-border)] bg-[var(--table-border)] lg:grid-cols-3">
             {METRICS.map((m) => {
               const Icon = m.icon;
@@ -524,6 +620,12 @@ export default function TrainingPage() {
             训练轨道与验证轨道平行推进，中间产物逐步落盘，人工标注是两条轨道上唯一的人类节点。
           </p>
         </div>
+
+        <TrainingVisual
+          src="/landing/training-tracks.svg"
+          alt="训练轨道与验证轨道分别落盘、人工节点高亮、train eval 零重叠的示意图"
+          caption="验证轨道生成模型没见过的考卷；训练轨道生成偏好对。两条轨道通过 ID overlap guardrail 防泄漏。"
+        />
 
         <div className="space-y-6">
           <FlowTrack
@@ -680,6 +782,33 @@ export default function TrainingPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+// ─── 训练页视觉图 ───────────────────────────────────────────────────────────
+function TrainingVisual({
+  src,
+  alt,
+  caption,
+}: {
+  src: string;
+  alt: string;
+  caption: string;
+}) {
+  return (
+    <figure className="mb-8 overflow-hidden rounded-sm border border-[var(--table-border)] bg-white shadow-[var(--shadow-panel)]">
+      <Image
+        src={src}
+        alt={alt}
+        width={1200}
+        height={720}
+        className="block h-auto w-full"
+        sizes="(max-width: 1200px) 100vw, 1200px"
+      />
+      <figcaption className="border-t border-[var(--grid-line)] bg-[var(--surface-muted)] px-4 py-2 text-[12px] leading-5 text-foreground/50">
+        {caption}
+      </figcaption>
+    </figure>
   );
 }
 

@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Finer OS training loops</title>
+  <desc id="desc">Loop A validates the data pipeline while Loop B turns real human corrections into preference data.</desc>
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#d8cec0" stroke-width="1" opacity=".38"/>
+    </pattern>
+    <marker id="arrow-red" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#9f1d22"/>
+    </marker>
+    <marker id="arrow-gold" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L9,4.5 L0,9 Z" fill="#9b7b45"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#3c2818" flood-opacity=".12"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="720" fill="#f3efe7"/>
+  <rect width="1200" height="720" fill="url(#grid)"/>
+  <rect x="48" y="48" width="1104" height="624" rx="8" fill="#fffdf8" stroke="#cbd5e1" filter="url(#shadow)"/>
+  <text x="86" y="102" fill="#9f1d22" font-family="Avenir Next, PingFang SC, sans-serif" font-size="18" font-weight="800" letter-spacing="4">TWO LOOPS</text>
+  <text x="86" y="142" fill="#181512" font-family="Songti SC, Noto Serif CJK SC, serif" font-size="36" font-weight="700">环 A 证管线，环 B 才是质量来源</text>
+  <text x="86" y="178" fill="#806f61" font-family="Avenir Next, PingFang SC, sans-serif" font-size="18">半真实 bootstrap 用来证明格式、脚本和评测闭环；真实 F6 纠错才持续提供训练质量。</text>
+
+  <g transform="translate(86 230)">
+    <rect x="0" y="0" width="500" height="360" rx="8" fill="#ffffff" stroke="#d5dce5"/>
+    <rect x="0" y="0" width="500" height="7" fill="#9b7b45"/>
+    <text x="28" y="54" fill="#181512" font-family="Songti SC, Noto Serif CJK SC, serif" font-size="28" font-weight="700">环 A · 半真实 bootstrap</text>
+    <text x="28" y="88" fill="#806f61" font-family="Avenir Next, PingFang SC, sans-serif" font-size="15">目标：证明管线通，不冒充质量提升</text>
+
+    <g font-family="Avenir Next, PingFang SC, sans-serif" font-size="15">
+      <rect x="38" y="130" width="170" height="58" rx="6" fill="#faf7f0" stroke="#ded4c7"/>
+      <text x="58" y="155" fill="#181512" font-weight="700">真实 KOL 原文</text>
+      <text x="58" y="176" fill="#806f61" font-size="12">evidence_text</text>
+
+      <rect x="288" y="130" width="170" height="58" rx="6" fill="#fff8f8" stroke="#ecd1d3"/>
+      <text x="308" y="155" fill="#181512" font-weight="700">基座真实失败</text>
+      <text x="308" y="176" fill="#806f61" font-size="12">on-policy rejected</text>
+
+      <rect x="288" y="248" width="170" height="58" rx="6" fill="#f7fbf9" stroke="#cbe2d8"/>
+      <text x="308" y="273" fill="#181512" font-weight="700">校准 chosen</text>
+      <text x="308" y="294" fill="#806f61" font-size="12">证据 span 内联</text>
+
+      <rect x="38" y="248" width="170" height="58" rx="6" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="58" y="273" fill="#181512" font-weight="700">chosen 侧抽检</text>
+      <text x="58" y="294" fill="#806f61" font-size="12">A / E / R 质检</text>
+    </g>
+    <path d="M208 159 H278" stroke="#9b7b45" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+    <path d="M373 188 V238" stroke="#9b7b45" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+    <path d="M288 277 H218" stroke="#9b7b45" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+    <path d="M123 248 V198" stroke="#9b7b45" stroke-width="2.5" marker-end="url(#arrow-gold)"/>
+  </g>
+
+  <g transform="translate(614 230)">
+    <rect x="0" y="0" width="500" height="360" rx="8" fill="#ffffff" stroke="#d5dce5"/>
+    <rect x="0" y="0" width="500" height="7" fill="#9f1d22"/>
+    <text x="28" y="54" fill="#181512" font-family="Songti SC, Noto Serif CJK SC, serif" font-size="28" font-weight="700">环 B · 真实反馈飞轮</text>
+    <text x="28" y="88" fill="#806f61" font-family="Avenir Next, PingFang SC, sans-serif" font-size="15">目标：真实 F5 错误被人工裁决后回流训练</text>
+
+    <g font-family="Avenir Next, PingFang SC, sans-serif" font-size="15">
+      <rect x="38" y="130" width="170" height="58" rx="6" fill="#fff8f8" stroke="#ecd1d3"/>
+      <text x="58" y="155" fill="#181512" font-weight="700">F5 原错输出</text>
+      <text x="58" y="176" fill="#806f61" font-size="12">model rejected</text>
+
+      <rect x="288" y="130" width="170" height="58" rx="6" fill="#ffffff" stroke="#d5dce5"/>
+      <text x="308" y="155" fill="#181512" font-weight="700">F6 人工复核</text>
+      <text x="308" y="176" fill="#806f61" font-size="12">字段级 corrections</text>
+
+      <rect x="288" y="248" width="170" height="58" rx="6" fill="#f7fbf9" stroke="#cbe2d8"/>
+      <text x="308" y="273" fill="#181512" font-weight="700">偏好对落盘</text>
+      <text x="308" y="294" fill="#806f61" font-size="12">chosen / rejected</text>
+
+      <rect x="38" y="248" width="170" height="58" rx="6" fill="#faf7f0" stroke="#ded4c7"/>
+      <text x="58" y="273" fill="#181512" font-weight="700">DPO 导出</text>
+      <text x="58" y="294" fill="#806f61" font-size="12">to_bailian.py</text>
+    </g>
+    <path d="M208 159 H278" stroke="#9f1d22" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+    <path d="M373 188 V238" stroke="#9f1d22" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+    <path d="M288 277 H218" stroke="#9f1d22" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+    <path d="M123 248 V198" stroke="#9f1d22" stroke-width="2.5" marker-end="url(#arrow-red)"/>
+  </g>
+</svg>

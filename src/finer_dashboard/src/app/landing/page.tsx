@@ -4,8 +4,10 @@ import {
   ArrowRight,
   ArrowUpRight,
   Boxes,
+  ClipboardCheck,
   Cpu,
   GitBranch,
+  GraduationCap,
   LayoutGrid,
   LineChart,
   Network,
@@ -23,7 +25,7 @@ const NAV_LINKS = [
   { href: "#pipeline", label: "流水线" },
   { href: "#proof", label: "回测证据" },
   { href: "#capabilities", label: "能力" },
-  { href: "#human-loop", label: "AI · 人" },
+  { href: "#human-loop", label: "标注训练" },
   { href: "#engineering", label: "技术" },
   { href: "#join", label: "加入" },
 ];
@@ -272,6 +274,58 @@ export default function LandingPage() {
             F6 复核台被人类裁决；裁决以结构化字段记录，导出为 DPO
             训练数据——这是 Finer 对「黑箱 AI」最具体的反话术。
           </p>
+        </div>
+
+        <div className="mb-10 grid gap-6 lg:grid-cols-[minmax(0,1.18fr)_minmax(320px,0.82fr)] lg:items-center">
+          <ProductFrame
+            src="/landing/annotation-workbench.png"
+            alt="Finer OS 标注工作台：原文证据、Gold 表单、质量闸和 Formal export 阻断"
+            width={1440}
+            height={980}
+            label="finer.os / annotation"
+          />
+          <div className="border-t-2 border-morningstar-red bg-white p-6 shadow-[var(--shadow-soft)]">
+            <div className="flex items-center gap-2">
+              <ClipboardCheck className="h-7 w-7 text-morningstar-red" strokeWidth={1.5} />
+              <span className="rounded-sm border border-[rgba(225,27,34,0.18)] bg-[rgba(225,27,34,0.08)] px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-morningstar-red">
+                HUMAN LABELING
+              </span>
+            </div>
+            <h3 className="mt-4 text-[20px] font-bold tracking-tight text-foreground">
+              标注台不是外包页面，是训练资产入口
+            </h3>
+            <p className="mt-3 text-[13px] leading-6 text-[var(--ink-soft)]">
+              评测集 Gold、DPO chosen 侧抽检、F6 字段级纠错都在同一套工作台里落盘。
+              每条记录都带 reviewer_id / reviewed_at，可重建、可 diff、可导出。
+            </p>
+            <div className="mt-4 space-y-2 text-[12px] leading-5 text-foreground/70">
+              {[
+                "Gold 标注：独立 held-out 考卷，不喂给模型",
+                "偏好抽检：chosen / rejected 的质量闸",
+                "RLHF 纠错：真实 F5 错误回流成 DPO pairs",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-2">
+                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-morningstar-red" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                href="/training"
+                className="inline-flex items-center gap-2 rounded-sm bg-morningstar-red px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-morningstar-red/90"
+              >
+                <GraduationCap className="h-4 w-4" strokeWidth={1.8} />
+                看训练数据页
+              </Link>
+              <Link
+                href="/annotation"
+                className="inline-flex items-center gap-2 rounded-sm border border-[var(--table-border)] bg-white px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:border-foreground/30"
+              >
+                打开标注台
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Three concept columns */}
@@ -568,6 +622,9 @@ export default function LandingPage() {
                 </Link>
                 <Link href="/backtest" className="block text-foreground/70 hover:text-morningstar-red">
                   回测
+                </Link>
+                <Link href="/training" className="block text-foreground/70 hover:text-morningstar-red">
+                  训练数据
                 </Link>
                 <Link href="/" className="block text-foreground/70 hover:text-morningstar-red">
                   工作台
